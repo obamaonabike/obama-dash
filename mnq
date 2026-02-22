@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OBAMA DASH">
+<meta name="theme-color" content="#00ff41">
+<meta name="description" content="Obama Dash — live MNQ HTF/LTF confluence dashboard">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>OBAMA DASH // MNQ</title>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
+  :root {
+    --green:#00ff41;--green-dim:#00aa2a;--green-dark:#003a0f;
+    --red:#ff3131;--amber:#ffb300;--bg:#020c02;--panel:#040f04;
+    --border:#0a2a0a;--text:#00cc33;--text-dim:#006618;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;min-height:100vh;overflow-x:hidden;cursor:crosshair;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:9999;}
+  body::after{content:'';position:fixed;inset:0;background:rgba(0,255,65,0.015);pointer-events:none;z-index:9998;animation:flicker 0.15s infinite;}
+  @keyframes flicker{0%,94%,100%{opacity:1}93%{opacity:0.85}96%{opacity:0.9}}
+
+  /* HEADER */
+  .header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--panel);}
+  .header-title{font-family:'VT323',monospace;font-size:28px;color:var(--green);text-shadow:0 0 10px var(--green),0 0 20px var(--green-dim);letter-spacing:3px;}
+  .header-title span{color:var(--text-dim);}
+  .header-meta{display:flex;gap:24px;align-items:center;}
+  .meta-item{text-align:right;}
+  .meta-label{color:var(--text-dim);font-size:9px;letter-spacing:2px;text-transform:uppercase;}
+  .meta-value{color:var(--green);font-size:13px;text-shadow:0 0 6px var(--green-dim);}
+  .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;margin-right:5px;}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--green);}50%{opacity:0.4;box-shadow:0 0 2px var(--green-dim);}}
+
+  /* TICKER */
+  .ticker{overflow:hidden;border-bottom:1px solid var(--border);background:var(--green-dark);padding:4px 0;}
+  .ticker-inner{display:flex;gap:40px;animation:scroll 40s linear infinite;white-space:nowrap;}
+  @keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  .ticker-item{font-size:11px;letter-spacing:1px;color:var(--text-dim);}
+  .ticker-item span{color:var(--green);margin:0 4px;}
+  .ticker-item .up{color:var(--green);}
+  .ticker-item .dn{color:var(--red);}
+
+  /* MAIN LAYOUT */
+  .main-layout{display:grid;grid-template-columns:1fr 280px 280px;grid-template-rows:auto auto;gap:1px;background:var(--border);border:1px solid var(--border);margin:1px;}
+  .panel{background:var(--panel);}
+  .panel-chart{grid-row:1/3;display:flex;flex-direction:column;}
+  .panel-full{grid-column:1/4;}
+
+  /* PANEL HEADER */
+  .panel-header{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid var(--border);background:var(--green-dark);flex-shrink:0;}
+  .panel-title{font-family:'VT323',monospace;font-size:15px;letter-spacing:3px;color:var(--green);text-shadow:0 0 8px var(--green-dim);}
+  .panel-tag{font-size:9px;color:var(--text-dim);letter-spacing:2px;}
+
+  /* CHART CONTROLS */
+  .chart-controls{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .tf-btn{background:var(--panel);border:none;border-right:1px solid var(--border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 14px;cursor:pointer;letter-spacing:2px;transition:all 0.15s;}
+  .tf-btn:hover{background:var(--green-dark);color:var(--green);}
+  .tf-btn.active{background:var(--green-dark);color:var(--green);border-bottom:2px solid var(--green);}
+  .chart-toggle{display:flex;align-items:center;gap:5px;padding:0 10px;font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:1px;border-right:1px solid var(--border);height:100%;}
+  .chart-toggle input{accent-color:var(--green);cursor:pointer;}
+
+  /* CHART CONTAINER */
+  .chart-body{flex:1;position:relative;min-height:400px;}
+  #chart-container{width:100%;height:100%;}
+
+  /* TABLES */
+  table{width:100%;border-collapse:collapse;}
+  thead th{padding:5px 12px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--text-dim);border-bottom:1px solid var(--border);text-transform:uppercase;}
+  tbody tr{border-bottom:1px solid rgba(0,40,0,0.5);transition:background 0.15s;}
+  tbody tr:hover{background:rgba(0,255,65,0.04);}
+  tbody td{padding:6px 12px;font-size:12px;}
+  .lvl-eq{color:#fff;text-shadow:0 0 6px #fff;}
+  .lvl-pos{color:var(--green);text-shadow:0 0 6px var(--green-dim);}
+  .lvl-neg{color:var(--red);text-shadow:0 0 4px rgba(255,49,49,0.5);}
+  .lvl-extreme{color:var(--amber);text-shadow:0 0 6px rgba(255,179,0,0.5);}
+  .price-val{font-size:12px;font-weight:bold;letter-spacing:1px;}
+  .prox-bar{display:flex;align-items:center;gap:6px;}
+  .prox-track{flex:1;height:3px;background:rgba(0,40,0,0.6);border-radius:2px;overflow:hidden;}
+  .prox-fill{height:100%;border-radius:2px;transition:width 0.4s;}
+  .prox-pct{font-size:9px;color:var(--text-dim);width:38px;text-align:right;}
+
+  /* CONFLUENCE */
+  .alert-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);animation:alertIn 0.3s ease;}
+  @keyframes alertIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:translateX(0);}}
+  .alert-badge{font-size:13px;padding:2px 8px;border-radius:2px;font-family:'VT323',monospace;}
+  .badge-hot{background:rgba(255,49,49,0.15);border:1px solid var(--red);color:var(--red);}
+  .badge-warm{background:rgba(255,179,0,0.1);border:1px solid var(--amber);color:var(--amber);}
+  .badge-watch{background:rgba(0,255,65,0.06);border:1px solid var(--green-dim);color:var(--text-dim);}
+  .alert-info{flex:1;}
+  .alert-levels{font-size:12px;color:var(--green);}
+  .alert-detail{font-size:9px;color:var(--text-dim);margin-top:2px;}
+  .alert-price{font-size:12px;color:var(--green);text-align:right;}
+  .alert-dist{font-size:9px;color:var(--text-dim);text-align:right;}
+  .no-alerts{padding:18px 12px;color:var(--text-dim);font-size:10px;letter-spacing:2px;text-align:center;}
+
+  /* ACCURACY */
+  .acc-bar-track{width:120px;height:7px;background:rgba(0,40,0,0.6);border-radius:1px;overflow:hidden;display:inline-block;}
+  .acc-bar-fill{height:100%;border-radius:1px;}
+  .wl-text{color:var(--text-dim);font-size:10px;}
+  .rate-green{color:var(--green);}
+  .rate-red{color:var(--red);}
+  .rate-amber{color:var(--amber);}
+
+  /* TRADE TRACKER */
+  .trade-card{margin:8px 12px;border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+  .trade-card-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(0,255,65,0.04);border-bottom:1px solid var(--border);}
+  .trade-dir{font-family:'VT323',monospace;font-size:17px;padding:1px 9px;border-radius:2px;}
+  .dir-long{background:rgba(0,255,65,0.12);border:1px solid var(--green);color:var(--green);}
+  .dir-short{background:rgba(255,49,49,0.12);border:1px solid var(--red);color:var(--red);}
+  .trade-body{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+  .trade-stat{background:var(--panel);padding:7px 10px;}
+  .stat-label{font-size:8px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;}
+  .stat-value{font-size:13px;color:var(--green);margin-top:2px;}
+  .stat-pnl-pos{color:var(--green);text-shadow:0 0 6px var(--green-dim);}
+  .stat-pnl-neg{color:var(--red);}
+  .progress-bar{height:3px;background:var(--border);margin-top:5px;border-radius:1px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--green);box-shadow:0 0 4px var(--green-dim);border-radius:1px;transition:width 0.5s;}
+  .no-trades{padding:20px 12px;color:var(--text-dim);text-align:center;letter-spacing:2px;font-size:10px;}
+
+  /* FOOTER */
+  .footer{display:flex;justify-content:space-between;align-items:center;padding:7px 16px;border-top:1px solid var(--border);background:var(--panel);}
+  .footer-left{color:var(--text-dim);font-size:10px;letter-spacing:2px;}
+  .btn-refresh{background:transparent;border:1px solid var(--green-dim);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+  .btn-refresh:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,65,0.05);box-shadow:0 0 8px rgba(0,255,65,0.2);}
+  .countdown{font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">OBAMA<span> // </span>DASH <span style="font-size:14px;letter-spacing:2px">// MNQ</span></div>
+  <nav style="display:flex;gap:12px;align-items:center"><a href="index.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">BTC</a><a href="mnq.html" style="color:var(--green);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--green-dim);padding:3px 10px">MNQ</a></nav>
+  <div class="header-meta">
+    <div class="meta-item"><div class="meta-label">Asset</div><div class="meta-value" id="hdr-symbol">MNQ</div></div>
+    <div class="meta-item"><div class="meta-label">Last Price</div><div class="meta-value" id="hdr-price">—</div></div>
+    <div class="meta-item"><div class="meta-label">HTF Anchor</div><div class="meta-value" id="hdr-htf-anchor">—</div></div>
+    <div class="meta-item"><div class="meta-label">LTF Anchor</div><div class="meta-value" id="hdr-ltf-anchor">—</div></div>
+    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-value"><span class="status-dot"></span><span id="hdr-status">LIVE</span></div></div>
+  </div>
+</div>
+
+<div class="ticker"><div class="ticker-inner" id="ticker-inner"></div></div>
+
+<div class="main-layout">
+
+  <!-- COL 1: LIVE CHART (spans both rows) -->
+  <div class="panel panel-chart">
+    <div class="panel-header">
+      <span class="panel-title">LIVE CHART</span>
+      <span class="panel-tag" id="chart-mode-tag">HTF // H1 // BINANCE</span>
+    </div>
+    <div class="chart-controls">
+      <button class="tf-btn active" id="btn-htf" onclick="switchChartMode('HTF')">HTF // H1</button>
+      <button class="tf-btn" id="btn-ltf" onclick="switchChartMode('LTF')">LTF // M1</button>
+      <button class="tf-btn" id="btn-htf-ratio" onclick="switchChartMode('HTF_RATIO')">HTF // RATIO</button>
+      <button class="tf-btn" id="btn-ratio-m1" onclick="switchChartMode('RATIO_M1')">RATIO // M1</button>
+      <button class="tf-btn" id="btn-both" onclick="switchChartMode('BOTH')">M1 // BOTH</button>
+      <label class="chart-toggle"><input type="checkbox" id="show-htf-lvl" checked onchange="reloadChartLevels()"> HTF</label>
+      <label class="chart-toggle"><input type="checkbox" id="show-ltf-lvl" checked onchange="reloadChartLevels()"> LTF</label>
+    </div>
+    <div class="chart-body">
+      <div id="chart-container"></div>
+    </div>
+  </div>
+
+  <!-- COL 2: HTF LEVELS -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">HTF LEVELS</span>
+      <span class="panel-tag">H1 // SUN 23:00 UTC</span>
+    </div>
+    <table><thead><tr><th>Level</th><th>Price</th><th>Dist</th><th>Proximity</th></tr></thead>
+    <tbody id="htf-table"></tbody></table>
+  </div>
+
+  <!-- COL 3: LTF LEVELS -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">LTF LEVELS</span>
+      <span class="panel-tag">M1 // 09:00 UTC DAILY</span>
+    </div>
+    <table><thead><tr><th>Level</th><th>Price</th><th>Dist</th><th>Proximity</th></tr></thead>
+    <tbody id="ltf-table"></tbody></table>
+  </div>
+
+  <!-- COL 2: CONFLUENCE ALERTS -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">CONFLUENCE ALERTS</span>
+      <span class="panel-tag">HTF ∩ LTF // TOL 0.30%</span>
+    </div>
+    <div id="confluence-panel"></div>
+  </div>
+
+  <!-- COL 3: SIGNAL ACCURACY -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">SIGNAL ACCURACY</span>
+      <span class="panel-tag">BY LEVEL // BACKTEST</span>
+    </div>
+    <table><thead><tr><th>Level</th><th>W/L</th><th>Rate</th><th>Accuracy</th></tr></thead>
+    <tbody id="accuracy-table"></tbody></table>
+  </div>
+
+  <!-- FULL WIDTH: ACTIVE TRADES -->
+  <div class="panel panel-full">
+    <div class="panel-header">
+      <span class="panel-title">ACTIVE POSITIONS</span>
+      <span class="panel-tag">REAL-TIME TRACKING</span>
+    </div>
+    <div id="trades-panel"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-left">LAST UPDATE: <span id="last-update">—</span> &nbsp;|&nbsp; NEXT REFRESH: <span class="countdown" id="countdown">60s</span></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span style="font-size:10px;color:var(--text-dim)" id="data-status">FETCHING DATA...</span>
+    <button id="install-btn" onclick="installApp()" class="btn-refresh" style="display:none;gap:6px;align-items:center;border-color:var(--amber);color:var(--amber)">[ + ADD TO HOME SCREEN ]</button>
+    <button class="btn-refresh" onclick="refreshAll()">[ REFRESH ]</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+const CONFIG = {
+  symbol:'MNQ', htfRatio:73.3458,
+  angles:[27,45,60,72,78], tolerance:0.0030, refreshSec:60
+};
+
+const BACKTEST_RESULTS = {
+  'EQ':  {wins:0,total:0}, '+27':{wins:0,total:0}, '-27':{wins:0,total:0},
+  '+45': {wins:0,total:0}, '-45':{wins:0,total:0}, '+60':{wins:0,total:0},
+  '-60': {wins:5,total:5}, '+72':{wins:0,total:0}, '-72':{wins:0,total:0},
+  '+78': {wins:2,total:2}, '-78':{wins:0,total:0},
+};
+
+const ACTIVE_TRADES = [
+  // { symbol:'MNQ', htfRatio:73.3458, direction:'LONG', entry:95000, target:97000,
+  //   stop:93000, ltfLevel:'-45', htfLevel:'EQ', entryTime:'2026-02-21 09:00 UTC' }
+];
+
+// ══════════════════════════════════════════════════════
+// CHART STATE
+// ══════════════════════════════════════════════════════
+let lwChart       = null;
+let candleSeries  = null;
+let chartLevels   = {};
+let chartMode     = 'HTF';
+let chartCandles  = [];
+let htfAnchorTs, ltfAnchorTs, htfAnchorOpen, ltfAnchorOpen;
+
+// ══════════════════════════════════════════════════════
+// MATH
+// ══════════════════════════════════════════════════════
+function anglePrice(anchor,bars,deg,ratio){
+  ratio=ratio||1;
+  return anchor + bars * ratio * Math.tan(deg * Math.PI / 180);
+}
+function getAllLevels(anchor,bars,ratio){
+  const lvls=[{label:'EQ',price:anchor,degree:0}];
+  for(const a of CONFIG.angles){
+    lvls.push({label:`+${a}`,price:anglePrice(anchor,bars, a,ratio),degree: a});
+    lvls.push({label:`-${a}`,price:anglePrice(anchor,bars,-a,ratio),degree:-a});
+  }
+  return lvls.sort((a,b)=>b.price-a.price);
+}
+
+// ══════════════════════════════════════════════════════
+// ANCHORS
+// ══════════════════════════════════════════════════════
+function getSunday2300(){
+  const n=new Date(), d=n.getUTCDay();
+  const s=new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()-(d===0?0:d),23,0,0));
+  if(s>n) s.setUTCDate(s.getUTCDate()-7);
+  return s;
+}
+function getToday0900(){
+  const n=new Date();
+  return new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate(),9,0,0));
+}
+
+// ══════════════════════════════════════════════════════
+// FETCH
+// ══════════════════════════════════════════════════════
+const YF_SYM='NQ=F';
+const YF_BASE='https://query1.finance.yahoo.com/v8/finance/chart/';
+async function fetchCurrentPrice(){
+  try{
+    const r=await fetch(YF_BASE+YF_SYM+'?interval=1m&range=1d');
+    const d=await r.json();
+    const closes=d.chart.result[0].indicators.quote[0].close;
+    for(let i=closes.length-1;i>=0;i--){if(closes[i]!=null)return closes[i];}
+    return null;
+  }catch(e){return null;}
+}
+async function fetchAnchorOpen(interval,ts){
+  try{
+    const yfi=interval==='1h'?'60m':'1m';
+    const s=Math.floor(ts.getTime()/1000);
+    const e=s+(interval==='1h'?7200:120);
+    const r=await fetch(YF_BASE+YF_SYM+'?interval='+yfi+'&period1='+s+'&period2='+e);
+    const d=await r.json();
+    const q=d.chart.result[0];
+    if(!q) return null;
+    const opens=q.indicators.quote[0].open;
+    for(let i=0;i<opens.length;i++){if(opens[i]!=null)return opens[i];}
+    return null;
+  }catch(e){return null;}
+}
+async function fetch24hChange(){
+  try{
+    const r=await fetch(YF_BASE+YF_SYM+'?interval=1d&range=5d');
+    const d=await r.json();
+    const q=d.chart.result[0];
+    const c=q.indicators.quote[0].close;
+    const h=q.indicators.quote[0].high;
+    const l=q.indicators.quote[0].low;
+    const v=q.indicators.quote[0].volume;
+    const last=c[c.length-1];
+    const prev=c[c.length-2];
+    return{change:((last-prev)/prev)*100,high:h[h.length-1],low:l[l.length-1],vol:v[v.length-1]};
+  }catch(e){return null;}
+}
+async function fetchCandles(interval,limit){
+  try{
+    const yfi=interval==='1h'?'60m':'1m';
+    const range=interval==='1h'?'30d':'2d';
+    const r=await fetch(YF_BASE+YF_SYM+'?interval='+yfi+'&range='+range);
+    const d=await r.json();
+    const q=d.chart.result[0];
+    const ts=q.timestamp;
+    const ohlc=q.indicators.quote[0];
+    const out=[];
+    for(let i=0;i<ts.length;i++){
+      if(ohlc.close[i]==null) continue;
+      out.push({time:ts[i],open:ohlc.open[i],high:ohlc.high[i],low:ohlc.low[i],close:ohlc.close[i]});
+    }
+    return out.slice(-limit);
+  }catch(e){return[];}
+}
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function levelClass(lbl){
+  if(lbl==='EQ') return 'lvl-eq';
+  const d=Math.abs(parseInt(lbl.slice(1)));
+  if(d>=72) return 'lvl-extreme';
+  return lbl.startsWith('+')? 'lvl-pos':'lvl-neg';
+}
+function proxColor(pct){
+  if(pct<0.2) return '#ff3131';
+  if(pct<0.5) return '#ffb300';
+  return '#00aa2a';
+}
+function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});}
+
+// ══════════════════════════════════════════════════════
+// CHART — LEVEL DEFINITIONS
+// ══════════════════════════════════════════════════════
+function getLevelDefs(type){
+  const h=type==='HTF';
+  return [
+    {label:'EQ',  deg:0,   color:h?'#ffffff':'#aaaaaa', width:1,      dashed:false},
+    {label:'+27', deg:27,  color:h?'#00ff41':'#00cc33', width:1,      dashed:!h},
+    {label:'-27', deg:-27, color:h?'#ff3131':'#cc2222', width:1,      dashed:!h},
+    {label:'+45', deg:45,  color:h?'#00ff41':'#00cc33', width:1,      dashed:!h},
+    {label:'-45', deg:-45, color:h?'#ff3131':'#cc2222', width:1,      dashed:!h},
+    {label:'+60', deg:60,  color:h?'#00ff41':'#00cc33', width:1,      dashed:!h},
+    {label:'-60', deg:-60, color:h?'#ff3131':'#cc2222', width:1,      dashed:!h},
+    {label:'+72', deg:72,  color:h?'#ffb300':'#dd9900', width:1,      dashed:!h},
+    {label:'-72', deg:-72, color:h?'#ffb300':'#dd9900', width:1,      dashed:!h},
+    {label:'+78', deg:78,  color:h?'#ffb300':'#dd9900', width:1,      dashed:!h},
+    {label:'-78', deg:-78, color:h?'#ffb300':'#dd9900', width:1,      dashed:!h},
+  ];
+}
+
+// ══════════════════════════════════════════════════════
+// CHART — BUILD
+// ══════════════════════════════════════════════════════
+function buildChart(){
+  const container = document.getElementById('chart-container');
+  const body      = container.parentElement;
+  const h         = Math.max(400, window.innerHeight * 0.55);
+  body.style.height = h + 'px';
+  container.style.height = h + 'px';
+
+  lwChart = LightweightCharts.createChart(container, {
+    width:  container.clientWidth,
+    height: h,
+    layout: {background:{color:'#020c02'}, textColor:'#00cc33'},
+    grid:   {vertLines:{color:'#0a2a0a'}, horzLines:{color:'#0a2a0a'}},
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal,
+      vertLine:{color:'#00ff4144',labelBackgroundColor:'#003a0f'},
+      horzLine:{color:'#00ff4144',labelBackgroundColor:'#003a0f'},
+    },
+    rightPriceScale:{borderColor:'#0a2a0a', scaleMargins:{top:0.08,bottom:0.08}},
+    timeScale:{borderColor:'#0a2a0a', timeVisible:true, secondsVisible:false},
+  });
+
+  candleSeries = lwChart.addCandlestickSeries({
+    upColor:'#00ff41', downColor:'#ff3131',
+    borderUpColor:'#00ff41', borderDownColor:'#ff3131',
+    wickUpColor:'#00aa2a', wickDownColor:'#aa1111',
+  });
+
+  window.addEventListener('resize', ()=>{
+    const nh = Math.max(400, window.innerHeight * 0.55);
+    body.style.height = nh + 'px';
+    container.style.height = nh + 'px';
+    lwChart.applyOptions({width:container.clientWidth, height:nh});
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// CHART — CLEAR LEVELS
+// ══════════════════════════════════════════════════════
+function clearChartLevels(){
+  for(const s of Object.values(chartLevels)){
+    try{lwChart.removeSeries(s);}catch(e){}
+  }
+  chartLevels={};
+}
+
+// ══════════════════════════════════════════════════════
+// CHART — DRAW LEVEL SET
+// ══════════════════════════════════════════════════════
+function drawChartLevelSet(candles, anchorTs, anchorOpen, type, ratio){
+  ratio=ratio||1;
+  // HTF_R = ratio overlay on BOTH tab — use dashed style to distinguish
+  const isRatioOverlay = type==='HTF_R';
+  if(!anchorOpen || !candles.length) return;
+  const defs      = getLevelDefs(type);
+  const anchorSec = anchorTs.getTime()/1000;
+  const secPerBar = (type==='HTF'||type==='HTF_R') ? 3600 : 60;
+  const filtered  = candles.filter(c=>c.time>=anchorSec);
+  if(filtered.length<2) return;
+
+  for(const def of defs){
+    const data = filtered.map(c=>({
+      time:  c.time,
+      value: anglePrice(anchorOpen, Math.round((c.time-anchorSec)/secPerBar), def.deg, ratio)
+    }));
+    const s = lwChart.addLineSeries({
+      color: isRatioOverlay ? def.color+'99' : def.color,
+      lineWidth:def.width,
+      lineStyle: isRatioOverlay ? 1 : (def.dashed?2:0),
+      priceLineVisible:false,
+      lastValueVisible:true,
+      title: isRatioOverlay ? `R${def.label}` : `${type} ${def.label}`,
+      crosshairMarkerVisible:false,
+    });
+    s.setData(data);
+    chartLevels[`${type}_${def.label}`]=s;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CHART — RELOAD LEVELS (toggle)
+// ══════════════════════════════════════════════════════
+function reloadChartLevels(){
+  clearChartLevels();
+  const m = chartMode;
+  const showHTF = document.getElementById('show-htf-lvl').checked;
+  const showLTF = document.getElementById('show-ltf-lvl').checked;
+  if(m==='BOTH'){
+    // Overlay both HTF fans on M1 candles
+    if(htfAnchorOpen){
+      drawChartLevelSet(chartCandles, htfAnchorTs, htfAnchorOpen, 'HTF', 1);               // no ratio
+      drawChartLevelSet(chartCandles, htfAnchorTs, htfAnchorOpen, 'HTF_R', CONFIG.htfRatio); // with ratio
+    }
+    if(showLTF && ltfAnchorOpen)
+      drawChartLevelSet(chartCandles, ltfAnchorTs, ltfAnchorOpen, 'LTF');
+  } else {
+    const useRatio = m==='HTF_RATIO' || m==='RATIO_M1';
+    if(showHTF && htfAnchorOpen)
+      drawChartLevelSet(chartCandles, htfAnchorTs, htfAnchorOpen, 'HTF', useRatio?CONFIG.htfRatio:1);
+    if(showLTF && ltfAnchorOpen)
+      drawChartLevelSet(chartCandles, ltfAnchorTs, ltfAnchorOpen, 'LTF');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CHART — LOAD MODE
+// ══════════════════════════════════════════════════════
+async function loadChartMode(mode){
+  const useH1 = mode==='HTF' || mode==='HTF_RATIO';
+  const interval = useH1?'1h':'1m';
+  const limit    = useH1?336:480;
+  chartCandles   = await fetchCandles(interval, limit);
+  if(!chartCandles.length) return;
+  candleSeries.setData(chartCandles);
+  reloadChartLevels();
+  lwChart.timeScale().fitContent();
+  const tags = {
+    'HTF':      'HTF // H1 // NO RATIO',
+    'HTF_RATIO':'HTF // H1 // RATIO 73.3458',
+    'LTF':      'LTF // M1',
+    'RATIO_M1': 'HTF RATIO // M1',
+    'BOTH':     'M1 // BOTH HTF OVERLAID',
+  };
+  document.getElementById('chart-mode-tag').textContent = tags[mode]||mode;
+}
+
+function switchChartMode(mode){
+  chartMode=mode;
+  document.getElementById('btn-htf').classList.toggle('active',mode==='HTF');
+  document.getElementById('btn-ltf').classList.toggle('active',mode==='LTF');
+  document.getElementById('btn-htf-ratio').classList.toggle('active',mode==='HTF_RATIO');
+  document.getElementById('btn-ratio-m1').classList.toggle('active',mode==='RATIO_M1');
+  document.getElementById('btn-both').classList.toggle('active',mode==='BOTH');
+  loadChartMode(mode);
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER LEVELS TABLE
+// ══════════════════════════════════════════════════════
+function renderLevelsTable(tbodyId, levels, cp){
+  const tb=document.getElementById(tbodyId);
+  tb.innerHTML='';
+  for(const lv of levels){
+    const dist=(Math.abs(cp-lv.price)/cp)*100;
+    const prox=Math.max(0,1-dist/2);
+    const bw=Math.round(prox*100);
+    const bc=proxColor(prox);
+    const cls=levelClass(lv.label);
+    const arrow=cp>lv.price?'▲':'▼';
+    const dc=dist<0.1?'var(--red)':dist<0.3?'var(--amber)':'var(--text-dim)';
+    tb.innerHTML+=`<tr>
+      <td class="${cls}" style="letter-spacing:1px">${lv.label}</td>
+      <td class="price-val ${cls}">${fmt(lv.price)}</td>
+      <td style="color:${dc};font-size:10px">${arrow} ${dist.toFixed(3)}%</td>
+      <td><div class="prox-bar">
+        <div class="prox-track"><div class="prox-fill" style="width:${bw}%;background:${bc}"></div></div>
+        <span class="prox-pct">${dist.toFixed(2)}%</span>
+      </div></td></tr>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER CONFLUENCE
+// ══════════════════════════════════════════════════════
+function renderConfluence(htf, ltf, cp){
+  const panel=document.getElementById('confluence-panel');
+  const tol=CONFIG.tolerance;
+  const alerts=[];
+  for(const l of ltf){
+    const ld=Math.abs(cp-l.price)/cp;
+    if(ld>tol*5) continue;
+    for(const h of htf){
+      const diff=Math.abs(l.price-h.price)/h.price;
+      if(diff<=tol*3) alerts.push({ltf:l,htf:h,priceDist:ld,levelDiff:diff});
+    }
+  }
+  alerts.sort((a,b)=>a.priceDist-b.priceDist);
+  if(!alerts.length){
+    panel.innerHTML=`<div class="no-alerts">[ NO ACTIVE CONFLUENCES ]<br><span style="font-size:9px;margin-top:4px;display:block">MONITORING ALL LEVELS // TOL ${(tol*100).toFixed(2)}%</span></div>`;
+    return;
+  }
+  panel.innerHTML='';
+  for(const a of alerts.slice(0,6)){
+    const pct=(a.priceDist*100).toFixed(3);
+    const bcls=a.priceDist<tol?'badge-hot':a.priceDist<tol*2?'badge-warm':'badge-watch';
+    const status=a.priceDist<tol?'HOT':a.priceDist<tol*2?'NEAR':'WATCH';
+    panel.innerHTML+=`<div class="alert-row">
+      <div class="alert-badge ${bcls}">${status}</div>
+      <div class="alert-info">
+        <div class="alert-levels">LTF <span class="${levelClass(a.ltf.label)}">${a.ltf.label}</span> ∩ HTF <span class="${levelClass(a.htf.label)}">${a.htf.label}</span></div>
+        <div class="alert-detail">DIFF ${(a.levelDiff*100).toFixed(3)}% // ${fmt(a.ltf.price)}</div>
+      </div>
+      <div><div class="alert-price">${fmt(a.htf.price)}</div>
+      <div class="alert-dist">${pct}% away</div></div></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER ACCURACY
+// ══════════════════════════════════════════════════════
+function renderAccuracy(){
+  const tb=document.getElementById('accuracy-table');
+  tb.innerHTML='';
+  for(const lv of ['EQ','+27','-27','+45','-45','+60','-60','+72','-72','+78','-78']){
+    const d=BACKTEST_RESULTS[lv]||{wins:0,total:0};
+    const rate=d.total>0?d.wins/d.total:null;
+    const cls=levelClass(lv);
+    const rs=rate!==null?(rate*100).toFixed(0)+'%':'N/A';
+    const rc=rate===null?'':rate>=0.6?'rate-green':rate>=0.4?'rate-amber':'rate-red';
+    const bw=rate!==null?Math.round(rate*100):0;
+    const bc=rate===null?'#1a1a1a':rate>=0.6?'var(--green)':rate>=0.4?'var(--amber)':'var(--red)';
+    tb.innerHTML+=`<tr>
+      <td class="${cls}" style="letter-spacing:1px">${lv}</td>
+      <td class="wl-text">${d.wins}/${d.total}</td>
+      <td class="${rc}" style="font-size:11px">${rs}</td>
+      <td><div class="acc-bar-track"><div class="acc-bar-fill" style="width:${bw}%;background:${bc}"></div></div></td></tr>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER TRADES
+// ══════════════════════════════════════════════════════
+function renderTrades(cp){
+  const panel=document.getElementById('trades-panel');
+  if(!ACTIVE_TRADES.length){
+    panel.innerHTML=`<div class="no-trades">[ NO ACTIVE POSITIONS ]<br><span style="font-size:9px;margin-top:4px;display:block">ADD TRADES TO ACTIVE_TRADES ARRAY IN SCRIPT</span></div>`;
+    return;
+  }
+  panel.innerHTML='';
+  for(const t of ACTIVE_TRADES){
+    const c=cp||t.entry;
+    const pnl=t.direction==='LONG'?((c-t.entry)/t.entry*100):((t.entry-c)/t.entry*100);
+    const pc=pnl>=0?'stat-pnl-pos':'stat-pnl-neg';
+    const dc=t.direction==='LONG'?'dir-long':'dir-short';
+    const range=Math.abs(t.target-t.entry);
+    const prog=range>0?Math.min(100,Math.max(0,Math.abs(c-t.entry)/range*100)):0;
+    panel.innerHTML+=`<div class="trade-card">
+      <div class="trade-card-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="trade-dir ${dc}">${t.direction}</span>
+          <span style="font-size:12px;color:var(--green);letter-spacing:2px">${t.symbol}</span>
+          <span style="font-size:10px;color:var(--text-dim)">LTF <span class="${levelClass(t.ltfLevel)}">${t.ltfLevel}</span> ∩ HTF <span class="${levelClass(t.htfLevel)}">${t.htfLevel}</span></span>
+        </div>
+        <span style="font-size:9px;color:var(--text-dim)">${t.entryTime}</span>
+      </div>
+      <div class="trade-body">
+        <div class="trade-stat"><div class="stat-label">Entry</div><div class="stat-value">${fmt(t.entry)}</div></div>
+        <div class="trade-stat"><div class="stat-label">Current</div><div class="stat-value">${fmt(c)}</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${prog}%"></div></div></div>
+        <div class="trade-stat"><div class="stat-label">Target</div><div class="stat-value lvl-pos">${fmt(t.target)}</div></div>
+        <div class="trade-stat"><div class="stat-label">Unrealised P&L</div><div class="stat-value ${pc}">${pnl>=0?'+':''}${pnl.toFixed(3)}%</div></div>
+      </div></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// TICKER
+// ══════════════════════════════════════════════════════
+function buildTicker(price,stats){
+  const items=[
+    `BTCUSDT <span>${price?fmt(price):'—'}</span>`,
+    stats?`24H <span class="${stats.change>=0?'up':'dn'}">${stats.change>=0?'+':''}${stats.change.toFixed(2)}%</span>`:'',
+    stats?`HIGH <span>${fmt(stats.high)}</span>`:'',
+    stats?`LOW <span>${fmt(stats.low)}</span>`:'',
+    stats?`VOL <span>${(stats.vol/1000).toFixed(1)}K BTC</span>`:'',
+    
+    
+    `TOLERANCE <span>${(CONFIG.tolerance*100).toFixed(2)}%</span>`,
+    `LEVELS <span>±27 ±45 ±60 ±72 ±78 EQ</span>`,
+  ].filter(Boolean).map(i=>`<span class="ticker-item">${i}</span>`).join('');
+  document.getElementById('ticker-inner').innerHTML=items+items;
+}
+
+// ══════════════════════════════════════════════════════
+// MAIN REFRESH
+// ══════════════════════════════════════════════════════
+let cdVal=CONFIG.refreshSec, cdTimer;
+
+async function refreshAll(){
+  document.getElementById('data-status').textContent='FETCHING...';
+
+  htfAnchorTs = getSunday2300();
+  ltfAnchorTs = getToday0900();
+  const now   = new Date();
+  const htfBars = Math.floor((now-htfAnchorTs)/3600000);
+  const ltfBars = Math.floor((now-ltfAnchorTs)/60000);
+
+  const [price,htfOpen,ltfOpen,stats] = await Promise.all([
+    fetchCurrentPrice(),
+    fetchAnchorOpen('1h',htfAnchorTs),
+    fetchAnchorOpen('1m',ltfAnchorTs),
+    fetch24hChange()
+  ]);
+
+  const cp=price||95000;
+  htfAnchorOpen = htfOpen||cp;
+  ltfAnchorOpen = ltfOpen||cp;
+
+  const htfLevels=getAllLevels(htfAnchorOpen,htfBars);
+  const ltfLevels=getAllLevels(ltfAnchorOpen,ltfBars);
+
+  // Update header
+  document.getElementById('hdr-price').textContent       = price?fmt(price):'—';
+  document.getElementById('hdr-htf-anchor').textContent  = htfAnchorTs.toUTCString().slice(5,11)+' 23:00';
+  document.getElementById('hdr-ltf-anchor').textContent  = ltfAnchorTs.toUTCString().slice(5,11)+' 09:00';
+
+  // Reload chart levels with fresh anchor data
+  reloadChartLevels();
+
+  // Render panels
+  renderLevelsTable('htf-table',htfLevels,cp);
+  renderLevelsTable('ltf-table',ltfLevels,cp);
+  renderConfluence(htfLevels,ltfLevels,cp);
+  renderAccuracy();
+  renderTrades(cp);
+  buildTicker(price,stats);
+
+  document.getElementById('last-update').textContent   = new Date().toUTCString().slice(17,25)+' UTC';
+  document.getElementById('data-status').textContent   = price?'LIVE DATA // BINANCE':'OFFLINE MODE';
+
+  clearInterval(cdTimer);
+  cdVal=CONFIG.refreshSec;
+  cdTimer=setInterval(()=>{
+    cdVal--;
+    document.getElementById('countdown').textContent=cdVal+'s';
+    if(cdVal<=0){clearInterval(cdTimer);refreshAll();}
+  },1000);
+}
+
+// ══════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// PWA — SERVICE WORKER + INSTALL PROMPT
+// ══════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW failed:', err));
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'none';
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
+});
+
+window.addEventListener('load', async ()=>{
+  buildChart();
+  renderAccuracy();
+
+  htfAnchorTs = getSunday2300();
+  ltfAnchorTs = getToday0900();
+
+  const [htfOpen, ltfOpen] = await Promise.all([
+    fetchAnchorOpen('1h', htfAnchorTs),
+    fetchAnchorOpen('1m', ltfAnchorTs),
+  ]);
+  htfAnchorOpen = htfOpen;
+  ltfAnchorOpen = ltfOpen;
+
+  // Load chart candles and levels
+  await loadChartMode('HTF');
+
+  // Load all other panel data
+  await refreshAll();
+
+  // Reload chart candles every 5 min independently
+  setInterval(()=>loadChartMode(chartMode), 300000);
+});
+</script>
+</body>
+</html>
