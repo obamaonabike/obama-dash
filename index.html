@@ -134,6 +134,7 @@
 
 <div class="header">
   <div class="header-title">OBAMA<span> // </span>DASH <span style="font-size:14px;letter-spacing:2px">// TERMINAL</span></div>
+  <nav style="display:flex;gap:12px;align-items:center"><a href="index.html" style="color:var(--green);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--green-dim);padding:3px 10px">BTC</a><a href="mnq.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">MNQ</a></nav>
   <div class="header-meta">
     <div class="meta-item"><div class="meta-label">Asset</div><div class="meta-value" id="hdr-symbol">BTCUSDT</div></div>
     <div class="meta-item"><div class="meta-label">Last Price</div><div class="meta-value" id="hdr-price">—</div></div>
@@ -419,7 +420,7 @@ function drawChartLevelSet(candles, anchorTs, anchorOpen, type, ratio){
       lineStyle: isRatioOverlay ? 1 : (def.dashed?2:0),
       priceLineVisible:false,
       lastValueVisible:true,
-      title:`${type} ${def.label}`,
+      title: isRatioOverlay ? `R${def.label}` : `${type} ${def.label}`,
       crosshairMarkerVisible:false,
     });
     s.setData(data);
