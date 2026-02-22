@@ -157,6 +157,8 @@
       <button class="tf-btn active" id="btn-htf" onclick="switchChartMode('HTF')">HTF // H1</button>
       <button class="tf-btn" id="btn-ltf" onclick="switchChartMode('LTF')">LTF // M1</button>
       <button class="tf-btn" id="btn-htf-ratio" onclick="switchChartMode('HTF_RATIO')">HTF // RATIO</button>
+      <button class="tf-btn" id="btn-ratio-m1" onclick="switchChartMode('RATIO_M1')">RATIO // M1</button>
+      <button class="tf-btn" id="btn-both" onclick="switchChartMode('BOTH')">M1 // BOTH</button>
       <label class="chart-toggle"><input type="checkbox" id="show-htf-lvl" checked onchange="reloadChartLevels()"> HTF</label>
       <label class="chart-toggle"><input type="checkbox" id="show-ltf-lvl" checked onchange="reloadChartLevels()"> LTF</label>
     </div>
@@ -397,10 +399,12 @@ function clearChartLevels(){
 // ══════════════════════════════════════════════════════
 function drawChartLevelSet(candles, anchorTs, anchorOpen, type, ratio){
   ratio=ratio||1;
+  // HTF_R = ratio overlay on BOTH tab — use dashed style to distinguish
+  const isRatioOverlay = type==='HTF_R';
   if(!anchorOpen || !candles.length) return;
   const defs      = getLevelDefs(type);
   const anchorSec = anchorTs.getTime()/1000;
-  const secPerBar = type==='HTF' ? 3600 : 60;
+  const secPerBar = (type==='HTF'||type==='HTF_R') ? 3600 : 60;
   const filtered  = candles.filter(c=>c.time>=anchorSec);
   if(filtered.length<2) return;
 
@@ -410,8 +414,9 @@ function drawChartLevelSet(candles, anchorTs, anchorOpen, type, ratio){
       value: anglePrice(anchorOpen, Math.round((c.time-anchorSec)/secPerBar), def.deg, ratio)
     }));
     const s = lwChart.addLineSeries({
-      color:def.color, lineWidth:def.width,
-      lineStyle:def.dashed?2:0,
+      color: isRatioOverlay ? def.color+'99' : def.color,
+      lineWidth:def.width,
+      lineStyle: isRatioOverlay ? 1 : (def.dashed?2:0),
       priceLineVisible:false,
       lastValueVisible:true,
       title:`${type} ${def.label}`,
@@ -427,28 +432,46 @@ function drawChartLevelSet(candles, anchorTs, anchorOpen, type, ratio){
 // ══════════════════════════════════════════════════════
 function reloadChartLevels(){
   clearChartLevels();
-  const useRatio = chartMode==='HTF_RATIO';
-  if(document.getElementById('show-htf-lvl').checked && htfAnchorOpen)
-    drawChartLevelSet(chartCandles, htfAnchorTs, htfAnchorOpen, 'HTF', useRatio?CONFIG.htfRatio:1);
-  if(document.getElementById('show-ltf-lvl').checked && ltfAnchorOpen)
-    drawChartLevelSet(chartCandles, ltfAnchorTs, ltfAnchorOpen, 'LTF');
+  const m = chartMode;
+  const showHTF = document.getElementById('show-htf-lvl').checked;
+  const showLTF = document.getElementById('show-ltf-lvl').checked;
+  if(m==='BOTH'){
+    // Overlay both HTF fans on M1 candles
+    if(htfAnchorOpen){
+      drawChartLevelSet(chartCandles, htfAnchorTs, htfAnchorOpen, 'HTF', 1);               // no ratio
+      drawChartLevelSet(chartCandles, htfAnchorTs, htfAnchorOpen, 'HTF_R', CONFIG.htfRatio); // with ratio
+    }
+    if(showLTF && ltfAnchorOpen)
+      drawChartLevelSet(chartCandles, ltfAnchorTs, ltfAnchorOpen, 'LTF');
+  } else {
+    const useRatio = m==='HTF_RATIO' || m==='RATIO_M1';
+    if(showHTF && htfAnchorOpen)
+      drawChartLevelSet(chartCandles, htfAnchorTs, htfAnchorOpen, 'HTF', useRatio?CONFIG.htfRatio:1);
+    if(showLTF && ltfAnchorOpen)
+      drawChartLevelSet(chartCandles, ltfAnchorTs, ltfAnchorOpen, 'LTF');
+  }
 }
 
 // ══════════════════════════════════════════════════════
 // CHART — LOAD MODE
 // ══════════════════════════════════════════════════════
 async function loadChartMode(mode){
-  const isHTF    = mode==='HTF' || mode==='HTF_RATIO';
-  const interval = isHTF?'1h':'1m';
-  const limit    = isHTF?336:480;
+  const useH1 = mode==='HTF' || mode==='HTF_RATIO';
+  const interval = useH1?'1h':'1m';
+  const limit    = useH1?336:480;
   chartCandles   = await fetchCandles(interval, limit);
   if(!chartCandles.length) return;
   candleSeries.setData(chartCandles);
   reloadChartLevels();
   lwChart.timeScale().fitContent();
-  document.getElementById('chart-mode-tag').textContent =
-    mode==='HTF' ? 'HTF // H1 // NO RATIO' :
-    mode==='HTF_RATIO' ? 'HTF // H1 // RATIO 73.3458' : 'LTF // M1 // BINANCE';
+  const tags = {
+    'HTF':      'HTF // H1 // NO RATIO',
+    'HTF_RATIO':'HTF // H1 // RATIO 73.3458',
+    'LTF':      'LTF // M1',
+    'RATIO_M1': 'HTF RATIO // M1',
+    'BOTH':     'M1 // BOTH HTF OVERLAID',
+  };
+  document.getElementById('chart-mode-tag').textContent = tags[mode]||mode;
 }
 
 function switchChartMode(mode){
@@ -456,6 +479,8 @@ function switchChartMode(mode){
   document.getElementById('btn-htf').classList.toggle('active',mode==='HTF');
   document.getElementById('btn-ltf').classList.toggle('active',mode==='LTF');
   document.getElementById('btn-htf-ratio').classList.toggle('active',mode==='HTF_RATIO');
+  document.getElementById('btn-ratio-m1').classList.toggle('active',mode==='RATIO_M1');
+  document.getElementById('btn-both').classList.toggle('active',mode==='BOTH');
   loadChartMode(mode);
 }
 
