@@ -403,11 +403,12 @@ function drawChartLevelSet(candles,anchorTs,anchorOpen,type,ratio){
       time:c.time,
       value:anglePrice(anchorOpen,Math.round((c.time-anchorSec)/secPerBar),def.deg,ratio||1)
     }));
+    const shortType = type==='HTF_R'?'R':type==='HTF'?'H':type==='LTF'?'L':'';
     const s=lwChart.addLineSeries({
       color:def.color, lineWidth:def.width,
       lineStyle:(type==='LTF')?2:0,
-      priceLineVisible:false, lastValueVisible:false,
-      title:'',
+      priceLineVisible:false, lastValueVisible:true,
+      title: shortType+def.label,
       crosshairMarkerVisible:false,
     });
     s.setData(data);
