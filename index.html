@@ -19,20 +19,13 @@
 :root {
 –bg:         #050f05;
 –panel:      #070d07;
-–panel2:     #0a140a;
 –border:     #0f2a0f;
-–border2:    #0a1a0a;
 –green:      #00ff41;
 –green-dim:  #00882a;
-–green-dark: #001a06;
-–green-mid:  #00441a;
 –red:        #ff3131;
 –amber:      #ffb300;
-–magenta:    #ff00ff;
-–white:      #e8e8e8;
 –text:       #00cc33;
 –text-dim:   #006618;
-–text-dimmer:#003a10;
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -47,94 +40,66 @@ font-size:12px;
 cursor:crosshair;
 }
 
-/* scanlines */
 body::before {
 content:’’; position:fixed; inset:0; z-index:9999; pointer-events:none;
-background:repeating-linear-gradient(
-0deg, transparent, transparent 3px,
-rgba(0,0,0,0.10) 3px, rgba(0,0,0,0.10) 4px
-);
+background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.10) 3px,rgba(0,0,0,0.10) 4px);
 }
 
-#app {
-display:flex; flex-direction:column;
-height:100dvh; overflow:hidden;
-position:relative; z-index:1;
-}
+#app { display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
 
-/* ── HEADER ── */
-.header {
+/* ── TITLE BAR ── */
+.titlebar {
 flex-shrink:0;
 display:flex; align-items:center; justify-content:space-between;
-padding:5px 12px; gap:12px;
+padding:4px 12px;
 background:var(–panel);
 border-bottom:1px solid var(–border);
-overflow:hidden;
+height:32px;
 }
-.header-title {
+.titlebar-name {
 font-family:‘VT323’, monospace;
-font-size:22px; letter-spacing:3px;
+font-size:22px; letter-spacing:4px;
 color:var(–green);
 text-shadow:0 0 8px var(–green-dim);
-white-space:nowrap; flex-shrink:0;
+white-space:nowrap;
 }
-.header-title span { color:var(–text-dim); }
-
-.header-meta { display:flex; gap:16px; align-items:center; overflow:hidden; }
-.meta-item   { text-align:right; flex-shrink:0; }
-.meta-item.hide-mobile { display:none; }
-@media (min-width:600px) { .meta-item.hide-mobile { display:block; } }
-.meta-label  { font-size:9px; color:var(–text-dim); letter-spacing:2px; text-transform:uppercase; }
-.meta-value  { font-size:12px; color:var(–green); margin-top:1px; }
-
+.titlebar-name span { color:var(–text-dim); }
+.titlebar-right {
+display:flex; align-items:center; gap:8px;
+}
+.price-display {
+font-size:13px; color:var(–green);
+letter-spacing:1px;
+}
 .status-dot {
-display:inline-block; width:7px; height:7px; border-radius:50%;
-background:var(–green); margin-right:5px; vertical-align:middle;
+width:6px; height:6px; border-radius:50%;
+background:var(–green);
 animation:pulse 2s infinite;
+flex-shrink:0;
 }
-@keyframes pulse {
-0%,100% { opacity:1; } 50% { opacity:0.3; }
-}
-
-/* ── TICKER ── */
-.ticker {
-flex-shrink:0; overflow:hidden;
-background:var(–green-dark);
-border-bottom:1px solid var(–border);
-padding:3px 0;
-}
-.ticker-inner {
-display:flex; gap:40px; white-space:nowrap;
-animation:scroll 45s linear infinite;
-}
-@keyframes scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-.ticker-item       { font-size:11px; letter-spacing:1px; color:var(–text-dim); }
-.ticker-item span  { color:var(–green); margin:0 4px; }
-.ticker-item .up   { color:var(–green); }
-.ticker-item .dn   { color:var(–red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* ── CHART SHELL ── */
 .chart-shell {
 flex:1; min-height:0;
 display:flex; flex-direction:column;
-border:1px solid var(–border);
-margin:1px;
 }
 
 /* ── CONTROLS ── */
 .chart-controls {
 flex-shrink:0;
 display:flex; align-items:stretch;
-height:28px;
+height:26px;
 background:var(–panel);
 border-bottom:1px solid var(–border);
+position:relative;
 }
 .tf-btn {
 background:none; border:none; border-right:1px solid var(–border);
 color:var(–text-dim);
 font-family:‘Share Tech Mono’, monospace;
 font-size:10px; letter-spacing:2px;
-padding:0 16px; cursor:pointer;
+padding:0 14px; cursor:pointer;
 transition:color 0.1s, background 0.1s;
 position:relative;
 }
@@ -144,38 +109,36 @@ position:relative;
 content:’’; position:absolute;
 bottom:0; left:20%; right:20%;
 height:2px; background:var(–green);
-box-shadow:0 0 6px var(–green-dim);
 }
-
 .kl-btn {
 margin-left:auto;
 background:none; border:none; border-left:1px solid var(–border);
 color:var(–text-dim);
 font-family:‘Share Tech Mono’, monospace;
 font-size:10px; letter-spacing:2px;
-padding:0 14px; cursor:pointer;
+padding:0 12px; cursor:pointer;
 transition:color 0.1s;
 }
-.kl-btn:hover  { color:var(–green); }
+.kl-btn:hover { color:var(–green); }
 
 /* ── KEY LEVELS PANEL ── */
 .kl-panel {
-position:absolute; top:29px; right:0;
-width:260px; z-index:50;
+position:absolute; top:27px; right:0;
+width:240px; z-index:50;
 background:#030a03;
 border:1px solid var(–border);
 border-top:none;
 display:none;
 }
 .kl-panel.open { display:block; }
-.kl-group      { border-bottom:1px solid var(–border2); }
+.kl-group      { border-bottom:1px solid #0a1a0a; }
 .kl-group-hdr  {
 display:flex; flex-direction:column; gap:4px;
 padding:5px 10px;
 font-size:10px; letter-spacing:2px;
 }
 .kl-group-hdr:hover { background:rgba(0,255,65,0.02); }
-.kl-row { display:flex; gap:14px; flex-wrap:wrap; }
+.kl-row { display:flex; gap:12px; flex-wrap:wrap; }
 .kl-row label {
 display:flex; align-items:center; gap:4px;
 font-size:9px; color:var(–text-dim);
@@ -187,172 +150,85 @@ letter-spacing:1px; cursor:pointer;
 .chart-body { flex:1; position:relative; min-height:0; overflow:hidden; }
 #chart-container { width:100%; height:100%; }
 
-/* corner brackets */
-.chart-body::before {
-content:’’; position:absolute;
-top:8px; left:8px; width:16px; height:16px;
-border-top:1px solid var(–text-dimmer);
-border-left:1px solid var(–text-dimmer);
-pointer-events:none; z-index:10;
-}
-.chart-body::after {
-content:’’; position:absolute;
-bottom:8px; right:8px; width:16px; height:16px;
-border-bottom:1px solid var(–text-dimmer);
-border-right:1px solid var(–text-dimmer);
-pointer-events:none; z-index:10;
-}
-
-/* ── FOOTER ── */
-.footer {
-flex-shrink:0;
-display:flex; justify-content:space-between; align-items:center;
-padding:4px 14px;
-background:var(–panel);
-border-top:1px solid var(–border);
-font-size:10px; letter-spacing:1.5px;
-color:var(–text-dim);
-}
-.countdown { color:var(–green); }
-.btn-refresh {
-background:transparent;
-border:1px solid var(–text-dimmer);
-color:var(–text-dim);
-font-family:‘Share Tech Mono’, monospace;
-font-size:10px; letter-spacing:2px;
-padding:2px 10px; cursor:pointer;
-transition:all 0.15s;
-}
-.btn-refresh:hover {
-border-color:var(–green); color:var(–green);
-background:rgba(0,255,65,0.04);
-}
-
 /* ── LEVEL CLASSES ── */
 .lvl-eq      { color:#fff; }
 .lvl-pos     { color:var(–green); }
 .lvl-neg     { color:var(–red); }
 .lvl-extreme { color:var(–amber); }
 
-/* ── INSTALL BTN ── */
-#install-btn { display:none; }
-
 </style>
 </head>
 <body>
-
 <div id="app">
 
-  <!-- HEADER -->
+  <!-- TITLE BAR -->
 
-  <div class="header">
-    <div class="header-title">OBAMA<span> // </span>DASH<span> // </span><span style="font-size:16px;letter-spacing:3px;color:var(--text-dim)">TERMINAL</span></div>
-    <div class="header-meta">
-      <div class="meta-item">
-        <div class="meta-label">ASSET</div>
-        <div class="meta-value" id="hdr-symbol">BTCUSDT</div>
-      </div>
-      <div class="meta-item">
-        <div class="meta-label">PRICE</div>
-        <div class="meta-value" id="hdr-price">—</div>
-      </div>
-      <div class="meta-item hide-mobile">
-        <div class="meta-label">HTF ANCHOR</div>
-        <div class="meta-value" id="hdr-htf-anchor">—</div>
-      </div>
-      <div class="meta-item hide-mobile">
-        <div class="meta-label">LTF ANCHOR</div>
-        <div class="meta-value" id="hdr-ltf-anchor">—</div>
-      </div>
-      <div class="meta-item">
-        <div class="meta-label">STATUS</div>
-        <div class="meta-value"><span class="status-dot"></span><span id="hdr-status">LIVE</span></div>
-      </div>
+  <div class="titlebar">
+    <div class="titlebar-name">OBAMA<span> // </span>DASH</div>
+    <div class="titlebar-right">
+      <span class="price-display" id="hdr-price">—</span>
+      <div class="status-dot"></div>
     </div>
   </div>
-
-  <!-- TICKER -->
-
-  <div class="ticker"><div class="ticker-inner" id="ticker-inner"></div></div>
 
   <!-- CHART SHELL -->
 
   <div class="chart-shell">
-
-```
-<!-- CONTROLS BAR -->
-<div class="chart-controls" style="position:relative">
-  <button class="tf-btn active" id="btn-ltf-ratio" onclick="switchChartMode('LTF_RATIO')">M1 // RATIO</button>
-  <button class="tf-btn"        id="btn-ltf-both"  onclick="switchChartMode('LTF_BOTH')">M1 // BOTH</button>
-  <button class="kl-btn" id="kl-toggle-btn" onclick="toggleKLPanel()">⊞ KEY LEVELS</button>
-
-  <!-- Key Levels Panel -->
-  <div class="kl-panel" id="kl-panel">
-    <div class="kl-group">
-      <div class="kl-group-hdr" style="color:#08bcd4">
-        <span>DAILY</span>
-        <div class="kl-row">
-          <label><input type="checkbox" id="kl-daily-open" checked onchange="redrawKL()"> OPEN</label>
-          <label><input type="checkbox" id="kl-daily-hl"        onchange="redrawKL()"> PREV H/L</label>
+    <div class="chart-controls" style="position:relative">
+      <button class="tf-btn active" id="btn-ltf-ratio" onclick="switchChartMode('LTF_RATIO')">M1 // RATIO</button>
+      <button class="tf-btn"        id="btn-ltf-both"  onclick="switchChartMode('LTF_BOTH')">M1 // BOTH</button>
+      <button class="kl-btn" id="kl-toggle-btn" onclick="toggleKLPanel()">⊞ KEY LEVELS</button>
+      <div class="kl-panel" id="kl-panel">
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#08bcd4">
+            <span>DAILY</span>
+            <div class="kl-row">
+              <label><input type="checkbox" id="kl-daily-open" checked onchange="redrawKL()"> OPEN</label>
+              <label><input type="checkbox" id="kl-daily-hl"        onchange="redrawKL()"> PREV H/L</label>
+            </div>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#fffcbc">
+            <span>WEEKLY</span>
+            <div class="kl-row">
+              <label><input type="checkbox" id="kl-weekly-open" checked onchange="redrawKL()"> OPEN</label>
+              <label><input type="checkbox" id="kl-weekly-hl"   checked onchange="redrawKL()"> H/L</label>
+              <label><input type="checkbox" id="kl-weekly-mid"  checked onchange="redrawKL()"> MID</label>
+            </div>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#08d48c">
+            <span>MONTHLY</span>
+            <div class="kl-row">
+              <label><input type="checkbox" id="kl-monthly-open" checked onchange="redrawKL()"> OPEN</label>
+              <label><input type="checkbox" id="kl-monthly-hl"         onchange="redrawKL()"> H/L</label>
+              <label><input type="checkbox" id="kl-monthly-mid"        onchange="redrawKL()"> MID</label>
+            </div>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#ff6666">
+            <span>QUARTERLY</span>
+            <div class="kl-row">
+              <label><input type="checkbox" id="kl-quarterly-open" onchange="redrawKL()"> OPEN</label>
+            </div>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#ff3131">
+            <span>YEARLY</span>
+            <div class="kl-row">
+              <label><input type="checkbox" id="kl-yearly-open" checked onchange="redrawKL()"> OPEN</label>
+              <label><input type="checkbox" id="kl-yearly-hl"         onchange="redrawKL()"> H/L</label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="kl-group">
-      <div class="kl-group-hdr" style="color:#fffcbc">
-        <span>WEEKLY</span>
-        <div class="kl-row">
-          <label><input type="checkbox" id="kl-weekly-open" checked onchange="redrawKL()"> OPEN</label>
-          <label><input type="checkbox" id="kl-weekly-hl"   checked onchange="redrawKL()"> H/L</label>
-          <label><input type="checkbox" id="kl-weekly-mid"  checked onchange="redrawKL()"> MID</label>
-        </div>
-      </div>
-    </div>
-    <div class="kl-group">
-      <div class="kl-group-hdr" style="color:#08d48c">
-        <span>MONTHLY</span>
-        <div class="kl-row">
-          <label><input type="checkbox" id="kl-monthly-open" checked onchange="redrawKL()"> OPEN</label>
-          <label><input type="checkbox" id="kl-monthly-hl"         onchange="redrawKL()"> H/L</label>
-          <label><input type="checkbox" id="kl-monthly-mid"        onchange="redrawKL()"> MID</label>
-        </div>
-      </div>
-    </div>
-    <div class="kl-group">
-      <div class="kl-group-hdr" style="color:#ff6666">
-        <span>QUARTERLY</span>
-        <div class="kl-row">
-          <label><input type="checkbox" id="kl-quarterly-open" onchange="redrawKL()"> OPEN</label>
-        </div>
-      </div>
-    </div>
-    <div class="kl-group">
-      <div class="kl-group-hdr" style="color:#ff3131">
-        <span>YEARLY</span>
-        <div class="kl-row">
-          <label><input type="checkbox" id="kl-yearly-open" checked onchange="redrawKL()"> OPEN</label>
-          <label><input type="checkbox" id="kl-yearly-hl"         onchange="redrawKL()"> H/L</label>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- CHART CANVAS -->
-<div class="chart-body">
-  <div id="chart-container"></div>
-</div>
-```
-
-  </div>
-
-  <!-- FOOTER -->
-
-  <div class="footer">
-    <div>LAST UPDATE <span style="color:var(--green)" id="last-update">—</span> &nbsp;·&nbsp; NEXT REFRESH <span class="countdown" id="countdown">60s</span></div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <span id="data-status" style="color:var(--text-dim);font-size:10px;letter-spacing:1px">FETCHING DATA...</span>
-      <button id="install-btn" onclick="installApp()" class="btn-refresh" style="display:none;border-color:var(--amber);color:var(--amber)">[ + HOME SCREEN ]</button>
-      <button class="btn-refresh" onclick="refreshAll()">[ REFRESH ]</button>
+    <div class="chart-body">
+      <div id="chart-container"></div>
     </div>
   </div>
 
@@ -564,23 +440,11 @@ function switchChartMode(mode){
 }
 
 // ── TICKER ────────────────────────────────────────────
-function buildTicker(price){
-  const items=[
-    `BTCUSDT <span>${price?fmt(price):'—'}</span>`,
-    `TOLERANCE <span>${(CONFIG.tolerance*100).toFixed(2)}%</span>`,
-    `LEVELS <span>±27 ±45 ±60 ±72 ±78 EQ</span>`,
-    `HTF ANCHOR <span>${htfAnchorTs?htfAnchorTs.toUTCString().slice(5,11)+' 23:00':'—'}</span>`,
-    `LTF ANCHOR <span>${ltfAnchorTs?ltfAnchorTs.toUTCString().slice(5,11)+' 09:00':'—'}</span>`,
-    `RATIO <span>73.3458</span>`,
-  ].filter(Boolean).map(i=>`<span class="ticker-item">${i}</span>`).join('');
-  document.getElementById('ticker-inner').innerHTML=items+items;
-}
 
 // ── MAIN REFRESH ──────────────────────────────────────
 let cdVal=CONFIG.refreshSec, cdTimer, liveTimer=null;
 
 async function refreshAll(){
-  document.getElementById('data-status').textContent='FETCHING...';
   htfAnchorTs=getSunday2300();
   ltfAnchorTs=getToday0900();
   const now=new Date();
@@ -591,26 +455,20 @@ async function refreshAll(){
 
   const cp=price||95000;
 
-  document.getElementById('hdr-price').textContent      = price?fmt(price):'—';
-  document.getElementById('hdr-htf-anchor').textContent = htfAnchorTs.toUTCString().slice(5,11)+' 23:00';
-  document.getElementById('hdr-ltf-anchor').textContent = ltfAnchorTs.toUTCString().slice(5,11)+' 09:00';
+  document.getElementById('hdr-price').textContent = price?fmt(price):'—';
 
   const htfChanged = htfOpen !== htfAnchorOpen;
   const ltfChanged = ltfOpen !== ltfAnchorOpen;
   htfAnchorOpen = htfOpen || cp;
   ltfAnchorOpen = ltfOpen || cp;
   if(htfChanged || ltfChanged) reloadChartLevels();
-  buildTicker(price);
 
-  document.getElementById('last-update').textContent = new Date().toUTCString().slice(17,25)+' UTC';
-  document.getElementById('data-status').textContent = price?'LIVE DATA // BINANCE':'OFFLINE MODE';
 
   clearInterval(cdTimer);
   cdVal=CONFIG.refreshSec;
   cdTimer=setInterval(()=>{
     cdVal--;
-    document.getElementById('countdown').textContent=cdVal+'s';
-    if(cdVal<=0){clearInterval(cdTimer);refreshAll();}
+      if(cdVal<=0){clearInterval(cdTimer);refreshAll();}
   },1000);
 }
 
