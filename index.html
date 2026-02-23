@@ -140,8 +140,10 @@
       <span class="panel-tag" id="chart-mode-tag">HTF // H1 // BINANCE</span>
     </div>
     <div class="chart-controls">
-      <button class="tf-btn active" id="btn-htf" onclick="switchChartMode('HTF')">HTF</button>
-      <button class="tf-btn"        id="btn-ltf" onclick="switchChartMode('LTF')">LTF</button>
+      <button class="tf-btn active" id="btn-htf"       onclick="switchChartMode('HTF')">HTF</button>
+      <button class="tf-btn"        id="btn-ltf-std"   onclick="switchChartMode('LTF_STD')">LTF // STD</button>
+      <button class="tf-btn"        id="btn-ltf-ratio" onclick="switchChartMode('LTF_RATIO')">LTF // RATIO</button>
+      <button class="tf-btn"        id="btn-ltf-both"  onclick="switchChartMode('LTF_BOTH')">LTF // BOTH</button>
     </div>
 
 ```
@@ -342,13 +344,36 @@ function drawChartLevelSet(candles,anchorTs,anchorOpen,type,ratio){
 
 function reloadChartLevels(){
   clearChartLevels();
-  // Always draw both HTF fans + LTF fan
-  if(htfAnchorOpen){
-    drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
-    drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+  const m = chartMode;
+  if(m==='HTF'){
+    // H1 candles — draw both HTF fans + LTF overlay
+    if(htfAnchorOpen){
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+    }
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
+  } else if(m==='LTF_STD'){
+    // M1 candles — standard HTF fan only
+    if(htfAnchorOpen)
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
+  } else if(m==='LTF_RATIO'){
+    // M1 candles — ratio HTF fan only
+    if(htfAnchorOpen)
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
+  } else if(m==='LTF_BOTH'){
+    // M1 candles — both HTF fans
+    if(htfAnchorOpen){
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+    }
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
   }
-  if(ltfAnchorOpen)
-    drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
 }
 
 async function loadChartMode(mode){
@@ -363,12 +388,14 @@ async function loadChartMode(mode){
 
 function switchChartMode(mode){
   chartMode=mode;
-  ['htf','ltf'].forEach(id=>{
+  ['htf','ltf-std','ltf-ratio','ltf-both'].forEach(id=>{
     document.getElementById('btn-'+id).classList.remove('active');
   });
-  const map={'HTF':'htf','LTF':'ltf'};
+  const map={'HTF':'htf','LTF_STD':'ltf-std','LTF_RATIO':'ltf-ratio','LTF_BOTH':'ltf-both'};
   if(map[mode]) document.getElementById('btn-'+map[mode]).classList.add('active');
   loadChartMode(mode);
+  // Start live updates on M1 modes, stop on HTF
+  if(mode==='HTF'){ stopLiveCandle(); } else { startLiveCandle(); }
 }
 
 // ── CONFLUENCE ────────────────────────────────────────
@@ -509,7 +536,7 @@ function buildTicker(price,stats){
 }
 
 // ── MAIN REFRESH ──────────────────────────────────────
-let cdVal=CONFIG.refreshSec, cdTimer;
+let cdVal=CONFIG.refreshSec, cdTimer, liveTimer=null;
 
 async function refreshAll(){
   document.getElementById('data-status').textContent='FETCHING...';
@@ -551,6 +578,37 @@ async function refreshAll(){
     document.getElementById('countdown').textContent=cdVal+'s';
     if(cdVal<=0){clearInterval(cdTimer);refreshAll();}
   },1000);
+}
+
+
+// ── LIVE M1 CANDLE UPDATE (BTC — Binance, ~1s) ────────
+async function fetchLastCandle(){
+  try{
+    const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${CONFIG.symbol}&interval=1m&limit=2`);
+    const d = await r.json();
+    if(!d||!d.length) return null;
+    const k = d[d.length-1];
+    return {time:k[0]/1000, open:parseFloat(k[1]), high:parseFloat(k[2]), low:parseFloat(k[3]), close:parseFloat(k[4])};
+  }catch(e){return null;}
+}
+function startLiveCandle(){
+  stopLiveCandle();
+  liveTimer = setInterval(async ()=>{
+    const candle = await fetchLastCandle();
+    if(!candle || !candleSeries) return;
+    // Update or append last candle
+    try{ candleSeries.update(candle); }catch(e){}
+    // Keep chartCandles in sync
+    if(chartCandles.length && chartCandles[chartCandles.length-1].time === candle.time){
+      chartCandles[chartCandles.length-1] = candle;
+    } else if(candle.time > (chartCandles[chartCandles.length-1]?.time||0)){
+      chartCandles.push(candle);
+    }
+  }, 1000);
+}
+
+function stopLiveCandle(){
+  if(liveTimer){ clearInterval(liveTimer); liveTimer=null; }
 }
 
 // ── PWA ───────────────────────────────────────────────
