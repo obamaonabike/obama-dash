@@ -142,141 +142,6 @@ touch-action:none;
 
 </div>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-html {
-background:#050f05;
-height:100%; height:-webkit-fill-available;
-}
-
-body {
-width:100%;
-height:100%; height:-webkit-fill-available;
-min-height:100dvh;
-overflow:hidden;
-background:#050f05;
-color:#00cc33;
-font-family:‘Share Tech Mono’, monospace;
-font-size:11px;
-letter-spacing:0.5px;
-cursor:crosshair;
--webkit-text-size-adjust:100%;
-}
-
-#app {
-display:flex; flex-direction:column;
-width:100%; height:100%;
-min-height:100dvh;
-background:#050f05;
-overflow:hidden;
-touch-action:none;
-}
-
-/* ── HEADER / FOOTER — Image 1 reference ── */
-.bar {
-flex-shrink:0;
-display:flex; align-items:center; justify-content:space-between;
-padding:0 10px;
-height:24px;
-background:#070d07;
-color:#006618;
-font-size:10px;
-letter-spacing:2px;
-text-transform:uppercase;
-}
-.bar-top    { border-bottom:1px solid #0f2a0f; }
-.bar-bottom { border-top:1px solid #0f2a0f; }
-
-.bar-title {
-font-family:‘Share Tech Mono’, monospace;
-font-size:11px; letter-spacing:4px;
-color:#00cc33;
-text-transform:uppercase;
-white-space:nowrap;
-}
-.price-display {
-color:#00cc33;
-font-size:11px; letter-spacing:1px;
-}
-.status-dot {
-width:5px; height:5px; border-radius:50%;
-background:#00cc33; flex-shrink:0;
-animation:pulse 2s infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
-
-/* ── MODE BUTTONS — Image 1 reference ── */
-.chart-controls {
-flex-shrink:0;
-display:flex; align-items:stretch;
-height:22px;
-background:#070d07;
-border-bottom:1px solid #0f2a0f;
-}
-.tf-btn {
-background:#070d07;
-border:none; border-right:1px solid #0f2a0f;
-color:#003a10;
-font-family:‘Share Tech Mono’, monospace;
-font-size:10px; letter-spacing:2px;
-text-transform:uppercase;
-padding:0 12px; cursor:pointer;
-transition:color 0.1s, background 0.1s;
-position:relative;
-}
-.tf-btn.active {
-color:#00cc33;
-background:#0a160a;
-border-bottom:1px solid #00cc33;
-}
-
-/* ── CHART ── */
-.chart-shell {
-flex:1; min-height:0;
-display:flex; flex-direction:column;
-background:#050f05;
-}
-.chart-body {
-flex:1; position:relative;
-min-height:0; overflow:hidden;
-background:#050f05;
-touch-action:none;
-}
-#chart-container { width:100%; height:100%; background:#050f05; }
-
-</style>
-</head>
-<body>
-<div id="app">
-
-  <div class="bar bar-top" style="background:#070d07">
-    <span class="bar-title">ObamaDash</span>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="price-display" id="hdr-price">—</span>
-      <div class="status-dot"></div>
-    </div>
-  </div>
-
-  <div class="chart-shell">
-    <div class="chart-controls" style="background:#070d07">
-      <button class="tf-btn active" id="btn-ltf-ratio" onclick="switchChartMode('LTF_RATIO')">M1 RATIO</button>
-      <button class="tf-btn"        id="btn-ltf-both"  onclick="switchChartMode('LTF_BOTH')">M1 BOTH</button>
-    </div>
-    <div class="chart-body">
-      <div id="chart-container"></div>
-    </div>
-  </div>
-
-  <div class="bar bar-bottom" style="background:#070d07">
-    <span id="bar-status">FETCHING...</span>
-    <span id="bar-time">—</span>
-  </div>
-
-</div>
-
 <script>
 const CONFIG = {
   symbol:'BTCUSDT', htfRatio:73.3458,
@@ -336,10 +201,10 @@ function getLevelDefs(type){
     {label:'-45', deg:-45, color:'#ff00ff', width:1},
     {label:'+60', deg:60,  color:'#ffb300', width:1},
     {label:'-60', deg:-60, color:'#ff00ff', width:1},
-    {label:'+72', deg:72,  color:'#ffdd00', width:2},
-    {label:'-72', deg:-72, color:'#ffdd00', width:2},
-    {label:'+78', deg:78,  color:'#ffdd00', width:2},
-    {label:'-78', deg:-78, color:'#ffdd00', width:2},
+    {label:'+72', deg:72,  color:'#ffdd00', width:1},
+    {label:'-72', deg:-72, color:'#ffdd00', width:1},
+    {label:'+78', deg:78,  color:'#ffdd00', width:1},
+    {label:'-78', deg:-78, color:'#ffdd00', width:1},
   ];
   return [
     {label:'EQ',  deg:0,   color:h?'#ffffff':'#aaaaaa', width:1},
@@ -349,10 +214,10 @@ function getLevelDefs(type){
     {label:'-45', deg:-45, color:h?'#ff3131':'#cc2222', width:1},
     {label:'+60', deg:60,  color:h?'#00ff41':'#00cc33', width:1},
     {label:'-60', deg:-60, color:h?'#ff3131':'#cc2222', width:1},
-    {label:'+72', deg:72,  color:h?'#ffb300':'#dd9900', width:2},
-    {label:'-72', deg:-72, color:h?'#ffb300':'#dd9900', width:2},
-    {label:'+78', deg:78,  color:h?'#ffb300':'#dd9900', width:2},
-    {label:'-78', deg:-78, color:h?'#ffb300':'#dd9900', width:2},
+    {label:'+72', deg:72,  color:h?'#ffb300':'#dd9900', width:1},
+    {label:'-72', deg:-72, color:h?'#ffb300':'#dd9900', width:1},
+    {label:'+78', deg:78,  color:h?'#ffb300':'#dd9900', width:1},
+    {label:'-78', deg:-78, color:h?'#ffb300':'#dd9900', width:1},
   ];
 }
 
