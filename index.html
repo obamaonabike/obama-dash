@@ -198,32 +198,32 @@ function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:1,maximum
 
 function getLevelDefs(type){
   const isRatio = type==='HTF_R';
+  const h = type==='HTF';
   if(isRatio) return [
-      {label:'EQ',  deg:0,   color:h?'#ffffff':'#aaaaaa', width:1},
+    {label:'EQ',  deg:0,   color:'#ffffff', width:1},
+    {label:'+27', deg:27,  color:'#ffb300', width:1},
+    {label:'-27', deg:-27, color:'#ff00ff', width:1},
+    {label:'+45', deg:45,  color:'#ffb300', width:1},
+    {label:'-45', deg:-45, color:'#ff00ff', width:1},
+    {label:'+60', deg:60,  color:'#ffb300', width:1},
+    {label:'-60', deg:-60, color:'#ff00ff', width:1},
+    {label:'+72', deg:72,  color:'#ffdd00', width:2},
+    {label:'-72', deg:-72, color:'#ffdd00', width:2},
+    {label:'+78', deg:78,  color:'#ffdd00', width:2},
+    {label:'-78', deg:-78, color:'#ffdd00', width:2},
+  ];
+  return [
+    {label:'EQ',  deg:0,   color:h?'#ffffff':'#aaaaaa', width:1},
     {label:'+27', deg:27,  color:h?'#00ff41':'#00cc33', width:1},
     {label:'-27', deg:-27, color:h?'#ff3131':'#cc2222', width:1},
     {label:'+45', deg:45,  color:h?'#00ff41':'#00cc33', width:1},
     {label:'-45', deg:-45, color:h?'#ff3131':'#cc2222', width:1},
     {label:'+60', deg:60,  color:h?'#00ff41':'#00cc33', width:1},
     {label:'-60', deg:-60, color:h?'#ff3131':'#cc2222', width:1},
-    {label:'+72', deg:72,  color:h?'#ffb300':'#dd9900', width:1},
-    {label:'-72', deg:-72, color:h?'#ffb300':'#dd9900', width:1},
-    {label:'+78', deg:78,  color:h?'#ffb300':'#dd9900', width:1},
-    {label:'-78', deg:-78, color:h?'#ffb300':'#dd9900', width:1},
-  ];
-  const h = type==='HTF';
-  return [
-    {label:'EQ',  deg:0,   color:h?'#00ff41':'#00992a', width:1},
-    {label:'+27', deg:27,  color:h?'#00ee3c':'#00882a', width:1},
-    {label:'-27', deg:-27, color:h?'#00ee3c':'#00882a', width:1},
-    {label:'+45', deg:45,  color:h?'#00cc33':'#007722', width:1},
-    {label:'-45', deg:-45, color:h?'#00cc33':'#007722', width:1},
-    {label:'+60', deg:60,  color:h?'#00aa2a':'#006618', width:1},
-    {label:'-60', deg:-60, color:h?'#00aa2a':'#006618', width:1},
-    {label:'+72', deg:72,  color:h?'#00ff41':'#00882a', width:2},
-    {label:'-72', deg:-72, color:h?'#00ff41':'#00882a', width:2},
-    {label:'+78', deg:78,  color:h?'#00ff41':'#00882a', width:2},
-    {label:'-78', deg:-78, color:h?'#00ff41':'#00882a', width:2},
+    {label:'+72', deg:72,  color:h?'#ffb300':'#dd9900', width:2},
+    {label:'-72', deg:-72, color:h?'#ffb300':'#dd9900', width:2},
+    {label:'+78', deg:78,  color:h?'#ffb300':'#dd9900', width:2},
+    {label:'-78', deg:-78, color:h?'#ffb300':'#dd9900', width:2},
   ];
 }
 
@@ -380,11 +380,12 @@ async function refreshAll(){
   document.getElementById('bar-status').textContent = price?'LIVE // BINANCE':'OFFLINE';
   document.getElementById('bar-time').textContent = new Date().toUTCString().slice(5,22)+' UTC';
 
-  const htfChanged = htfOpen !== htfAnchorOpen;
-  const ltfChanged = ltfOpen !== ltfAnchorOpen;
+  const prevHtf = htfAnchorOpen;
+  const prevLtf = ltfAnchorOpen;
   htfAnchorOpen = htfOpen || cp;
   ltfAnchorOpen = ltfOpen || cp;
-  if(htfChanged || ltfChanged) reloadChartLevels();
+  // Always redraw on first load (prevHtf undefined), otherwise only if anchor changed
+  if(!prevHtf || !prevLtf || htfOpen !== prevHtf || ltfOpen !== prevLtf) reloadChartLevels();
 
 }
 
@@ -421,7 +422,6 @@ function stopLiveCandle(){
 // ── BOOT ──────────────────────────────────────────────
 window.addEventListener('load',async()=>{
   buildChart();
-  // Force resize after layout settles — critical for iOS Safari
   requestAnimationFrame(()=>{ setTimeout(()=>window.dispatchEvent(new Event('resize')),150); });
   htfAnchorTs=getSunday2300();
   ltfAnchorTs=getToday0900();
