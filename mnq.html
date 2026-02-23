@@ -614,20 +614,9 @@ async function refreshAll(){
 }
 
 // ── PWA ───────────────────────────────────────────────
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-}
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault(); deferredPrompt=e;
-  const btn=document.getElementById('install-btn');
-  if(btn) btn.style.display='flex';
-});
-function installApp(){
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('install-btn').style.display='none';});
-}
+// Service worker disabled on MNQ page
+// PWA install disabled on MNQ page
+function installApp(){}
 
 // ── BOOT ──────────────────────────────────────────────
 window.addEventListener('load',async()=>{
