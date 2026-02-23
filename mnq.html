@@ -12,12 +12,12 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>OBAMA DASH // MNQ</title>
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js" crossorigin="anonymous"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
   :root {
     --green:#00ff41;--green-dim:#00aa2a;--green-dark:#003a0f;
-    --red:#ff3131;--amber:#ffb300;
+    --red:#ff3131;--amber:#ffb300;--magenta:#ff00ff;
     --bg:#020c02;--panel:#040f04;--border:#0a2a0a;--text:#00cc33;--text-dim:#008820;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -116,6 +116,18 @@
 </head>
 <body>
 
+<div id="err-overlay" style="display:none;position:fixed;top:0;left:0;right:0;background:#1a0000;color:#ff3131;font-family:monospace;font-size:12px;padding:12px 16px;z-index:99999;border-bottom:1px solid #ff3131;white-space:pre-wrap;max-height:40vh;overflow:auto"></div>
+<script>
+window.onerror = function(msg, src, line, col, err){
+  const el = document.getElementById('err-overlay');
+  if(el){ el.style.display='block'; el.textContent += '\nERROR: '+msg+'\n  at '+src+':'+line+':'+col+(err?'\n  '+err.stack:''); }
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e){
+  const el = document.getElementById('err-overlay');
+  if(el){ el.style.display='block'; el.textContent += '\nUNHANDLED REJECTION: '+(e.reason?.stack||e.reason||e); }
+});
+</script>
 <div class="header">
   <div class="header-title">OBAMA<span> // </span>DASH <span style="font-size:14px;letter-spacing:2px">// TERMINAL</span></div>
   <nav style="display:flex;gap:12px;align-items:center"><a href="index.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">BTC</a><a href="mnq.html" style="color:var(--green);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--green-dim);padding:3px 10px">MNQ</a></nav>
@@ -220,23 +232,22 @@ function getToday0900(){
   return new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate(),9,0,0));
 }
 
-// ── FETCH (Yahoo Finance via CORS proxies) ─────────────
+// ── FETCH (Yahoo Finance + CORS proxy chain) ──────────
 const YF_SYM  = 'NQ=F';
-const YF_URL  = (params) => `https://query1.finance.yahoo.com/v8/finance/chart/${YF_SYM}?${params}`;
+const YF_URL  = (p) => `https://query1.finance.yahoo.com/v8/finance/chart/${YF_SYM}?${p}`;
 const PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
 ];
 
 async function yfFetch(params){
   const url = YF_URL(params);
-  for(const proxy of PROXIES){
+  for(const px of PROXIES){
     try{
-      const r = await fetch(proxy(url));
+      const r = await fetch(px(url));
       if(!r.ok) continue;
-      const text = await r.text();
-      const d = JSON.parse(text);
+      const d = JSON.parse(await r.text());
       if(d?.chart?.result?.[0]) return d;
     }catch(e){ continue; }
   }
@@ -247,8 +258,8 @@ async function fetchCurrentPrice(){
   try{
     const d = await yfFetch('interval=1m&range=1d');
     if(!d) return null;
-    const closes = d.chart.result[0].indicators.quote[0].close;
-    for(let i=closes.length-1;i>=0;i--){ if(closes[i]!=null) return closes[i]; }
+    const cl = d.chart.result[0].indicators.quote[0].close;
+    for(let i=cl.length-1;i>=0;i--){ if(cl[i]!=null) return cl[i]; }
     return null;
   }catch(e){return null;}
 }
@@ -256,11 +267,11 @@ async function fetchAnchorOpen(interval,ts){
   try{
     const yfi = interval==='1h'?'60m':'1m';
     const s   = Math.floor(ts.getTime()/1000);
-    const e   = s + (interval==='1h'?7200:120);
+    const e   = s+(interval==='1h'?7200:120);
     const d   = await yfFetch(`interval=${yfi}&period1=${s}&period2=${e}`);
     if(!d) return null;
-    const opens = d.chart.result[0].indicators.quote[0].open;
-    for(let i=0;i<opens.length;i++){ if(opens[i]!=null) return opens[i]; }
+    const op = d.chart.result[0].indicators.quote[0].open;
+    for(let i=0;i<op.length;i++){ if(op[i]!=null) return op[i]; }
     return null;
   }catch(e){return null;}
 }
@@ -268,13 +279,10 @@ async function fetch24hChange(){
   try{
     const d = await yfFetch('interval=1d&range=5d');
     if(!d) return null;
-    const q  = d.chart.result[0];
-    const cl = q.indicators.quote[0].close;
-    const h  = q.indicators.quote[0].high;
-    const l  = q.indicators.quote[0].low;
-    const v  = q.indicators.quote[0].volume;
-    const last=cl[cl.length-1], prev=cl[cl.length-2]||last;
-    return{change:((last-prev)/prev)*100,high:h[h.length-1],low:l[l.length-1],vol:v[v.length-1]};
+    const q=d.chart.result[0], qt=q.indicators.quote[0];
+    const cl=qt.close, last=cl[cl.length-1], prev=cl[cl.length-2]||last;
+    return{change:((last-prev)/prev)*100, high:qt.high[qt.high.length-1],
+           low:qt.low[qt.low.length-1], vol:qt.volume[qt.volume.length-1]};
   }catch(e){return null;}
 }
 async function fetchCandles(interval,limit){
@@ -283,13 +291,11 @@ async function fetchCandles(interval,limit){
     const range = interval==='1h'?'30d':'2d';
     const d     = await yfFetch(`interval=${yfi}&range=${range}`);
     if(!d) return [];
-    const q    = d.chart.result[0];
-    const ts   = q.timestamp;
-    const ohlc = q.indicators.quote[0];
-    const out  = [];
+    const q=d.chart.result[0], ts=q.timestamp, ohlc=q.indicators.quote[0];
+    const out=[];
     for(let i=0;i<ts.length;i++){
       if(ohlc.close[i]==null) continue;
-      out.push({time:ts[i], open:ohlc.open[i], high:ohlc.high[i], low:ohlc.low[i], close:ohlc.close[i]});
+      out.push({time:ts[i],open:ohlc.open[i],high:ohlc.high[i],low:ohlc.low[i],close:ohlc.close[i]});
     }
     return out.slice(-limit);
   }catch(e){return[];}
@@ -555,7 +561,7 @@ function buildTicker(price,stats){
     stats?`24H <span class="${stats.change>=0?'up':'dn'}">${stats.change>=0?'+':''}${stats.change.toFixed(2)}%</span>`:'',
     stats?`HIGH <span>${fmt(stats.high)}</span>`:'',
     stats?`LOW <span>${fmt(stats.low)}</span>`:'',
-    stats?`VOL <span>${stats.vol?stats.vol.toLocaleString():'—'}</span>`:'',
+    stats?`VOL <span>${stats.vol?Math.round(stats.vol).toLocaleString():'—'}</span>`:'',
     `TOLERANCE <span>${(CONFIG.tolerance*100).toFixed(2)}%</span>`,
     `LEVELS <span>±27 ±45 ±60 ±72 ±78 EQ</span>`,
   ].filter(Boolean).map(i=>`<span class="ticker-item">${i}</span>`).join('');
@@ -625,18 +631,136 @@ function installApp(){
 
 // ── BOOT ──────────────────────────────────────────────
 window.addEventListener('load',async()=>{
-  buildChart();
-  htfAnchorTs=getSunday2300();
-  ltfAnchorTs=getToday0900();
-  const [htfOpen,ltfOpen]=await Promise.all([
-    fetchAnchorOpen('1h',htfAnchorTs), fetchAnchorOpen('1m',ltfAnchorTs)
-  ]);
-  htfAnchorOpen=htfOpen;
-  ltfAnchorOpen=ltfOpen;
-  await loadChartMode('HTF');  // default to HTF view
-  await refreshAll();
-  setInterval(()=>loadChartMode(chartMode),300000);
+  try{
+    buildChart();
+    htfAnchorTs=getSunday2300();
+    ltfAnchorTs=getToday0900();
+    const [htfOpen,ltfOpen]=await Promise.all([
+      fetchAnchorOpen('1h',htfAnchorTs), fetchAnchorOpen('1m',ltfAnchorTs)
+    ]);
+    htfAnchorOpen=htfOpen;
+    ltfAnchorOpen=ltfOpen;
+    await loadChartMode('HTF');
+    await refreshAll();
+    setInterval(()=>loadChartMode(chartMode),300000);
+  }catch(bootErr){
+    const el=document.getElementById('err-overlay');
+    if(el){el.style.display='block';el.textContent='BOOT ERROR: '+bootErr.message+'\n'+(bootErr.stack||'');}
+    console.error('Boot error:',bootErr);
+  }
 });
+
+
+
+function getSVGCoords(e){
+  const r=overlay.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+
+function svgEl(tag,attrs){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+  overlay.appendChild(el);
+  return el;
+}
+
+function getPriceLabel(y){
+  try{
+    const h=overlay.getBoundingClientRect().height;
+    const pct=y/h;
+    // Estimate from candle data visible range
+    if(!chartCandles.length) return '';
+    const prices=chartCandles.map(c=>c.close);
+    const mn=Math.min(...prices), mx=Math.max(...prices);
+    const p=mx-pct*(mx-mn);
+    return p.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+  }catch(e){return '';}
+}
+
+overlay.addEventListener('mousedown',e=>{
+  if(drawTool==='none') return;
+  const {x,y}=getSVGCoords(e);
+
+  if(drawTool==='hline'){
+    const line=svgEl('line',{x1:0,y1:y,x2:'100%',y2:y,stroke:DC_GREEN,'stroke-width':1,'stroke-dasharray':'6,3',opacity:0.85});
+    const lbl=svgEl('text',{x:8,y:y-4,fill:DC_GREEN,'font-family':'Share Tech Mono,monospace','font-size':10,opacity:0.9});
+    lbl.textContent=getPriceLabel(y);
+    drawings.push({els:[line,lbl]});
+
+  } else if(drawTool==='vline'){
+    const line=svgEl('line',{x1:x,y1:0,x2:x,y2:'100%',stroke:'#ffb300','stroke-width':1,'stroke-dasharray':'6,3',opacity:0.85});
+    drawings.push({els:[line]});
+
+  } else if(drawTool==='trend'){
+    if(!drawState){
+      const line=svgEl('line',{x1:x,y1:y,x2:x,y2:y,stroke:DC_AMBER,'stroke-width':1.5,opacity:0.9});
+      const dot=svgEl('circle',{cx:x,cy:y,r:3,fill:DC_AMBER,opacity:0.9});
+      drawState={x1:x,y1:y,line,dot};
+    } else {
+      drawState.line.setAttribute('x2',x);
+      drawState.line.setAttribute('y2',y);
+      const dot2=svgEl('circle',{cx:x,cy:y,r:3,fill:DC_AMBER,opacity:0.9});
+      drawings.push({els:[drawState.line,drawState.dot,dot2]});
+      drawState=null;
+    }
+
+  } else if(drawTool==='rect'){
+    const rect=svgEl('rect',{x,y,width:0,height:0,fill:'rgba(0,255,65,0.05)',stroke:DC_GREEN,'stroke-width':1,opacity:0.85});
+    drawState={x0:x,y0:y,rect};
+  }
+});
+
+overlay.addEventListener('mousemove',e=>{
+  if(!drawState) return;
+  const {x,y}=getSVGCoords(e);
+  if(drawTool==='trend'&&drawState.line){
+    drawState.line.setAttribute('x2',x);
+    drawState.line.setAttribute('y2',y);
+  } else if(drawTool==='rect'&&drawState.rect){
+    drawState.rect.setAttribute('x',Math.min(x,drawState.x0));
+    drawState.rect.setAttribute('y',Math.min(y,drawState.y0));
+    drawState.rect.setAttribute('width',Math.abs(x-drawState.x0));
+    drawState.rect.setAttribute('height',Math.abs(y-drawState.y0));
+  }
+});
+
+overlay.addEventListener('mouseup',e=>{
+  if(drawTool==='rect'&&drawState){
+    drawings.push({els:[drawState.rect]});
+    drawState=null;
+  }
+});
+
+// Touch support (iPad)
+function touchToMouse(type,touch){
+  overlay.dispatchEvent(new MouseEvent(type,{clientX:touch.clientX,clientY:touch.clientY,bubbles:true}));
+}
+overlay.addEventListener('touchstart',e=>{e.preventDefault();touchToMouse('mousedown',e.touches[0]);},{passive:false});
+overlay.addEventListener('touchmove', e=>{e.preventDefault();touchToMouse('mousemove',e.touches[0]);},{passive:false});
+overlay.addEventListener('touchend',  e=>{
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  touchToMouse('mouseup',t);
+  if(drawTool==='hline'||drawTool==='trend') touchToMouse('mousedown',t);
+},{passive:false});
+
+function undoDraw(){
+  if(drawState){
+    ['line','dot','rect'].forEach(k=>{if(drawState[k]) drawState[k].remove();});
+    drawState=null; return;
+  }
+  const last=drawings.pop();
+  if(last) last.els.forEach(el=>el.remove());
+}
+
+function clearDrawings(){
+  drawings.forEach(d=>d.els.forEach(el=>el.remove()));
+  drawings=[];
+  if(drawState){
+    ['line','dot','rect'].forEach(k=>{if(drawState[k]) drawState[k].remove();});
+    drawState=null;
+  }
+}
 
 </script>
 
