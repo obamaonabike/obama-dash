@@ -112,6 +112,19 @@
 .btn-refresh:hover{border-color:var(–green);color:var(–green);background:rgba(0,255,65,0.05);box-shadow:0 0 8px rgba(0,255,65,0.2);}
 .countdown{font-size:10px;color:var(–text-dim);letter-spacing:1px;}
 
+/* KEY LEVELS */
+.kl-btn{background:var(–panel);border:none;border-left:1px solid var(–border);color:var(–text-dim);font-family:‘Share Tech Mono’,monospace;font-size:11px;padding:5px 12px;cursor:pointer;letter-spacing:1px;transition:all 0.15s;margin-left:auto;}
+.kl-btn:hover{background:var(–green-dark);color:var(–green);}
+.kl-btn.active{background:var(–green-dark);color:var(–green);border-bottom:2px solid var(–green);}
+.kl-panel{position:absolute;top:32px;right:0;width:280px;background:#0a1a0a;border:1px solid var(–border);z-index:50;display:none;max-height:420px;overflow-y:auto;}
+.kl-panel.open{display:block;}
+.kl-group{border-bottom:1px solid var(–border);}
+.kl-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;font-size:10px;letter-spacing:2px;}
+.kl-group-hdr:hover{background:rgba(0,255,65,0.04);}
+.kl-row{display:flex;align-items:center;justify-content:space-between;padding:4px 10px 4px 20px;font-size:10px;color:var(–text-dim);}
+.kl-row label{display:flex;align-items:center;gap:6px;cursor:pointer;letter-spacing:1px;}
+.kl-row input[type=checkbox]{accent-color:var(–green);cursor:pointer;}
+
 </style>
 </head>
 <body>
@@ -130,7 +143,7 @@ window.addEventListener('unhandledrejection', function(e){
 </script>
 <div class="header">
   <div class="header-title">OBAMA<span> // </span>DASH <span style="font-size:14px;letter-spacing:2px">// TERMINAL</span></div>
-  <nav style="display:flex;gap:12px;align-items:center"><a href="index.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">BTC</a><a href="mnq.html" style="color:var(--green);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--green-dim);padding:3px 10px">MNQ</a></nav>
+  <nav style="display:flex;gap:12px;align-items:center"><a href="index.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">BTC</a><a href="mnq.html" style="color:var(--green);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--green-dim);padding:3px 10px">MNQ</a><a href="chart.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">CHART</a></nav>
   <div class="header-meta">
     <div class="meta-item"><div class="meta-label">Asset</div><div class="meta-value" id="hdr-symbol">MNQ</div></div>
     <div class="meta-item"><div class="meta-label">Last Price</div><div class="meta-value" id="hdr-price">—</div></div>
@@ -151,11 +164,51 @@ window.addEventListener('unhandledrejection', function(e){
       <span class="panel-title">LIVE CHART</span>
       <span class="panel-tag" id="chart-mode-tag">HTF // H1 // BINANCE</span>
     </div>
-    <div class="chart-controls">
+    <div class="chart-controls" style="position:relative">
       <button class="tf-btn active" id="btn-htf"       onclick="switchChartMode('HTF')">HTF</button>
       <button class="tf-btn"        id="btn-ltf-std"   onclick="switchChartMode('LTF_STD')">LTF // STD</button>
       <button class="tf-btn"        id="btn-ltf-ratio" onclick="switchChartMode('LTF_RATIO')">LTF // RATIO</button>
       <button class="tf-btn"        id="btn-ltf-both"  onclick="switchChartMode('LTF_BOTH')">LTF // BOTH</button>
+      <button class="kl-btn" id="kl-toggle-btn" onclick="toggleKLPanel()">⊞ KEY LEVELS</button>
+      <!-- Key Levels Settings Panel -->
+      <div class="kl-panel" id="kl-panel">
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#08bcd4">
+            <span>DAILY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-daily-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-daily-hl" onchange="redrawKL()"> Prev H/L</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#fffcbc">
+            <span>WEEKLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-weekly-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-weekly-hl" checked onchange="redrawKL()"> Prev H/L</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-weekly-mid" checked onchange="redrawKL()"> Mid</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#08d48c">
+            <span>MONTHLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-monthly-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-monthly-hl" checked onchange="redrawKL()"> Prev H/L</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-monthly-mid" onchange="redrawKL()"> Mid</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#ff6666">
+            <span>QUARTERLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-quarterly-open" onchange="redrawKL()"> Open</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#ff3131">
+            <span>YEARLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-yearly-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-yearly-hl" onchange="redrawKL()"> H/L</label>
+          </div>
+        </div>
+      </div>
     </div>
 
 ```
@@ -695,6 +748,140 @@ function startLiveCandle(){
 
 function stopLiveCandle(){
   if(liveTimer){ clearInterval(liveTimer); liveTimer=null; }
+}
+
+
+// ── KEY LEVELS FETCH (Yahoo Finance) ──────────────────
+async function fetchKLData(){
+  try{
+    const [dData, wData, mData] = await Promise.all([
+      yfFetch('interval=1d&range=10d'),
+      yfFetch('interval=1wk&range=3mo'),
+      yfFetch('interval=1mo&range=2y'),
+    ]);
+    function parseYF(d, i=0){
+      const q=d.chart.result[0], qt=q.indicators.quote[0];
+      const n=qt.close.length-1-i;
+      return {open:qt.open[n],high:qt.high[n],low:qt.low[n],close:qt.close[n]};
+    }
+    // Yearly: accumulate monthly data from Jan 1
+    const nowYear = new Date().getUTCFullYear();
+    const mq = mData.chart.result[0];
+    const mts = mq.timestamp, mqt = mq.indicators.quote[0];
+    let yearOpen=null,yearHigh=null,yearLow=null;
+    for(let i=0;i<mts.length;i++){
+      if(new Date(mts[i]*1000).getUTCFullYear()===nowYear){
+        if(yearOpen===null) yearOpen=mqt.open[i];
+        if(mqt.high[i]!=null&&(yearHigh===null||mqt.high[i]>yearHigh)) yearHigh=mqt.high[i];
+        if(mqt.low[i]!=null&&(yearLow===null||mqt.low[i]<yearLow)) yearLow=mqt.low[i];
+      }
+    }
+    // Quarterly: find start of current quarter
+    const nowMonth = new Date().getUTCMonth();
+    const qStartMonth = Math.floor(nowMonth/3)*3;
+    let qOpen=null;
+    for(let i=0;i<mts.length;i++){
+      const d=new Date(mts[i]*1000);
+      if(d.getUTCFullYear()===nowYear && d.getUTCMonth()===qStartMonth){
+        qOpen=mqt.open[i]; break;
+      }
+    }
+    return {
+      daily:   { open:parseYF(dData,0).open },
+      prevDay: { high:parseYF(dData,1).high, low:parseYF(dData,1).low },
+      weekly:  { open:parseYF(wData,0).open },
+      prevWeek:{ high:parseYF(wData,1).high, low:parseYF(wData,1).low },
+      monthly: { open:parseYF(mData,0).open },
+      prevMonth:{ high:parseYF(mData,1).high, low:parseYF(mData,1).low },
+      quarterly:{ open:qOpen },
+      yearly:  { open:yearOpen, high:yearHigh, low:yearLow },
+    };
+  }catch(e){ console.error('KL fetch error',e); return null; }
+}
+// ── KEY LEVELS STATE & DRAW ────────────────────────────
+let klData     = null;
+let klLines    = [];   // price line objects on candleSeries
+let klEnabled  = false;
+
+function toggleKLPanel(){
+  const panel = document.getElementById('kl-panel');
+  const btn   = document.getElementById('kl-toggle-btn');
+  const open  = panel.classList.toggle('open');
+  btn.classList.toggle('active', open);
+  klEnabled = open;
+  if(open && !klData){ loadKL(); } else { redrawKL(); }
+}
+// Close panel if clicking outside
+document.addEventListener('click', e=>{
+  const panel=document.getElementById('kl-panel');
+  const btn=document.getElementById('kl-toggle-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    klEnabled=false;
+    clearKL();
+  }
+});
+
+function chk(id){ const el=document.getElementById(id); return el&&el.checked; }
+
+async function loadKL(){
+  document.getElementById('kl-toggle-btn').textContent='⊞ LOADING...';
+  klData = await fetchKLData();
+  document.getElementById('kl-toggle-btn').textContent='⊞ KEY LEVELS';
+  redrawKL();
+}
+
+function clearKL(){
+  if(!candleSeries) return;
+  for(const pl of klLines){ try{ candleSeries.removePriceLine(pl); }catch(e){} }
+  klLines=[];
+}
+
+function makePL(price, title, color, dashed=false){
+  if(!price||!candleSeries) return;
+  const pl = candleSeries.createPriceLine({
+    price, title,
+    color,
+    lineWidth: 1,
+    lineStyle: dashed ? 2 : 0,
+    axisLabelVisible: true,
+    axisLabelColor: color,
+  });
+  klLines.push(pl);
+}
+
+function redrawKL(){
+  clearKL();
+  if(!klData||!klEnabled) return;
+  const d=klData;
+
+  // Daily — cyan
+  if(chk('kl-daily-open'))   makePL(d.daily.open,   'DO',  '#08bcd4');
+  if(chk('kl-daily-hl'))     makePL(d.prevDay.high, 'PDH', '#08bcd4', true);
+  if(chk('kl-daily-hl'))     makePL(d.prevDay.low,  'PDL', '#08bcd4', true);
+
+  // Weekly — yellow
+  if(chk('kl-weekly-open'))  makePL(d.weekly.open,     'WO',  '#fffcbc');
+  if(chk('kl-weekly-hl'))    makePL(d.prevWeek.high,   'PWH', '#fffcbc', true);
+  if(chk('kl-weekly-hl'))    makePL(d.prevWeek.low,    'PWL', '#fffcbc', true);
+  if(chk('kl-weekly-mid')&&d.prevWeek.high&&d.prevWeek.low)
+    makePL((d.prevWeek.high+d.prevWeek.low)/2, 'PWM', '#fffcbc', true);
+
+  // Monthly — green
+  if(chk('kl-monthly-open')) makePL(d.monthly.open,    'MO',  '#08d48c');
+  if(chk('kl-monthly-hl'))   makePL(d.prevMonth.high,  'PMH', '#08d48c', true);
+  if(chk('kl-monthly-hl'))   makePL(d.prevMonth.low,   'PML', '#08d48c', true);
+  if(chk('kl-monthly-mid')&&d.prevMonth.high&&d.prevMonth.low)
+    makePL((d.prevMonth.high+d.prevMonth.low)/2,'PMM','#08d48c',true);
+
+  // Quarterly — red
+  if(chk('kl-quarterly-open')) makePL(d.quarterly.open, 'QO', '#ff6666');
+
+  // Yearly — bright red
+  if(chk('kl-yearly-open')) makePL(d.yearly.open,  'YO',  '#ff3131');
+  if(chk('kl-yearly-hl'))   makePL(d.yearly.high,  'CYH', '#ff3131', true);
+  if(chk('kl-yearly-hl'))   makePL(d.yearly.low,   'CYL', '#ff3131', true);
 }
 
 // ── PWA ───────────────────────────────────────────────
