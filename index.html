@@ -214,31 +214,31 @@ function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:1,maximum
 function getLevelDefs(type){
   const isRatio = type==='HTF_R';
   if(isRatio) return [
-    {label:'EQ',  deg:0,   color:'#ffffff', width:1},
-    {label:'+27', deg:27,  color:'#ffaa00', width:1},
-    {label:'-27', deg:-27, color:'#ff44ff', width:1},
-    {label:'+45', deg:45,  color:'#ffaa00', width:1},
-    {label:'-45', deg:-45, color:'#ff44ff', width:1},
-    {label:'+60', deg:60,  color:'#ffaa00', width:1},
-    {label:'-60', deg:-60, color:'#ff44ff', width:1},
-    {label:'+72', deg:72,  color:'#ffff00', width:2},
-    {label:'-72', deg:-72, color:'#ffff00', width:2},
-    {label:'+78', deg:78,  color:'#ffff00', width:2},
-    {label:'-78', deg:-78, color:'#ffff00', width:2},
+    {label:'EQ',  deg:0,   color:'#00ff41', width:1},
+    {label:'+27', deg:27,  color:'#00dd38', width:1},
+    {label:'-27', deg:-27, color:'#00dd38', width:1},
+    {label:'+45', deg:45,  color:'#00bb30', width:1},
+    {label:'-45', deg:-45, color:'#00bb30', width:1},
+    {label:'+60', deg:60,  color:'#009926', width:1},
+    {label:'-60', deg:-60, color:'#009926', width:1},
+    {label:'+72', deg:72,  color:'#00ff41', width:2},
+    {label:'-72', deg:-72, color:'#00ff41', width:2},
+    {label:'+78', deg:78,  color:'#00ff41', width:2},
+    {label:'-78', deg:-78, color:'#00ff41', width:2},
   ];
   const h = type==='HTF';
   return [
-    {label:'EQ',  deg:0,   color:h?'#ffffff':'#888888', width:1},
-    {label:'+27', deg:27,  color:h?'#00ff00':'#00cc00', width:1},
-    {label:'-27', deg:-27, color:h?'#ff2200':'#cc1a00', width:1},
-    {label:'+45', deg:45,  color:h?'#00ff00':'#00cc00', width:1},
-    {label:'-45', deg:-45, color:h?'#ff2200':'#cc1a00', width:1},
-    {label:'+60', deg:60,  color:h?'#00ff00':'#00cc00', width:1},
-    {label:'-60', deg:-60, color:h?'#ff2200':'#cc1a00', width:1},
-    {label:'+72', deg:72,  color:h?'#ffaa00':'#cc8800', width:2},
-    {label:'-72', deg:-72, color:h?'#ffaa00':'#cc8800', width:2},
-    {label:'+78', deg:78,  color:h?'#ffaa00':'#cc8800', width:2},
-    {label:'-78', deg:-78, color:h?'#ffaa00':'#cc8800', width:2},
+    {label:'EQ',  deg:0,   color:h?'#00ff41':'#00992a', width:1},
+    {label:'+27', deg:27,  color:h?'#00ee3c':'#00882a', width:1},
+    {label:'-27', deg:-27, color:h?'#00ee3c':'#00882a', width:1},
+    {label:'+45', deg:45,  color:h?'#00cc33':'#007722', width:1},
+    {label:'-45', deg:-45, color:h?'#00cc33':'#007722', width:1},
+    {label:'+60', deg:60,  color:h?'#00aa2a':'#006618', width:1},
+    {label:'-60', deg:-60, color:h?'#00aa2a':'#006618', width:1},
+    {label:'+72', deg:72,  color:h?'#00ff41':'#00882a', width:2},
+    {label:'-72', deg:-72, color:h?'#00ff41':'#00882a', width:2},
+    {label:'+78', deg:78,  color:h?'#00ff41':'#00882a', width:2},
+    {label:'-78', deg:-78, color:h?'#00ff41':'#00882a', width:2},
   ];
 }
 
@@ -254,7 +254,6 @@ function buildChart(){
       background:{color:'#000000'},
       textColor:'#00cc33',
       fontSize:10,
-      fontFamily:"'Share Tech Mono', monospace",
     },
     grid:{
       vertLines:{color:'#0c1e0c', style:0},
@@ -283,8 +282,6 @@ function buildChart(){
     borderDownColor:'#00ff41',
     wickUpColor:    '#00cc33',
     wickDownColor:  '#00cc33',
-    priceLineColor: '#00ff41',
-    priceLineWidth: 1,
   });
   function resize(){
     const nh=getH();
