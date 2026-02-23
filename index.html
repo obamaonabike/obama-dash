@@ -31,7 +31,9 @@
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 html, body {
-width:100%; height:100dvh;
+width:100%;
+height: 100dvh;
+height: -webkit-fill-available;
 overflow:hidden;
 background:var(–bg);
 color:var(–text);
@@ -45,7 +47,12 @@ content:’’; position:fixed; inset:0; z-index:9999; pointer-events:none;
 background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.10) 3px,rgba(0,0,0,0.10) 4px);
 }
 
-#app { display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+#app {
+display:flex; flex-direction:column;
+height: 100dvh;
+height: -webkit-fill-available;
+overflow:hidden;
+}
 
 /* ── TITLE BAR ── */
 .titlebar {
@@ -325,8 +332,8 @@ function getLevelDefs(type){
 function buildChart(){
   const container=document.getElementById('chart-container');
   const body=container.parentElement;
-  const h=Math.max(400,window.innerHeight*0.55);
-  body.style.height=h+'px'; container.style.height=h+'px';
+  function getH(){ return body.getBoundingClientRect().height||window.innerHeight-58; }
+  const h=getH();
   lwChart=LightweightCharts.createChart(container,{
     width:container.clientWidth, height:h,
     layout:{background:{color:'#050f05'},textColor:'#008822'},
@@ -346,11 +353,14 @@ function buildChart(){
     borderUpColor:'#00ff41',borderDownColor:'#ff3131',
     wickUpColor:'#00aa2a',wickDownColor:'#aa1111',
   });
-  window.addEventListener('resize',()=>{
-    const nh=Math.max(400,window.innerHeight*0.55);
-    body.style.height=nh+'px'; container.style.height=nh+'px';
+  function resize(){
+    const nh=getH();
     lwChart.applyOptions({width:container.clientWidth,height:nh});
-  });
+  }
+  let _rt;
+  function dResize(){ clearTimeout(_rt); _rt=setTimeout(resize,80); }
+  window.addEventListener('resize', dResize);
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', dResize);
 }
 
 function clearChartLevels(){
@@ -645,6 +655,8 @@ function installApp(){
 // ── BOOT ──────────────────────────────────────────────
 window.addEventListener('load',async()=>{
   buildChart();
+  // Force resize after layout settles — critical for iOS Safari
+  requestAnimationFrame(()=>{ setTimeout(()=>window.dispatchEvent(new Event('resize')),150); });
   htfAnchorTs=getSunday2300();
   ltfAnchorTs=getToday0900();
   const [htfOpen,ltfOpen]=await Promise.all([
