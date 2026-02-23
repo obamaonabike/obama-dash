@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -25,110 +26,111 @@
   body::after{content:'';position:fixed;inset:0;background:rgba(0,255,65,0.015);pointer-events:none;z-index:9998;animation:flicker 0.15s infinite;}
   @keyframes flicker{0%,94%,100%{opacity:1}93%{opacity:0.85}96%{opacity:0.9}}
 
-  /* HEADER */
-  .header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--panel);}
-  .header-title{font-family:'VT323',monospace;font-size:28px;color:var(--green);text-shadow:0 0 10px var(--green),0 0 20px var(--green-dim);letter-spacing:3px;}
-  .header-title span{color:var(--text-dim);}
-  .header-meta{display:flex;gap:24px;align-items:center;}
-  .meta-item{text-align:right;}
-  .meta-label{color:var(--text-dim);font-size:9px;letter-spacing:2px;text-transform:uppercase;}
-  .meta-value{color:var(--green);font-size:13px;text-shadow:0 0 6px var(--green-dim);}
-  .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;margin-right:5px;}
-  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--green);}50%{opacity:0.4;box-shadow:0 0 2px var(--green-dim);}}
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(–border);background:var(–panel);}
+.header-title{font-family:‘VT323’,monospace;font-size:28px;color:var(–green);text-shadow:0 0 10px var(–green),0 0 20px var(–green-dim);letter-spacing:3px;}
+.header-title span{color:var(–text-dim);}
+.header-meta{display:flex;gap:24px;align-items:center;}
+.meta-item{text-align:right;}
+.meta-label{color:var(–text-dim);font-size:9px;letter-spacing:2px;text-transform:uppercase;}
+.meta-value{color:var(–green);font-size:13px;text-shadow:0 0 6px var(–green-dim);}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(–green);box-shadow:0 0 8px var(–green);animation:pulse 2s infinite;margin-right:5px;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(–green);}50%{opacity:0.4;box-shadow:0 0 2px var(–green-dim);}}
 
-  /* TICKER */
-  .ticker{overflow:hidden;border-bottom:1px solid var(--border);background:var(--green-dark);padding:4px 0;}
-  .ticker-inner{display:flex;gap:40px;animation:scroll 40s linear infinite;white-space:nowrap;}
-  @keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
-  .ticker-item{font-size:11px;letter-spacing:1px;color:var(--text-dim);}
-  .ticker-item span{color:var(--green);margin:0 4px;}
-  .ticker-item .up{color:var(--green);}
-  .ticker-item .dn{color:var(--red);}
+/* TICKER */
+.ticker{overflow:hidden;border-bottom:1px solid var(–border);background:var(–green-dark);padding:4px 0;}
+.ticker-inner{display:flex;gap:40px;animation:scroll 40s linear infinite;white-space:nowrap;}
+@keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.ticker-item{font-size:11px;letter-spacing:1px;color:var(–text-dim);}
+.ticker-item span{color:var(–green);margin:0 4px;}
+.ticker-item .up{color:var(–green);}
+.ticker-item .dn{color:var(–red);}
 
-  /* MAIN LAYOUT */
-  .main-layout{display:grid;grid-template-columns:1fr 280px 280px;grid-template-rows:auto auto;gap:1px;background:var(--border);border:1px solid var(--border);margin:1px;}
-  .panel{background:var(--panel);}
-  .panel-chart{grid-row:1/3;display:flex;flex-direction:column;}
-  .panel-full{grid-column:1/4;}
+/* MAIN LAYOUT */
+.main-layout{display:grid;grid-template-columns:1fr 280px 280px;grid-template-rows:auto auto;gap:1px;background:var(–border);border:1px solid var(–border);margin:1px;}
+.panel{background:var(–panel);}
+.panel-chart{grid-row:1/3;display:flex;flex-direction:column;}
+.panel-full{grid-column:1/4;}
 
-  /* PANEL HEADER */
-  .panel-header{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid var(--border);background:var(--green-dark);flex-shrink:0;}
-  .panel-title{font-family:'VT323',monospace;font-size:15px;letter-spacing:3px;color:var(--green);text-shadow:0 0 8px var(--green-dim);}
-  .panel-tag{font-size:9px;color:var(--text-dim);letter-spacing:2px;}
+/* PANEL HEADER */
+.panel-header{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid var(–border);background:var(–green-dark);flex-shrink:0;}
+.panel-title{font-family:‘VT323’,monospace;font-size:15px;letter-spacing:3px;color:var(–green);text-shadow:0 0 8px var(–green-dim);}
+.panel-tag{font-size:9px;color:var(–text-dim);letter-spacing:2px;}
 
-  /* CHART CONTROLS */
-  .chart-controls{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;}
-  .tf-btn{background:var(--panel);border:none;border-right:1px solid var(--border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 14px;cursor:pointer;letter-spacing:2px;transition:all 0.15s;}
-  .tf-btn:hover{background:var(--green-dark);color:var(--green);}
-  .tf-btn.active{background:var(--green-dark);color:var(--green);border-bottom:2px solid var(--green);}
-  .chart-toggle{display:flex;align-items:center;gap:5px;padding:0 10px;font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:1px;border-right:1px solid var(--border);height:100%;}
-  .chart-toggle input{accent-color:var(--green);cursor:pointer;}
+/* CHART CONTROLS */
+.chart-controls{display:flex;align-items:center;gap:0;border-bottom:1px solid var(–border);flex-shrink:0;}
+.tf-btn{background:var(–panel);border:none;border-right:1px solid var(–border);color:var(–text-dim);font-family:‘Share Tech Mono’,monospace;font-size:10px;padding:5px 14px;cursor:pointer;letter-spacing:2px;transition:all 0.15s;}
+.tf-btn:hover{background:var(–green-dark);color:var(–green);}
+.tf-btn.active{background:var(–green-dark);color:var(–green);border-bottom:2px solid var(–green);}
+.chart-toggle{display:flex;align-items:center;gap:5px;padding:0 10px;font-size:9px;color:var(–text-dim);cursor:pointer;letter-spacing:1px;border-right:1px solid var(–border);height:100%;}
+.chart-toggle input{accent-color:var(–green);cursor:pointer;}
 
-  /* CHART CONTAINER */
-  .chart-body{flex:1;position:relative;min-height:400px;}
-  #chart-container{width:100%;height:100%;}
+/* CHART CONTAINER */
+.chart-body{flex:1;position:relative;min-height:400px;}
+#chart-container{width:100%;height:100%;}
 
-  /* TABLES */
-  table{width:100%;border-collapse:collapse;}
-  thead th{padding:5px 12px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--text-dim);border-bottom:1px solid var(--border);text-transform:uppercase;}
-  tbody tr{border-bottom:1px solid rgba(0,40,0,0.5);transition:background 0.15s;}
-  tbody tr:hover{background:rgba(0,255,65,0.04);}
-  tbody td{padding:6px 12px;font-size:12px;}
-  .lvl-eq{color:#fff;text-shadow:0 0 6px #fff;}
-  .lvl-pos{color:var(--green);text-shadow:0 0 6px var(--green-dim);}
-  .lvl-neg{color:var(--red);text-shadow:0 0 4px rgba(255,49,49,0.5);}
-  .lvl-extreme{color:var(--amber);text-shadow:0 0 6px rgba(255,179,0,0.5);}
-  .price-val{font-size:12px;font-weight:bold;letter-spacing:1px;}
-  .prox-bar{display:flex;align-items:center;gap:6px;}
-  .prox-track{flex:1;height:3px;background:rgba(0,40,0,0.6);border-radius:2px;overflow:hidden;}
-  .prox-fill{height:100%;border-radius:2px;transition:width 0.4s;}
-  .prox-pct{font-size:9px;color:var(--text-dim);width:38px;text-align:right;}
+/* TABLES */
+table{width:100%;border-collapse:collapse;}
+thead th{padding:5px 12px;text-align:left;font-size:9px;letter-spacing:2px;color:var(–text-dim);border-bottom:1px solid var(–border);text-transform:uppercase;}
+tbody tr{border-bottom:1px solid rgba(0,40,0,0.5);transition:background 0.15s;}
+tbody tr:hover{background:rgba(0,255,65,0.04);}
+tbody td{padding:6px 12px;font-size:12px;}
+.lvl-eq{color:#fff;text-shadow:0 0 6px #fff;}
+.lvl-pos{color:var(–green);text-shadow:0 0 6px var(–green-dim);}
+.lvl-neg{color:var(–red);text-shadow:0 0 4px rgba(255,49,49,0.5);}
+.lvl-extreme{color:var(–amber);text-shadow:0 0 6px rgba(255,179,0,0.5);}
+.price-val{font-size:12px;font-weight:bold;letter-spacing:1px;}
+.prox-bar{display:flex;align-items:center;gap:6px;}
+.prox-track{flex:1;height:3px;background:rgba(0,40,0,0.6);border-radius:2px;overflow:hidden;}
+.prox-fill{height:100%;border-radius:2px;transition:width 0.4s;}
+.prox-pct{font-size:9px;color:var(–text-dim);width:38px;text-align:right;}
 
-  /* CONFLUENCE */
-  .alert-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);animation:alertIn 0.3s ease;}
-  @keyframes alertIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:translateX(0);}}
-  .alert-badge{font-size:13px;padding:2px 8px;border-radius:2px;font-family:'VT323',monospace;}
-  .badge-hot{background:rgba(255,49,49,0.15);border:1px solid var(--red);color:var(--red);}
-  .badge-warm{background:rgba(255,179,0,0.1);border:1px solid var(--amber);color:var(--amber);}
-  .badge-watch{background:rgba(0,255,65,0.06);border:1px solid var(--green-dim);color:var(--text-dim);}
-  .alert-info{flex:1;}
-  .alert-levels{font-size:12px;color:var(--green);}
-  .alert-detail{font-size:9px;color:var(--text-dim);margin-top:2px;}
-  .alert-price{font-size:12px;color:var(--green);text-align:right;}
-  .alert-dist{font-size:9px;color:var(--text-dim);text-align:right;}
-  .no-alerts{padding:18px 12px;color:var(--text-dim);font-size:10px;letter-spacing:2px;text-align:center;}
+/* CONFLUENCE */
+.alert-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(–border);animation:alertIn 0.3s ease;}
+@keyframes alertIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:translateX(0);}}
+.alert-badge{font-size:13px;padding:2px 8px;border-radius:2px;font-family:‘VT323’,monospace;}
+.badge-hot{background:rgba(255,49,49,0.15);border:1px solid var(–red);color:var(–red);}
+.badge-warm{background:rgba(255,179,0,0.1);border:1px solid var(–amber);color:var(–amber);}
+.badge-watch{background:rgba(0,255,65,0.06);border:1px solid var(–green-dim);color:var(–text-dim);}
+.alert-info{flex:1;}
+.alert-levels{font-size:12px;color:var(–green);}
+.alert-detail{font-size:9px;color:var(–text-dim);margin-top:2px;}
+.alert-price{font-size:12px;color:var(–green);text-align:right;}
+.alert-dist{font-size:9px;color:var(–text-dim);text-align:right;}
+.no-alerts{padding:18px 12px;color:var(–text-dim);font-size:10px;letter-spacing:2px;text-align:center;}
 
-  /* ACCURACY */
-  .acc-bar-track{width:120px;height:7px;background:rgba(0,40,0,0.6);border-radius:1px;overflow:hidden;display:inline-block;}
-  .acc-bar-fill{height:100%;border-radius:1px;}
-  .wl-text{color:var(--text-dim);font-size:10px;}
-  .rate-green{color:var(--green);}
-  .rate-red{color:var(--red);}
-  .rate-amber{color:var(--amber);}
+/* ACCURACY */
+.acc-bar-track{width:120px;height:7px;background:rgba(0,40,0,0.6);border-radius:1px;overflow:hidden;display:inline-block;}
+.acc-bar-fill{height:100%;border-radius:1px;}
+.wl-text{color:var(–text-dim);font-size:10px;}
+.rate-green{color:var(–green);}
+.rate-red{color:var(–red);}
+.rate-amber{color:var(–amber);}
 
-  /* TRADE TRACKER */
-  .trade-card{margin:8px 12px;border:1px solid var(--border);border-radius:2px;overflow:hidden;}
-  .trade-card-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(0,255,65,0.04);border-bottom:1px solid var(--border);}
-  .trade-dir{font-family:'VT323',monospace;font-size:17px;padding:1px 9px;border-radius:2px;}
-  .dir-long{background:rgba(0,255,65,0.12);border:1px solid var(--green);color:var(--green);}
-  .dir-short{background:rgba(255,49,49,0.12);border:1px solid var(--red);color:var(--red);}
-  .trade-body{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
-  .trade-stat{background:var(--panel);padding:7px 10px;}
-  .stat-label{font-size:8px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;}
-  .stat-value{font-size:13px;color:var(--green);margin-top:2px;}
-  .stat-pnl-pos{color:var(--green);text-shadow:0 0 6px var(--green-dim);}
-  .stat-pnl-neg{color:var(--red);}
-  .progress-bar{height:3px;background:var(--border);margin-top:5px;border-radius:1px;overflow:hidden;}
-  .progress-fill{height:100%;background:var(--green);box-shadow:0 0 4px var(--green-dim);border-radius:1px;transition:width 0.5s;}
-  .no-trades{padding:20px 12px;color:var(--text-dim);text-align:center;letter-spacing:2px;font-size:10px;}
+/* TRADE TRACKER */
+.trade-card{margin:8px 12px;border:1px solid var(–border);border-radius:2px;overflow:hidden;}
+.trade-card-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(0,255,65,0.04);border-bottom:1px solid var(–border);}
+.trade-dir{font-family:‘VT323’,monospace;font-size:17px;padding:1px 9px;border-radius:2px;}
+.dir-long{background:rgba(0,255,65,0.12);border:1px solid var(–green);color:var(–green);}
+.dir-short{background:rgba(255,49,49,0.12);border:1px solid var(–red);color:var(–red);}
+.trade-body{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(–border);}
+.trade-stat{background:var(–panel);padding:7px 10px;}
+.stat-label{font-size:8px;color:var(–text-dim);letter-spacing:2px;text-transform:uppercase;}
+.stat-value{font-size:13px;color:var(–green);margin-top:2px;}
+.stat-pnl-pos{color:var(–green);text-shadow:0 0 6px var(–green-dim);}
+.stat-pnl-neg{color:var(–red);}
+.progress-bar{height:3px;background:var(–border);margin-top:5px;border-radius:1px;overflow:hidden;}
+.progress-fill{height:100%;background:var(–green);box-shadow:0 0 4px var(–green-dim);border-radius:1px;transition:width 0.5s;}
+.no-trades{padding:20px 12px;color:var(–text-dim);text-align:center;letter-spacing:2px;font-size:10px;}
 
-  /* FOOTER */
-  .footer{display:flex;justify-content:space-between;align-items:center;padding:7px 16px;border-top:1px solid var(--border);background:var(--panel);}
-  .footer-left{color:var(--text-dim);font-size:10px;letter-spacing:2px;}
-  .btn-refresh{background:transparent;border:1px solid var(--green-dim);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
-  .btn-refresh:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,65,0.05);box-shadow:0 0 8px rgba(0,255,65,0.2);}
-  .countdown{font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+/* FOOTER */
+.footer{display:flex;justify-content:space-between;align-items:center;padding:7px 16px;border-top:1px solid var(–border);background:var(–panel);}
+.footer-left{color:var(–text-dim);font-size:10px;letter-spacing:2px;}
+.btn-refresh{background:transparent;border:1px solid var(–green-dim);color:var(–text-dim);font-family:‘Share Tech Mono’,monospace;font-size:10px;padding:4px 12px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+.btn-refresh:hover{border-color:var(–green);color:var(–green);background:rgba(0,255,65,0.05);box-shadow:0 0 8px rgba(0,255,65,0.2);}
+.countdown{font-size:10px;color:var(–text-dim);letter-spacing:1px;}
 </style>
+
 </head>
 <body>
 
@@ -149,6 +151,7 @@
 <div class="main-layout">
 
   <!-- COL 1: LIVE CHART (spans both rows) -->
+
   <div class="panel panel-chart">
     <div class="panel-header">
       <span class="panel-title">LIVE CHART</span>
@@ -169,6 +172,7 @@
   </div>
 
   <!-- COL 2: HTF LEVELS -->
+
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">HTF LEVELS</span>
@@ -179,6 +183,7 @@
   </div>
 
   <!-- COL 3: LTF LEVELS -->
+
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">LTF LEVELS</span>
@@ -189,6 +194,7 @@
   </div>
 
   <!-- COL 2: CONFLUENCE ALERTS -->
+
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">CONFLUENCE ALERTS</span>
@@ -198,6 +204,7 @@
   </div>
 
   <!-- COL 3: SIGNAL ACCURACY -->
+
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">SIGNAL ACCURACY</span>
@@ -208,6 +215,7 @@
   </div>
 
   <!-- FULL WIDTH: ACTIVE TRADES -->
+
   <div class="panel panel-full">
     <div class="panel-header">
       <span class="panel-title">ACTIVE POSITIONS</span>
@@ -291,55 +299,68 @@ function getToday0900(){
 // ══════════════════════════════════════════════════════
 // FETCH
 // ══════════════════════════════════════════════════════
-const YF_SYM='NQ=F';
-const YF_BASE='https://query1.finance.yahoo.com/v8/finance/chart/';
+const YF_SYM = 'NQ=F';
+const YF_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
+// CORS proxy — wraps Yahoo Finance for browser requests
+const PROXY = 'https://corsproxy.io/?url=';
+
+async function yfFetch(url){
+  // Try direct first, fall back to CORS proxy
+  try{
+    const r = await fetch(url, {headers:{'User-Agent':'Mozilla/5.0'}});
+    if(r.ok) return await r.json();
+  }catch(e){}
+  try{
+    const r = await fetch(PROXY + encodeURIComponent(url));
+    if(r.ok) return await r.json();
+  }catch(e){}
+  return null;
+}
+
 async function fetchCurrentPrice(){
   try{
-    const r=await fetch(YF_BASE+YF_SYM+'?interval=1m&range=1d');
-    const d=await r.json();
-    const closes=d.chart.result[0].indicators.quote[0].close;
+    const d = await yfFetch(YF_BASE+YF_SYM+'?interval=1m&range=1d');
+    if(!d) return null;
+    const closes = d.chart.result[0].indicators.quote[0].close;
     for(let i=closes.length-1;i>=0;i--){if(closes[i]!=null)return closes[i];}
     return null;
   }catch(e){return null;}
 }
 async function fetchAnchorOpen(interval,ts){
   try{
-    const yfi=interval==='1h'?'60m':'1m';
-    const s=Math.floor(ts.getTime()/1000);
-    const e=s+(interval==='1h'?7200:120);
-    const r=await fetch(YF_BASE+YF_SYM+'?interval='+yfi+'&period1='+s+'&period2='+e);
-    const d=await r.json();
-    const q=d.chart.result[0];
-    if(!q) return null;
-    const opens=q.indicators.quote[0].open;
+    const yfi = interval==='1h'?'60m':'1m';
+    const s   = Math.floor(ts.getTime()/1000);
+    const e   = s+(interval==='1h'?7200:120);
+    const d   = await yfFetch(YF_BASE+YF_SYM+'?interval='+yfi+'&period1='+s+'&period2='+e);
+    if(!d) return null;
+    const opens = d.chart.result[0].indicators.quote[0].open;
     for(let i=0;i<opens.length;i++){if(opens[i]!=null)return opens[i];}
     return null;
   }catch(e){return null;}
 }
 async function fetch24hChange(){
   try{
-    const r=await fetch(YF_BASE+YF_SYM+'?interval=1d&range=5d');
-    const d=await r.json();
-    const q=d.chart.result[0];
-    const c=q.indicators.quote[0].close;
-    const h=q.indicators.quote[0].high;
-    const l=q.indicators.quote[0].low;
-    const v=q.indicators.quote[0].volume;
-    const last=c[c.length-1];
-    const prev=c[c.length-2];
+    const d = await yfFetch(YF_BASE+YF_SYM+'?interval=1d&range=5d');
+    if(!d) return null;
+    const q  = d.chart.result[0];
+    const cl = q.indicators.quote[0].close;
+    const h  = q.indicators.quote[0].high;
+    const l  = q.indicators.quote[0].low;
+    const v  = q.indicators.quote[0].volume;
+    const last=cl[cl.length-1], prev=cl[cl.length-2];
     return{change:((last-prev)/prev)*100,high:h[h.length-1],low:l[l.length-1],vol:v[v.length-1]};
   }catch(e){return null;}
 }
 async function fetchCandles(interval,limit){
   try{
-    const yfi=interval==='1h'?'60m':'1m';
-    const range=interval==='1h'?'30d':'2d';
-    const r=await fetch(YF_BASE+YF_SYM+'?interval='+yfi+'&range='+range);
-    const d=await r.json();
-    const q=d.chart.result[0];
-    const ts=q.timestamp;
-    const ohlc=q.indicators.quote[0];
-    const out=[];
+    const yfi   = interval==='1h'?'60m':'1m';
+    const range = interval==='1h'?'30d':'2d';
+    const d     = await yfFetch(YF_BASE+YF_SYM+'?interval='+yfi+'&range='+range);
+    if(!d) return [];
+    const q    = d.chart.result[0];
+    const ts   = q.timestamp;
+    const ohlc = q.indicators.quote[0];
+    const out  = [];
     for(let i=0;i<ts.length;i++){
       if(ohlc.close[i]==null) continue;
       out.push({time:ts[i],open:ohlc.open[i],high:ohlc.high[i],low:ohlc.low[i],close:ohlc.close[i]});
@@ -776,5 +797,6 @@ window.addEventListener('load', async ()=>{
   setInterval(()=>loadChartMode(chartMode), 300000);
 });
 </script>
+
 </body>
 </html>
