@@ -152,8 +152,10 @@ window.addEventListener('unhandledrejection', function(e){
       <span class="panel-tag" id="chart-mode-tag">HTF // H1 // BINANCE</span>
     </div>
     <div class="chart-controls">
-      <button class="tf-btn active" id="btn-htf" onclick="switchChartMode('HTF')">HTF</button>
-      <button class="tf-btn"        id="btn-ltf" onclick="switchChartMode('LTF')">LTF</button>
+      <button class="tf-btn active" id="btn-htf"       onclick="switchChartMode('HTF')">HTF</button>
+      <button class="tf-btn"        id="btn-ltf-std"   onclick="switchChartMode('LTF_STD')">LTF // STD</button>
+      <button class="tf-btn"        id="btn-ltf-ratio" onclick="switchChartMode('LTF_RATIO')">LTF // RATIO</button>
+      <button class="tf-btn"        id="btn-ltf-both"  onclick="switchChartMode('LTF_BOTH')">LTF // BOTH</button>
     </div>
 
 ```
@@ -243,14 +245,27 @@ const PROXIES = [
 
 async function yfFetch(params){
   const url = YF_URL(params);
-  for(const px of PROXIES){
+  const dbg = document.getElementById('data-status');
+  for(let i=0;i<PROXIES.length;i++){
+    const px = PROXIES[i];
+    const label = ['allorigins','corsproxy','codetabs'][i];
     try{
+      if(dbg) dbg.textContent = 'TRYING '+label+'...';
       const r = await fetch(px(url));
-      if(!r.ok) continue;
-      const d = JSON.parse(await r.text());
-      if(d?.chart?.result?.[0]) return d;
-    }catch(e){ continue; }
+      if(!r.ok){ if(dbg) dbg.textContent=label+' HTTP '+r.status; continue; }
+      const text = await r.text();
+      const d = JSON.parse(text);
+      if(d?.chart?.result?.[0]){
+        if(dbg) dbg.textContent = 'LIVE DATA // '+label.toUpperCase();
+        return d;
+      }
+      if(dbg) dbg.textContent = label+': no result';
+    }catch(e){
+      if(dbg) dbg.textContent = label+' ERR: '+e.message;
+      continue;
+    }
   }
+  if(dbg) dbg.textContent = 'ALL PROXIES FAILED';
   return null;
 }
 
@@ -402,33 +417,67 @@ function drawChartLevelSet(candles,anchorTs,anchorOpen,type,ratio){
 
 function reloadChartLevels(){
   clearChartLevels();
-  // Always draw both HTF fans + LTF fan
-  if(htfAnchorOpen){
-    drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
-    drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+  const m = chartMode;
+  if(m==='HTF'){
+    // H1 candles — draw both HTF fans + LTF overlay
+    if(htfAnchorOpen){
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+    }
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
+  } else if(m==='LTF_STD'){
+    // M1 candles — standard HTF fan only
+    if(htfAnchorOpen)
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
+  } else if(m==='LTF_RATIO'){
+    // M1 candles — ratio HTF fan only
+    if(htfAnchorOpen)
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
+  } else if(m==='LTF_BOTH'){
+    // M1 candles — both HTF fans
+    if(htfAnchorOpen){
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF',1);
+      drawChartLevelSet(chartCandles,htfAnchorTs,htfAnchorOpen,'HTF_R',CONFIG.htfRatio);
+    }
+    if(ltfAnchorOpen)
+      drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
   }
-  if(ltfAnchorOpen)
-    drawChartLevelSet(chartCandles,ltfAnchorTs,ltfAnchorOpen,'LTF');
 }
 
 async function loadChartMode(mode){
   const useH1 = mode==='HTF';
   chartCandles = await fetchCandles(useH1?'1h':'1m', useH1?336:480);
-  if(!chartCandles.length) return;
+  if(!chartCandles.length){
+    document.getElementById('data-status').textContent = 'NO CANDLE DATA';
+    return;
+  }
   candleSeries.setData(chartCandles);
   reloadChartLevels();
   lwChart.timeScale().fitContent();
-  document.getElementById('chart-mode-tag').textContent = useH1?'HTF // H1 // BOTH FANS':'LTF // M1 // BOTH FANS';
+  const tags = {
+    'HTF':      'HTF // H1 // BOTH FANS',
+    'LTF_STD':  'LTF // M1 // HTF STANDARD',
+    'LTF_RATIO':'LTF // M1 // HTF RATIO',
+    'LTF_BOTH': 'LTF // M1 // BOTH FANS',
+  };
+  document.getElementById('chart-mode-tag').textContent = tags[mode]||mode;
 }
 
 function switchChartMode(mode){
   chartMode=mode;
-  ['htf','ltf'].forEach(id=>{
+  ['htf','ltf-std','ltf-ratio','ltf-both'].forEach(id=>{
     document.getElementById('btn-'+id).classList.remove('active');
   });
-  const map={'HTF':'htf','LTF':'ltf'};
+  const map={'HTF':'htf','LTF_STD':'ltf-std','LTF_RATIO':'ltf-ratio','LTF_BOTH':'ltf-both'};
   if(map[mode]) document.getElementById('btn-'+map[mode]).classList.add('active');
   loadChartMode(mode);
+  // Start live updates on M1 modes, stop on HTF
+  if(mode==='HTF'){ stopLiveCandle(); } else { startLiveCandle(); }
 }
 
 // ── CONFLUENCE ────────────────────────────────────────
@@ -569,7 +618,7 @@ function buildTicker(price,stats){
 }
 
 // ── MAIN REFRESH ──────────────────────────────────────
-let cdVal=CONFIG.refreshSec, cdTimer;
+let cdVal=CONFIG.refreshSec, cdTimer, liveTimer=null;
 
 async function refreshAll(){
   document.getElementById('data-status').textContent='FETCHING...';
@@ -611,6 +660,40 @@ async function refreshAll(){
     document.getElementById('countdown').textContent=cdVal+'s';
     if(cdVal<=0){clearInterval(cdTimer);refreshAll();}
   },1000);
+}
+
+
+// ── LIVE M1 CANDLE UPDATE (MNQ — Yahoo, ~5s) ─────────
+async function fetchLastCandle(){
+  try{
+    const d = await yfFetch('interval=1m&range=1d');
+    if(!d) return null;
+    const q    = d.chart.result[0];
+    const ts   = q.timestamp;
+    const ohlc = q.indicators.quote[0];
+    const i    = ts.length-1;
+    if(ohlc.close[i]==null) return null;
+    return {time:ts[i], open:ohlc.open[i], high:ohlc.high[i], low:ohlc.low[i], close:ohlc.close[i]};
+  }catch(e){return null;}
+}
+function startLiveCandle(){
+  stopLiveCandle();
+  liveTimer = setInterval(async ()=>{
+    const candle = await fetchLastCandle();
+    if(!candle || !candleSeries) return;
+    // Update or append last candle
+    try{ candleSeries.update(candle); }catch(e){}
+    // Keep chartCandles in sync
+    if(chartCandles.length && chartCandles[chartCandles.length-1].time === candle.time){
+      chartCandles[chartCandles.length-1] = candle;
+    } else if(candle.time > (chartCandles[chartCandles.length-1]?.time||0)){
+      chartCandles.push(candle);
+    }
+  }, 5000);
+}
+
+function stopLiveCandle(){
+  if(liveTimer){ clearInterval(liveTimer); liveTimer=null; }
 }
 
 // ── PWA ───────────────────────────────────────────────
