@@ -112,13 +112,26 @@
 .btn-refresh:hover{border-color:var(–green);color:var(–green);background:rgba(0,255,65,0.05);box-shadow:0 0 8px rgba(0,255,65,0.2);}
 .countdown{font-size:10px;color:var(–text-dim);letter-spacing:1px;}
 
+/* KEY LEVELS */
+.kl-btn{background:var(–panel);border:none;border-left:1px solid var(–border);color:var(–text-dim);font-family:‘Share Tech Mono’,monospace;font-size:11px;padding:5px 12px;cursor:pointer;letter-spacing:1px;transition:all 0.15s;margin-left:auto;}
+.kl-btn:hover{background:var(–green-dark);color:var(–green);}
+.kl-btn.active{background:var(–green-dark);color:var(–green);border-bottom:2px solid var(–green);}
+.kl-panel{position:absolute;top:32px;right:0;width:280px;background:#0a1a0a;border:1px solid var(–border);z-index:50;display:none;max-height:420px;overflow-y:auto;}
+.kl-panel.open{display:block;}
+.kl-group{border-bottom:1px solid var(–border);}
+.kl-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;font-size:10px;letter-spacing:2px;}
+.kl-group-hdr:hover{background:rgba(0,255,65,0.04);}
+.kl-row{display:flex;align-items:center;justify-content:space-between;padding:4px 10px 4px 20px;font-size:10px;color:var(–text-dim);}
+.kl-row label{display:flex;align-items:center;gap:6px;cursor:pointer;letter-spacing:1px;}
+.kl-row input[type=checkbox]{accent-color:var(–green);cursor:pointer;}
+
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-title">OBAMA<span> // </span>DASH <span style="font-size:14px;letter-spacing:2px">// TERMINAL</span></div>
-  <nav style="display:flex;gap:12px;align-items:center"><a href="index.html" style="color:var(--green);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--green-dim);padding:3px 10px">BTC</a><a href="mnq.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">MNQ</a></nav>
+  <nav style="display:flex;gap:12px;align-items:center"><a href="index.html" style="color:var(--green);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--green-dim);padding:3px 10px">BTC</a><a href="mnq.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">MNQ</a><a href="chart.html" style="color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:2px;border:1px solid var(--border);padding:3px 10px">CHART</a></nav>
   <div class="header-meta">
     <div class="meta-item"><div class="meta-label">Asset</div><div class="meta-value" id="hdr-symbol">BTCUSDT</div></div>
     <div class="meta-item"><div class="meta-label">Last Price</div><div class="meta-value" id="hdr-price">—</div></div>
@@ -139,11 +152,51 @@
       <span class="panel-title">LIVE CHART</span>
       <span class="panel-tag" id="chart-mode-tag">HTF // H1 // BINANCE</span>
     </div>
-    <div class="chart-controls">
+    <div class="chart-controls" style="position:relative">
       <button class="tf-btn active" id="btn-htf"       onclick="switchChartMode('HTF')">HTF</button>
       <button class="tf-btn"        id="btn-ltf-std"   onclick="switchChartMode('LTF_STD')">LTF // STD</button>
       <button class="tf-btn"        id="btn-ltf-ratio" onclick="switchChartMode('LTF_RATIO')">LTF // RATIO</button>
       <button class="tf-btn"        id="btn-ltf-both"  onclick="switchChartMode('LTF_BOTH')">LTF // BOTH</button>
+      <button class="kl-btn" id="kl-toggle-btn" onclick="toggleKLPanel()">⊞ KEY LEVELS</button>
+      <!-- Key Levels Settings Panel -->
+      <div class="kl-panel" id="kl-panel">
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#08bcd4">
+            <span>DAILY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-daily-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-daily-hl" onchange="redrawKL()"> Prev H/L</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#fffcbc">
+            <span>WEEKLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-weekly-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-weekly-hl" checked onchange="redrawKL()"> Prev H/L</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-weekly-mid" checked onchange="redrawKL()"> Mid</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#08d48c">
+            <span>MONTHLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-monthly-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-monthly-hl" checked onchange="redrawKL()"> Prev H/L</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-monthly-mid" onchange="redrawKL()"> Mid</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#ff6666">
+            <span>QUARTERLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-quarterly-open" onchange="redrawKL()"> Open</label>
+          </div>
+        </div>
+        <div class="kl-group">
+          <div class="kl-group-hdr" style="color:#ff3131">
+            <span>YEARLY</span>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-yearly-open" checked onchange="redrawKL()"> Open</label>
+            <label style="font-size:9px;color:var(--text-dim)"><input type="checkbox" id="kl-yearly-hl" onchange="redrawKL()"> H/L</label>
+          </div>
+        </div>
+      </div>
     </div>
 
 ```
@@ -330,11 +383,12 @@ function drawChartLevelSet(candles,anchorTs,anchorOpen,type,ratio){
       time:c.time,
       value:anglePrice(anchorOpen,Math.round((c.time-anchorSec)/secPerBar),def.deg,ratio||1)
     }));
+    const shortType = type==='HTF_R'?'R':type==='HTF'?'H':type==='LTF'?'L':'';
     const s=lwChart.addLineSeries({
       color:def.color, lineWidth:def.width,
       lineStyle:(type==='LTF')?2:0,
-      priceLineVisible:false, lastValueVisible:false,
-      title:'',
+      priceLineVisible:false, lastValueVisible:true,
+      title: shortType+def.label,
       crosshairMarkerVisible:false,
     });
     s.setData(data);
@@ -609,6 +663,129 @@ function startLiveCandle(){
 
 function stopLiveCandle(){
   if(liveTimer){ clearInterval(liveTimer); liveTimer=null; }
+}
+
+
+// ── KEY LEVELS FETCH (Binance) ─────────────────────────
+async function fetchKLData(){
+  try{
+    const [d1, w1, m1, m13] = await Promise.all([
+      fetch(`https://api.binance.com/api/v3/klines?symbol=${CONFIG.symbol}&interval=1d&limit=3`).then(r=>r.json()),
+      fetch(`https://api.binance.com/api/v3/klines?symbol=${CONFIG.symbol}&interval=1w&limit=3`).then(r=>r.json()),
+      fetch(`https://api.binance.com/api/v3/klines?symbol=${CONFIG.symbol}&interval=1M&limit=3`).then(r=>r.json()),
+      fetch(`https://api.binance.com/api/v3/klines?symbol=${CONFIG.symbol}&interval=3M&limit=3`).then(r=>r.json()),
+    ]);
+    const parse = (k,i=0)=>({open:parseFloat(k[k.length-1-i][1]),high:parseFloat(k[k.length-1-i][2]),low:parseFloat(k[k.length-1-i][3]),close:parseFloat(k[k.length-1-i][4])});
+    // Also get yearly: use 12M candles
+    const y1 = await fetch(`https://api.binance.com/api/v3/klines?symbol=${CONFIG.symbol}&interval=1M&limit=14`).then(r=>r.json());
+    const nowDate = new Date();
+    const yearStart = new Date(Date.UTC(nowDate.getUTCFullYear(),0,1)).getTime()/1000;
+    let yearOpen=null,yearHigh=null,yearLow=null;
+    for(const k of y1){
+      const ts=k[0]/1000;
+      if(ts>=yearStart){
+        if(yearOpen===null) yearOpen=parseFloat(k[1]);
+        const h=parseFloat(k[2]),l=parseFloat(k[3]);
+        if(yearHigh===null||h>yearHigh) yearHigh=h;
+        if(yearLow===null||l<yearLow) yearLow=l;
+      }
+    }
+    return {
+      daily:  { open:parse(d1,0).open },
+      prevDay:{ high:parse(d1,1).high, low:parse(d1,1).low },
+      weekly: { open:parse(w1,0).open },
+      prevWeek:{ high:parse(w1,1).high, low:parse(w1,1).low },
+      monthly:{ open:parse(m1,0).open },
+      prevMonth:{ high:parse(m1,1).high, low:parse(m1,1).low },
+      quarterly:{ open:parse(m13,0).open },
+      yearly: { open:yearOpen, high:yearHigh, low:yearLow },
+    };
+  }catch(e){ console.error('KL fetch error',e); return null; }
+}
+// ── KEY LEVELS STATE & DRAW ────────────────────────────
+let klData     = null;
+let klLines    = [];   // price line objects on candleSeries
+let klEnabled  = false;
+
+function toggleKLPanel(){
+  const panel = document.getElementById('kl-panel');
+  const btn   = document.getElementById('kl-toggle-btn');
+  const open  = panel.classList.toggle('open');
+  btn.classList.toggle('active', open);
+  klEnabled = open;
+  if(open && !klData){ loadKL(); } else { redrawKL(); }
+}
+// Close panel if clicking outside
+document.addEventListener('click', e=>{
+  const panel=document.getElementById('kl-panel');
+  const btn=document.getElementById('kl-toggle-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    klEnabled=false;
+    clearKL();
+  }
+});
+
+function chk(id){ const el=document.getElementById(id); return el&&el.checked; }
+
+async function loadKL(){
+  document.getElementById('kl-toggle-btn').textContent='⊞ LOADING...';
+  klData = await fetchKLData();
+  document.getElementById('kl-toggle-btn').textContent='⊞ KEY LEVELS';
+  redrawKL();
+}
+
+function clearKL(){
+  if(!candleSeries) return;
+  for(const pl of klLines){ try{ candleSeries.removePriceLine(pl); }catch(e){} }
+  klLines=[];
+}
+
+function makePL(price, title, color, dashed=false){
+  if(!price||!candleSeries) return;
+  const pl = candleSeries.createPriceLine({
+    price, title,
+    color,
+    lineWidth: 1,
+    lineStyle: dashed ? 2 : 0,
+    axisLabelVisible: true,
+    axisLabelColor: color,
+  });
+  klLines.push(pl);
+}
+
+function redrawKL(){
+  clearKL();
+  if(!klData||!klEnabled) return;
+  const d=klData;
+
+  // Daily — cyan
+  if(chk('kl-daily-open'))   makePL(d.daily.open,   'DO',  '#08bcd4');
+  if(chk('kl-daily-hl'))     makePL(d.prevDay.high, 'PDH', '#08bcd4', true);
+  if(chk('kl-daily-hl'))     makePL(d.prevDay.low,  'PDL', '#08bcd4', true);
+
+  // Weekly — yellow
+  if(chk('kl-weekly-open'))  makePL(d.weekly.open,     'WO',  '#fffcbc');
+  if(chk('kl-weekly-hl'))    makePL(d.prevWeek.high,   'PWH', '#fffcbc', true);
+  if(chk('kl-weekly-hl'))    makePL(d.prevWeek.low,    'PWL', '#fffcbc', true);
+  if(chk('kl-weekly-mid')&&d.prevWeek.high&&d.prevWeek.low)
+    makePL((d.prevWeek.high+d.prevWeek.low)/2, 'PWM', '#fffcbc', true);
+
+  // Monthly — green
+  if(chk('kl-monthly-open')) makePL(d.monthly.open,    'MO',  '#08d48c');
+  if(chk('kl-monthly-hl'))   makePL(d.prevMonth.high,  'PMH', '#08d48c', true);
+  if(chk('kl-monthly-hl'))   makePL(d.prevMonth.low,   'PML', '#08d48c', true);
+  if(chk('kl-monthly-mid')&&d.prevMonth.high&&d.prevMonth.low)
+    makePL((d.prevMonth.high+d.prevMonth.low)/2,'PMM','#08d48c',true);
+
+  // Quarterly — red
+  if(chk('kl-quarterly-open')) makePL(d.quarterly.open, 'QO', '#ff6666');
+
+  // Yearly — bright red
+  if(chk('kl-yearly-open')) makePL(d.yearly.open,  'YO',  '#ff3131');
+  if(chk('kl-yearly-hl'))   makePL(d.yearly.high,  'CYH', '#ff3131', true);
+  if(chk('kl-yearly-hl'))   makePL(d.yearly.low,   'CYL', '#ff3131', true);
 }
 
 // ── PWA ───────────────────────────────────────────────
