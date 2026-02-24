@@ -64,6 +64,8 @@ height:calc(24px + env(safe-area-inset-top));
 }
 .bar-bottom {
 border-top:1px solid #0f2a0f;
+align-items:flex-start;
+padding-top:5px;
 padding-bottom:env(safe-area-inset-bottom);
 height:calc(24px + env(safe-area-inset-bottom));
 }
@@ -187,9 +189,12 @@ function getToday0900(){
 
 // ── FETCH (Yahoo Finance) ─────────────────────────────
 async function yfFetch(params){
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${CONFIG.symbol}?${params}&includePrePost=true&corsDomain=finance.yahoo.com`;
-  const r=await fetch(url,{headers:{'Accept':'application/json'}});
-  return r.json();
+  const symbol=encodeURIComponent(CONFIG.symbol);
+  const target=encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?${params}&includePrePost=true`);
+  const url=`https://api.allorigins.win/get?url=${target}`;
+  const r=await fetch(url);
+  const j=await r.json();
+  return JSON.parse(j.contents);
 }
 async function fetchCurrentPrice(){
   try{
