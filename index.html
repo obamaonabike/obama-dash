@@ -286,17 +286,10 @@ function drawChartLevelSet(candles,anchorTs,anchorOpen,type,ratio){
   if(filtered.length<2) return;
   const lastCandle=filtered[filtered.length-1];
   // Extend to the next anchor pull time
-  // LTF extends to next 09:00 UTC, HTF extends to next Sunday 23:00 UTC
-  let nextPullSec;
-  if(type==='LTF'){
-    const next0900=getToday0900();
-    next0900.setUTCDate(next0900.getUTCDate()+1);
-    nextPullSec=next0900.getTime()/1000;
-  } else {
-    const nextSunday=getSunday2300();
-    nextSunday.setUTCDate(nextSunday.getUTCDate()+7);
-    nextPullSec=nextSunday.getTime()/1000;
-  }
+  // Both LTF and HTF extend to the next 09:00 UTC anchor pull
+  const next0900=getToday0900();
+  next0900.setUTCDate(next0900.getUTCDate()+1);
+  const nextPullSec=next0900.getTime()/1000;
   const futurePoints=[];
   for(let t=lastCandle.time+60; t<=nextPullSec; t+=60){
     futurePoints.push(t);
@@ -362,7 +355,7 @@ async function loadChartMode(mode){
   if(!chartCandles.length) return;
   candleSeries.setData(chartCandles);
   reloadChartLevels();
-  lwChart.timeScale().fitContent();
+  lwChart.timeScale().scrollToRealTime();
 
 }
 
