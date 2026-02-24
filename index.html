@@ -166,7 +166,10 @@ function getSunday2300(){
 }
 function getToday0900(){
   const n=new Date();
-  return new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate(),9,0,0));
+  const anchor=new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate(),9,0,0));
+  // If we haven't reached 09:00 UTC yet today, use yesterday's 09:00
+  if(anchor>n) anchor.setUTCDate(anchor.getUTCDate()-1);
+  return anchor;
 }
 
 // ── FETCH ─────────────────────────────────────────────
