@@ -355,7 +355,13 @@ async function loadChartMode(mode){
   if(!chartCandles.length) return;
   candleSeries.setData(chartCandles);
   reloadChartLevels();
-  lwChart.timeScale().scrollToRealTime();
+  // Scroll to the most recent real candle, not the projected future extension
+  const lastReal = chartCandles[chartCandles.length-1];
+  if(lastReal) lwChart.timeScale().scrollToPosition(0, false);
+  lwChart.timeScale().setVisibleRange({
+    from: lastReal.time - 60*90,
+    to:   lastReal.time + 60*30
+  });
 
 }
 
