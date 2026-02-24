@@ -64,10 +64,11 @@ height:calc(24px + env(safe-area-inset-top));
 }
 .bar-bottom {
 border-top:1px solid #0f2a0f;
-align-items:flex-start;
 padding-top:5px;
-padding-bottom:env(safe-area-inset-bottom);
-height:calc(24px + env(safe-area-inset-bottom));
+padding-bottom:calc(env(safe-area-inset-bottom) + 5px);
+height:auto;
+min-height:24px;
+align-items:flex-start;
 }
 
 .bar-title {
@@ -187,12 +188,11 @@ function getToday0900(){
   return anchor;
 }
 
-// ── FETCH (Yahoo Finance) ─────────────────────────────
+// ── FETCH (Yahoo Finance via CORS proxy) ──────────────
 async function yfFetch(params){
   const symbol=encodeURIComponent(CONFIG.symbol);
   const target=encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?${params}&includePrePost=true`);
-  const url=`https://api.allorigins.win/get?url=${target}`;
-  const r=await fetch(url);
+  const r=await fetch(`https://api.allorigins.win/get?url=${target}`);
   const j=await r.json();
   return JSON.parse(j.contents);
 }
@@ -204,9 +204,9 @@ async function fetchCurrentPrice(){
 }
 async function fetchAnchorOpen(interval,ts){
   try{
-    const yfInterval = interval==='1h'?'1h':'1m';
+    const yfInterval=interval==='1h'?'1h':'1m';
     const period1=Math.floor(ts.getTime()/1000);
-    const period2=period1+(interval==='1h'?7200:180); // 2h or 3m window
+    const period2=period1+(interval==='1h'?7200:180);
     const d=await yfFetch(`interval=${yfInterval}&period1=${period1}&period2=${period2}`);
     const res=d.chart.result[0];
     const opens=res.indicators.quote[0].open;
