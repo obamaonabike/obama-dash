@@ -57,8 +57,16 @@ font-size:10px;
 letter-spacing:2px;
 text-transform:uppercase;
 }
-.bar-top    { border-bottom:1px solid #0f2a0f; }
-.bar-bottom { border-top:1px solid #0f2a0f; }
+.bar-top {
+border-bottom:1px solid #0f2a0f;
+padding-top:env(safe-area-inset-top);
+height:calc(24px + env(safe-area-inset-top));
+}
+.bar-bottom {
+border-top:1px solid #0f2a0f;
+padding-bottom:env(safe-area-inset-bottom);
+height:calc(24px + env(safe-area-inset-bottom));
+}
 
 .bar-title {
 font-family:‘Share Tech Mono’, monospace;
