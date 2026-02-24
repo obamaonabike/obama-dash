@@ -1,0 +1,14 @@
+{
+“name”: “ObamaDash”,
+“short_name”: “ObamaDash”,
+“description”: “BTC Live Dashboard”,
+“start_url”: “/obama-dash/”,
+“display”: “fullscreen”,
+“orientation”: “portrait”,
+“background_color”: “#050f05”,
+“theme_color”: “#070d07”,
+“icons”: [
+{ “src”: “icon-192.png”, “sizes”: “192x192”, “type”: “image/png” },
+{ “src”: “icon-512.png”, “sizes”: “512x512”, “type”: “image/png” }
+]
+}
