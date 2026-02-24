@@ -284,11 +284,21 @@ function drawChartLevelSet(candles,anchorTs,anchorOpen,type,ratio){
   const secPerBar=(type==='HTF'||type==='HTF_R')?3600:60;
   const filtered=candles.filter(c=>c.time>=anchorSec);
   if(filtered.length<2) return;
+  // Extend 200 bars into the future so lines reach the right edge
+  const lastCandle=filtered[filtered.length-1];
+  const futurePoints=[];
+  for(let i=1;i<=200;i++){
+    futurePoints.push({time:lastCandle.time+(i*60)});
+  }
   for(const def of defs){
     const data=filtered.map(c=>({
       time:c.time,
       value:anglePrice(anchorOpen,Math.floor((c.time-anchorSec)/secPerBar),def.deg,ratio||1)
     }));
+    // Append future projected points
+    for(const fp of futurePoints){
+      data.push({time:fp.time, value:anglePrice(anchorOpen,Math.floor((fp.time-anchorSec)/secPerBar),def.deg,ratio||1)});
+    }
     const shortType = type==='HTF_R'?'R':type==='HTF'?'H':type==='LTF'?'L':'';
     const s=lwChart.addLineSeries({
       color:def.color, lineWidth:def.width,
