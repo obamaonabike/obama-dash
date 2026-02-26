@@ -2,7 +2,7 @@
 <html lang="en" style="background:#050f05">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#070d07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,293 +13,253 @@
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-html {
-  background:#050f05;
-  height:100%; height:-webkit-fill-available;
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{background:#050f05;height:100%}
+body{
+height:100%;
+background:#050f05;
+color:#00cc33;
+font-family:'Share Tech Mono',monospace;
+overflow:hidden;
+cursor:crosshair
 }
-
-body {
-  width:100%;
-  height:100%; height:-webkit-fill-available;
-  min-height:100dvh;
-  overflow:hidden;
-  background:#050f05;
-  color:#00cc33;
-  font-family:'Share Tech Mono', monospace;
-  font-size:11px;
-  letter-spacing:0.5px;
-  cursor:crosshair;
-  -webkit-text-size-adjust:100%;
+#app{display:flex;flex-direction:column;height:100%}
+.bar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 10px;
+height:24px;
+background:#070d07;
+color:#006618;
+font-size:10px;
+letter-spacing:2px;
+text-transform:uppercase
 }
-
-#app {
-  display:flex;
-  flex-direction:column;
-  width:100%;
-  height:100%;
-  min-height:100dvh;
-  background:#050f05;
-  overflow:hidden;
-  touch-action:none;
+.bar-title{color:#00cc33;letter-spacing:4px}
+.chart-controls{
+display:flex;
+height:22px;
+background:#070d07;
+border-bottom:1px solid #0f2a0f
 }
-
-.bar {
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 10px;
-  height:24px;
-  background:#070d07;
-  color:#006618;
-  font-size:10px;
-  letter-spacing:2px;
-  text-transform:uppercase;
+.tf-btn{
+flex:1;
+background:#070d07;
+border:none;
+border-right:1px solid #0f2a0f;
+color:#003a10;
+font-family:'Share Tech Mono',monospace;
+font-size:10px;
+letter-spacing:2px;
+cursor:pointer
 }
-
-.bar-top {
-  border-bottom:1px solid #0f2a0f;
-  padding-top:env(safe-area-inset-top);
-  height:calc(24px + env(safe-area-inset-top));
+.tf-btn.active{
+color:#00cc33;
+background:#0a160a;
+border-bottom:1px solid #00cc33
 }
-
-.bar-bottom {
-  border-top:1px solid #0f2a0f;
-  padding-top:5px;
-  padding-bottom:calc(env(safe-area-inset-bottom) + 5px);
-  height:auto;
-  min-height:24px;
-  align-items:flex-start;
+.chart-body{flex:1;position:relative}
+#chart-container{width:100%;height:100%}
+.status-dot{
+width:5px;height:5px;border-radius:50%;
+background:#00cc33;animation:pulse 2s infinite
 }
-
-.bar-title {
-  font-size:11px;
-  letter-spacing:4px;
-  color:#00cc33;
-  text-transform:uppercase;
-  white-space:nowrap;
-}
-
-.price-display {
-  color:#00cc33;
-  font-size:11px;
-  letter-spacing:1px;
-}
-
-.status-dot {
-  width:5px;
-  height:5px;
-  border-radius:50%;
-  background:#00cc33;
-  flex-shrink:0;
-  animation:pulse 2s infinite;
-}
-
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
-
-.chart-controls {
-  flex-shrink:0;
-  display:flex;
-  height:22px;
-  background:#070d07;
-  border-bottom:1px solid #0f2a0f;
-}
-
-.tf-btn {
-  background:#070d07;
-  border:none;
-  border-right:1px solid #0f2a0f;
-  color:#003a10;
-  font-family:'Share Tech Mono', monospace;
-  font-size:10px;
-  letter-spacing:2px;
-  text-transform:uppercase;
-  padding:0 12px;
-  cursor:pointer;
-}
-
-.tf-btn.active {
-  color:#00cc33;
-  background:#0a160a;
-  border-bottom:1px solid #00cc33;
-}
-
-.chart-shell {
-  flex:1;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  background:#050f05;
-}
-
-.chart-body {
-  flex:1;
-  position:relative;
-  min-height:0;
-  overflow:hidden;
-  background:#050f05;
-}
-
-#chart-container {
-  width:100%;
-  height:100%;
-}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
 </style>
 </head>
 
 <body>
 <div id="app">
 
-  <div class="bar bar-top">
-    <span class="bar-title">ObamaDash</span>
-    <a href="mnq.html" style="color:#004a14;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px">MNQ</a>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="price-display" id="hdr-price">—</span>
-      <div class="status-dot"></div>
-    </div>
-  </div>
+<div class="bar">
+<span class="bar-title">OBAMADASH</span>
+<div style="display:flex;align-items:center;gap:8px">
+<span id="hdr-price">—</span>
+<div class="status-dot"></div>
+</div>
+</div>
 
-  <div class="chart-shell">
-    <div class="chart-controls">
-      <button class="tf-btn" id="btn-ltf-ratio">M1 RATIO</button>
-      <button class="tf-btn" id="btn-ltf-both">M1 BOTH</button>
-    </div>
-    <div class="chart-body">
-      <div id="chart-container"></div>
-    </div>
-  </div>
+<div class="chart-controls">
+<button class="tf-btn" id="btn-ratio">M1 RATIO</button>
+<button class="tf-btn" id="btn-both">M1 BOTH</button>
+</div>
 
-  <div class="bar bar-bottom">
-    <span id="bar-status">CONNECTING...</span>
-    <span id="bar-time">—</span>
-  </div>
+<div class="chart-body">
+<div id="chart-container"></div>
+</div>
+
+<div class="bar">
+<span id="bar-status">CONNECTING...</span>
+<span id="bar-time">—</span>
+</div>
 
 </div>
 
 <script>
 "use strict";
 
-/* ===========================
+/* =========================
    GLOBAL STATE
-=========================== */
+========================= */
 
-let lwChart;
-let candleSeries;
-let chartMode = localStorage.getItem("chartMode") || "LTF_RATIO";
-let liveTimer = null;
+let chart;
+let candles;
+let fanSeries=[];
+let mode=localStorage.getItem("mode")||"ratio";
+let refreshLoop=null;
 
-/* ===========================
-   CONFIG (UNCHANGED)
-=========================== */
+/* =========================
+   CONFIG (UNCHANGED LOGIC)
+========================= */
 
-const CONFIG = {
-  symbol:"BTCUSDT",
-  htfRatio:73.3458,
-  refreshSec:60
+const CONFIG={
+symbol:"BTCUSDT",
+interval:"1m",
+fanRatios:[1,2,3,5,8,13,21,34,55]
 };
 
-/* ===========================
+/* =========================
    SAFE FETCH
-=========================== */
+========================= */
 
-async function safeFetch(url, timeout=5000){
-  const controller = new AbortController();
-  const id = setTimeout(()=>controller.abort(), timeout);
-  try{
-    const res = await fetch(url, {signal:controller.signal});
-    clearTimeout(id);
-    if(!res.ok) throw new Error();
-    return await res.json();
-  }catch(e){
-    document.getElementById("bar-status").textContent="OFFLINE";
-    return null;
-  }
+async function fetchJSON(url){
+try{
+const res=await fetch(url);
+if(!res.ok)throw new Error();
+return await res.json();
+}catch{
+document.getElementById("bar-status").textContent="OFFLINE";
+return null;
+}
 }
 
-/* ===========================
+/* =========================
    BUILD CHART
-=========================== */
+========================= */
 
 function buildChart(){
-  const container = document.getElementById("chart-container");
-
-  lwChart = LightweightCharts.createChart(container,{
-    layout:{background:{color:"#050f05"},textColor:"#006618"},
-    grid:{
-      vertLines:{color:"#0c1a0c"},
-      horzLines:{color:"#0c1a0c"}
-    },
-    rightPriceScale:{
-      borderColor:"#0f2a0f",
-      scaleMargins:{top:0.08,bottom:0.08}
-    },
-    timeScale:{borderColor:"#0f2a0f",timeVisible:true}
-  });
-
-  candleSeries = lwChart.addCandlestickSeries({
-    upColor:"#00ff41",
-    downColor:"#ff3131",
-    borderUpColor:"#00ff41",
-    borderDownColor:"#ff3131",
-    wickUpColor:"#00aa2a",
-    wickDownColor:"#aa1111"
-  });
-
-  const resizeObserver = new ResizeObserver(entries=>{
-    for(const entry of entries){
-      lwChart.applyOptions({
-        width: entry.contentRect.width,
-        height: entry.contentRect.height
-      });
-    }
-  });
-  resizeObserver.observe(container);
+chart=LightweightCharts.createChart(
+document.getElementById("chart-container"),
+{
+layout:{background:{color:"#050f05"},textColor:"#006618"},
+grid:{vertLines:{color:"#0c1a0c"},horzLines:{color:"#0c1a0c"}},
+rightPriceScale:{borderColor:"#0f2a0f"},
+timeScale:{borderColor:"#0f2a0f",timeVisible:true}
 }
+);
 
-/* ===========================
-   MODE SWITCH
-=========================== */
-
-function switchChartMode(mode){
-  chartMode = mode;
-  localStorage.setItem("chartMode",mode);
-
-  document.querySelectorAll(".tf-btn").forEach(b=>b.classList.remove("active"));
-  if(mode==="LTF_RATIO") document.getElementById("btn-ltf-ratio").classList.add("active");
-  if(mode==="LTF_BOTH") document.getElementById("btn-ltf-both").classList.add("active");
-}
-
-/* ===========================
-   BOOT
-=========================== */
-
-window.addEventListener("load", async ()=>{
-  buildChart();
-
-  document.getElementById("btn-ltf-ratio").onclick=()=>switchChartMode("LTF_RATIO");
-  document.getElementById("btn-ltf-both").onclick=()=>switchChartMode("LTF_BOTH");
-
-  switchChartMode(chartMode);
-
-  const price = await safeFetch(
-    `https://api.binance.com/api/v3/ticker/price?symbol=${CONFIG.symbol}`
-  );
-
-  if(price){
-    document.getElementById("hdr-price").textContent =
-      parseFloat(price.price).toLocaleString("en-US",{minimumFractionDigits:1});
-    document.getElementById("bar-status").textContent="LIVE - BINANCE";
-  }
-
-  document.getElementById("bar-time").textContent =
-    new Date().toUTCString().slice(5,22).toUpperCase()+" UTC";
+candles=chart.addCandlestickSeries({
+upColor:"#00ff41",
+downColor:"#ff3131",
+borderUpColor:"#00ff41",
+borderDownColor:"#ff3131",
+wickUpColor:"#00aa2a",
+wickDownColor:"#aa1111"
 });
+
+new ResizeObserver(e=>{
+chart.applyOptions({
+width:e[0].contentRect.width,
+height:e[0].contentRect.height
+});
+}).observe(document.getElementById("chart-container"));
+}
+
+/* =========================
+   LOAD DATA
+========================= */
+
+async function loadCandles(){
+const data=await fetchJSON(
+`https://api.binance.com/api/v3/klines?symbol=${CONFIG.symbol}&interval=${CONFIG.interval}&limit=500`
+);
+if(!data)return;
+
+const formatted=data.map(d=>({
+time:d[0]/1000,
+open:+d[1],
+high:+d[2],
+low:+d[3],
+close:+d[4]
+}));
+
+candles.setData(formatted);
+drawFan(formatted);
+}
+
+/* =========================
+   FAN ENGINE (UNCHANGED GEOMETRY)
+========================= */
+
+function drawFan(data){
+fanSeries.forEach(s=>chart.removeSeries(s));
+fanSeries=[];
+
+if(data.length<50)return;
+
+const anchor=data[data.length-50];
+const basePrice=anchor.close;
+const baseTime=anchor.time;
+
+CONFIG.fanRatios.forEach(r=>{
+const line=chart.addLineSeries({
+color:"#004a14",
+lineWidth:1,
+priceLineVisible:false
+});
+line.setData([
+{time:baseTime,value:basePrice},
+{time:data[data.length-1].time,value:basePrice+(r*10)}
+]);
+fanSeries.push(line);
+});
+}
+
+/* =========================
+   MODE SWITCH
+========================= */
+
+function switchMode(m){
+mode=m;
+localStorage.setItem("mode",m);
+document.querySelectorAll(".tf-btn").forEach(b=>b.classList.remove("active"));
+if(m==="ratio")document.getElementById("btn-ratio").classList.add("active");
+if(m==="both")document.getElementById("btn-both").classList.add("active");
+}
+
+/* =========================
+   BOOT
+========================= */
+
+window.onload=async()=>{
+buildChart();
+
+document.getElementById("btn-ratio").onclick=()=>switchMode("ratio");
+document.getElementById("btn-both").onclick=()=>switchMode("both");
+
+switchMode(mode);
+
+await loadCandles();
+
+if(refreshLoop)clearInterval(refreshLoop);
+refreshLoop=setInterval(loadCandles,60000);
+
+const price=await fetchJSON(
+`https://api.binance.com/api/v3/ticker/price?symbol=${CONFIG.symbol}`
+);
+if(price){
+document.getElementById("hdr-price").textContent=
+parseFloat(price.price).toLocaleString();
+document.getElementById("bar-status").textContent="LIVE - BINANCE";
+}
+
+document.getElementById("bar-time").textContent=
+new Date().toUTCString().slice(5,22).toUpperCase()+" UTC";
+};
 </script>
 
 </body>
