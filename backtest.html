@@ -199,7 +199,7 @@ display:none;
 
   <div class="bar bar-top">
     <span class="bar-title">BACKTEST</span>
-    <a href="index.html" class="nav-link">BTC</a>
+    <a href="index.html" class="nav-link">BTC</a><a href="forwardtest.html" class="nav-link">FT</a>
     <span id="hdr-status" style="color:#006618;font-size:9px;letter-spacing:1px;">LTF FAN REJECTION</span>
   </div>
 
@@ -667,8 +667,9 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
     : null;
 
   // Time in drawdown %
-  const tradesInDD = equity.filter((e,i)=> i>0 && e < Math.max(...equity.slice(0,i+1))).length;
-  const pctTimeInDD = (tradesInDD / equity.length * 100).toFixed(1);
+  let runningMax = 0, tradesInDD = 0;
+  for(const e of equity){ if(e > runningMax) runningMax = e; if(e < runningMax) tradesInDD++; }
+  const pctTimeInDD = equity.length ? (tradesInDD / equity.length * 100).toFixed(1) : '0.0';
 
   // Calmar ratio (annualised return / max DD)
   const annualisedReturn = totalNet * (365 / days);
