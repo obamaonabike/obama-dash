@@ -484,13 +484,16 @@ async function runBacktest(){
     const anchor = getAnchor0900(c.time * 1000);
     const key    = anchor.toISOString().slice(0,10);
     if(!anchorOpens[key]){
-      // Find the 09:00 candle open
       const anchorSec = anchor.getTime() / 1000;
-      if(Math.abs(c.time - anchorSec) < 120){ // within 2 min of anchor
+      if(Math.abs(c.time - anchorSec) < 180){ // within 3 min of anchor
         anchorOpens[key] = c.open;
       }
     }
   }
+
+  const anchorDays = Object.keys(anchorOpens).length;
+  setProgress(85, `FOUND ${anchorDays} ANCHOR OPENS — SCANNING SIGNALS...`);
+  await new Promise(r=>setTimeout(r,30));
 
   // Main loop
   for(let i = 2; i < candles.length - 10; i++){
@@ -560,11 +563,18 @@ async function runBacktest(){
     }
   }
 
-  setProgress(100, 'DONE');
-  await new Promise(r=>setTimeout(r,200));
+  setProgress(100, `DONE — ${trades.length} TRADES FROM ${candles.length.toLocaleString()} CANDLES`);
+  await new Promise(r=>setTimeout(r,400));
   document.getElementById('progress-wrap').style.display = 'none';
 
-  renderResults(trades, byLevel, byHour, risk, 0.3, feeRate);
+  try{
+    renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate);
+  }catch(err){
+    document.getElementById('stat-grid').innerHTML =
+      `<div class="stat-card full"><div class="stat-label">ERROR IN RESULTS</div><div class="stat-value red" style="font-size:11px;word-break:break-all;">${err.message}</div><div class="stat-sub">Trades found: ${trades.length} | Candles: ${candles.length}</div></div>`;
+    document.getElementById('results').style.display='block';
+    console.error(err);
+  }
   btn.disabled = false;
 }
 
