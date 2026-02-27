@@ -595,21 +595,44 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
   const avgR      = totalNet / (totalTrades * risk);
   const breakEven = (1 / (1 + rrRatio)) * 100;
 
-  // Detailed drawdown
+  // ── FULL DRAWDOWN ANALYSIS ──────────────────────────────
   let peak = 0, runningPnl = 0, maxDD = 0;
   let ddStart = null, ddEnd = null, ddStartPeak = null;
   let curDDStart = null, curPeak = 0;
   const equity = [];
-  for(const t of trades){
+
+  // Track all individual drawdown periods
+  const ddPeriods = [];
+  let inDDPeriod = false, ddPeriodStart = null, ddPeriodPeak = 0, ddPeriodPeakPnl = 0;
+
+  for(let i=0; i<trades.length; i++){
+    const t = trades[i];
     runningPnl += t.netPnl;
     equity.push(runningPnl);
+
     if(runningPnl > peak){
+      // New equity high — close any open DD period
+      if(inDDPeriod){
+        ddPeriods.push({
+          depth: ddPeriodPeak,
+          startTime: ddPeriodStart,
+          endTime: t.time,
+          recoveryTrades: i - trades.findIndex(x=>x.time===ddPeriodStart)
+        });
+        inDDPeriod = false;
+      }
       peak = runningPnl;
       curPeak = peak;
       curDDStart = null;
     }
+
     const dd = peak - runningPnl;
-    if(dd > 0 && curDDStart === null) curDDStart = t.time;
+    if(dd > 0){
+      if(!inDDPeriod){ inDDPeriod = true; ddPeriodStart = t.time; ddPeriodPeak = 0; }
+      if(dd > ddPeriodPeak) ddPeriodPeak = dd;
+      if(curDDStart === null) curDDStart = t.time;
+    }
+
     if(dd > maxDD){
       maxDD = dd;
       ddStart = curDDStart;
@@ -617,27 +640,52 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
       ddStartPeak = curPeak;
     }
   }
-  // Recovery — how many trades after worst DD to get back to peak
-  let ddRecovery = null;
+  // Close any open DD period at end
+  if(inDDPeriod) ddPeriods.push({depth:ddPeriodPeak, startTime:ddPeriodStart, endTime:null, recoveryTrades:null});
+
+  // Recovery from worst DD
+  let ddRecovery = null, ddRecoveryDays = null;
   if(ddEnd){
     const ddEndIdx = trades.findIndex(t=>t.time===ddEnd);
-    const peakAfterDD = ddStartPeak;
     let recovPnl = equity[ddEndIdx] || 0;
     for(let i=ddEndIdx+1; i<trades.length; i++){
       recovPnl += trades[i].netPnl;
-      if(recovPnl >= peakAfterDD){ ddRecovery = i - ddEndIdx; break; }
+      if(recovPnl >= ddStartPeak){
+        ddRecovery = i - ddEndIdx;
+        ddRecoveryDays = ((trades[i].time - ddEnd) / 86400).toFixed(1);
+        break;
+      }
     }
   }
-  // Avg drawdown
-  let totalDD = 0, ddCount = 0, inDD = false;
-  let localPeak = 0, localPnl = 0;
-  for(const t of trades){
-    localPnl += t.netPnl;
-    if(localPnl > localPeak){ localPeak = localPnl; inDD = false; }
-    const dd = localPeak - localPnl;
-    if(dd > 0){ totalDD += dd; ddCount++; inDD = true; }
-  }
-  const avgDD = ddCount ? totalDD / ddCount : 0;
+
+  // Drawdown period stats
+  const numDDPeriods  = ddPeriods.length;
+  const avgDDDepth    = numDDPeriods ? ddPeriods.reduce((s,d)=>s+d.depth,0)/numDDPeriods : 0;
+  const avgDDRecovery = ddPeriods.filter(d=>d.recoveryTrades!==null).length
+    ? ddPeriods.filter(d=>d.recoveryTrades!==null).reduce((s,d)=>s+d.recoveryTrades,0)
+      / ddPeriods.filter(d=>d.recoveryTrades!==null).length
+    : null;
+
+  // Time in drawdown %
+  const tradesInDD = equity.filter((e,i)=> i>0 && e < Math.max(...equity.slice(0,i+1))).length;
+  const pctTimeInDD = (tradesInDD / equity.length * 100).toFixed(1);
+
+  // Calmar ratio (annualised return / max DD)
+  const annualisedReturn = totalNet * (365 / days);
+  const calmar = maxDD > 0 ? (annualisedReturn / maxDD).toFixed(2) : '∞';
+
+  // Min account size for viability
+  // Rule: account must absorb max DD + 3× expected consec loss buffer without margin call
+  // Also: position notional = (risk/stopDist) × btcPrice, needs to fit in account with leverage
+  const avgBtcPrice = trades.reduce((s,t)=>s+t.entry,0)/trades.length;
+  const avgPosSize  = (risk / parseFloat(document.getElementById('cfg-stop').value));
+  const avgNotional = avgPosSize * avgBtcPrice;
+  const marginReq   = avgNotional / 10; // assume 10x leverage
+  // Buffer: max DD × 2 safety factor + initial margin
+  const minAccountDD    = maxDD * 2;
+  const minAccountMargin= marginReq;
+  const minAccount      = Math.max(minAccountDD, minAccountMargin, risk * maxConsecLoss * 1.5);
+  const riskPct         = (risk / minAccount * 100).toFixed(1);
 
   // Max consecutive losses
   let maxConsecLoss = 0, consecLoss = 0;
@@ -678,13 +726,22 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
     ${statCard('DAILY EDGE', '$'+(totalNet/30).toFixed(2)+'/day', totalNet>0?'green':'red',
         `TRADES/DAY: ${(totalTrades/30).toFixed(1)}`)}
     ${statCard('MAX DRAWDOWN', '$'+maxDD.toFixed(2), 'red',
-        `${peak>0?(maxDD/peak*100).toFixed(1):0}% OF PEAK &nbsp;|&nbsp; AVG: $${avgDD.toFixed(0)}`)}
-    ${statCard('DD RECOVERY', ddRecovery!==null?ddRecovery+' TRADES':'NOT RECOVERED', ddRecovery!==null&&ddRecovery<20?'green':ddRecovery!==null?'amber':'red',
-        ddStart?'WORST DD: '+new Date(ddStart*1000).toUTCString().slice(5,12).toUpperCase():'—')}
+        `${peak>0?(maxDD/peak*100).toFixed(1):0}% OF PEAK &nbsp;|&nbsp; AVG DEPTH: $${avgDDDepth.toFixed(0)}`)}
+    ${statCard('DD RECOVERY', ddRecovery!==null?ddRecovery+' TRADES ('+ddRecoveryDays+'d)':'NOT RECOVERED',
+        ddRecovery!==null&&ddRecovery<20?'green':ddRecovery!==null?'amber':'red',
+        `AVG RECOVERY: ${avgDDRecovery!==null?avgDDRecovery.toFixed(0)+' TRADES':'—'} &nbsp;|&nbsp; PERIODS: ${numDDPeriods}`)}
+    ${statCard('TIME IN DRAWDOWN', pctTimeInDD+'%', parseFloat(pctTimeInDD)<30?'green':parseFloat(pctTimeInDD)<50?'amber':'red',
+        ddStart?'WORST STARTED: '+new Date(ddStart*1000).toUTCString().slice(5,12).toUpperCase():'—')}
+    ${statCard('CALMAR RATIO', calmar, parseFloat(calmar)>=3?'green':parseFloat(calmar)>=1?'amber':'red',
+        `ANNUALISED: $${annualisedReturn.toFixed(0)} / MAX DD: $${maxDD.toFixed(0)}`)}
     ${statCard('MAX CONSEC LOSS', maxConsecLoss, maxConsecLoss<=3?'green':maxConsecLoss<=6?'amber':'red',
         `EXPECTED: ~${expConsecLoss} &nbsp;|&nbsp; MAX WIN STREAK: ${maxConsecWin}`)}
     ${statCard('PROFIT FACTOR', profitFactor, parseFloat(profitFactor)>=2?'green':parseFloat(profitFactor)>=1.5?'amber':'red',
         `GROSS WINS: $${grossWins.toFixed(0)} / LOSSES: $${grossLosses.toFixed(0)}`)}
+    ${statCard('MIN ACCOUNT SIZE', '$'+Math.ceil(minAccount/100)*100, minAccount<5000?'green':minAccount<15000?'amber':'red',
+        `RISK/ACCOUNT: ${riskPct}% &nbsp;|&nbsp; AVG NOTIONAL: $${avgNotional.toFixed(0)}`)}
+    ${statCard('RISK OF RUIN', (Math.pow((1-wins/totalTrades)/(wins/totalTrades||0.5), minAccount/risk)*100).toFixed(3)+'%',
+        'amber', `AT $${risk} RISK ON $${Math.ceil(minAccount/100)*100} ACCOUNT`)}
   `;
 
   // By level table
