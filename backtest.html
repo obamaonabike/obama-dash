@@ -693,11 +693,6 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate, days){
   const avgNotional = avgPosSize * avgBtcPrice;
   const marginReq   = avgNotional / 10; // assume 10x leverage
   // Buffer: max DD × 2 safety factor + initial margin
-  const minAccountDD    = maxDD * 2;
-  const minAccountMargin= marginReq;
-  const minAccount      = Math.max(minAccountDD, minAccountMargin, risk * maxConsecLoss * 1.5);
-  const riskPct         = (risk / minAccount * 100).toFixed(1);
-
   // Max consecutive losses
   let maxConsecLoss = 0, consecLoss = 0;
   let maxConsecWin  = 0, consecWin  = 0;
@@ -709,6 +704,11 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate, days){
   }
   // Expected max consec losses (statistical)
   const expConsecLoss = Math.ceil(Math.log(totalTrades) / Math.log(1/(1-(wins/totalTrades||0.5))));
+
+  const minAccountDD    = maxDD * 2;
+  const minAccountMargin= marginReq;
+  const minAccount      = Math.max(minAccountDD, minAccountMargin, risk * maxConsecLoss * 1.5);
+  const riskPct         = (risk / minAccount * 100).toFixed(1);
 
   // Profit factor
   const grossWins   = trades.filter(t=>t.result==='WIN').reduce((s,t)=>s+t.grossPnl,0);
