@@ -568,7 +568,7 @@ async function runBacktest(){
   document.getElementById('progress-wrap').style.display = 'none';
 
   try{
-    renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate);
+    renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate, days);
   }catch(err){
     document.getElementById('stat-grid').innerHTML =
       `<div class="stat-card full"><div class="stat-label">ERROR IN RESULTS</div><div class="stat-value red" style="font-size:11px;word-break:break-all;">${err.message}</div><div class="stat-sub">Trades found: ${trades.length} | Candles: ${candles.length}</div></div>`;
@@ -588,7 +588,7 @@ function recordResult(lv, hr, result, netPnl){
 }
 
 // ── RENDER ─────────────────────────────────────────────
-function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
+function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate, days){
   const totalTrades = trades.length;
   if(!totalTrades){
     document.getElementById('stat-grid').innerHTML =
