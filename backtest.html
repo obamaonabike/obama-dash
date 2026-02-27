@@ -234,11 +234,16 @@ display:none;
   </div>
   <div class="config-title" style="margin-top:10px;">// FAN LEVELS</div>
   <div id="level-toggles" style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px;">
-    <button class="lvl-btn active" data-deg="27" onclick="this.classList.toggle('active')">±27</button>
-    <button class="lvl-btn active" data-deg="45" onclick="this.classList.toggle('active')">±45</button>
-    <button class="lvl-btn active" data-deg="60" onclick="this.classList.toggle('active')">±60</button>
-    <button class="lvl-btn active" data-deg="72" onclick="this.classList.toggle('active')">±72</button>
-    <button class="lvl-btn active" data-deg="78" onclick="this.classList.toggle('active')">±78</button>
+    <button class="lvl-btn active" data-deg="27"  onclick="this.classList.toggle('active')">+27</button>
+    <button class="lvl-btn active" data-deg="-27" onclick="this.classList.toggle('active')">-27</button>
+    <button class="lvl-btn active" data-deg="45"  onclick="this.classList.toggle('active')">+45</button>
+    <button class="lvl-btn active" data-deg="-45" onclick="this.classList.toggle('active')">-45</button>
+    <button class="lvl-btn active" data-deg="60"  onclick="this.classList.toggle('active')">+60</button>
+    <button class="lvl-btn active" data-deg="-60" onclick="this.classList.toggle('active')">-60</button>
+    <button class="lvl-btn active" data-deg="72"  onclick="this.classList.toggle('active')">+72</button>
+    <button class="lvl-btn active" data-deg="-72" onclick="this.classList.toggle('active')">-72</button>
+    <button class="lvl-btn active" data-deg="78"  onclick="this.classList.toggle('active')">+78</button>
+    <button class="lvl-btn active" data-deg="-78" onclick="this.classList.toggle('active')">-78</button>
   </div>
 </div>
 
@@ -311,7 +316,7 @@ function getActiveLevels(){
 
 // ── CONSTANTS ─────────────────────────────────────────
 const SYMBOL = 'BTCUSDT';
-const ANGLES  = [27, 45, 60, 72, 78];
+const ANGLES  = [27, -27, 45, -45, 60, -60, 72, -72, 78, -78];
 const HTF_RATIO = 73.3458;
 
 // ── MATH (identical to dashboard) ─────────────────────
@@ -370,8 +375,8 @@ function getLevelsAt(candle, anchorSec, anchorOpen, activeLevels){
   const levels = [];
   levels.push({label:'LEQ', price: anchorOpen, deg:0});
   for(const deg of angles){
-    levels.push({label:`L+${deg}`, price: anglePrice(anchorOpen, bar, deg, 1), deg});
-    levels.push({label:`L-${deg}`, price: anglePrice(anchorOpen, bar,-deg, 1), deg:-deg});
+    const label = deg > 0 ? `L+${deg}` : `L${deg}`;
+    levels.push({label, price: anglePrice(anchorOpen, bar, deg, 1), deg});
   }
   return levels;
 }
