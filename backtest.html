@@ -95,6 +95,13 @@ color:#006618;font-family:‘Share Tech Mono’,monospace;
 font-size:9px;letter-spacing:2px;padding:4px 10px;cursor:pointer;
 }
 .order-btn.active{border-color:#00cc33;color:#00cc33;background:#001a06;}
+.hr-btn{
+background:#030803;border:1px solid #0f2a0f;
+color:#006618;font-family:‘Share Tech Mono’,monospace;
+font-size:9px;letter-spacing:1px;padding:3px 5px;cursor:pointer;
+min-width:26px;text-align:center;
+}
+.hr-btn.active{border-color:#00cc33;color:#00cc33;background:#001a06;}
 .lvl-btn{
 background:#030803;border:1px solid #0f2a0f;
 color:#006618;font-family:‘Share Tech Mono’,monospace;
@@ -231,6 +238,34 @@ display:none;
   <div class="config-row">
     <span class="config-label">DAYS</span>
     <input class="config-input" id="cfg-days" type="number" value="30" min="1" max="60">
+  </div>
+  <div class="config-title" style="margin-top:10px;">// TRADING HOURS (UTC)</div>
+  <div style="font-size:9px;color:#004a14;letter-spacing:1px;padding:4px 0 6px;">TAP TO EXCLUDE</div>
+  <div id="hour-toggles" style="display:flex;flex-wrap:wrap;gap:4px;padding-bottom:4px;">
+    <button class="hr-btn active" data-hr="0"  onclick="this.classList.toggle('active')">00</button>
+    <button class="hr-btn active" data-hr="1"  onclick="this.classList.toggle('active')">01</button>
+    <button class="hr-btn active" data-hr="2"  onclick="this.classList.toggle('active')">02</button>
+    <button class="hr-btn active" data-hr="3"  onclick="this.classList.toggle('active')">03</button>
+    <button class="hr-btn active" data-hr="4"  onclick="this.classList.toggle('active')">04</button>
+    <button class="hr-btn active" data-hr="5"  onclick="this.classList.toggle('active')">05</button>
+    <button class="hr-btn active" data-hr="6"  onclick="this.classList.toggle('active')">06</button>
+    <button class="hr-btn active" data-hr="7"  onclick="this.classList.toggle('active')">07</button>
+    <button class="hr-btn active" data-hr="8"  onclick="this.classList.toggle('active')">08</button>
+    <button class="hr-btn active" data-hr="9"  onclick="this.classList.toggle('active')">09</button>
+    <button class="hr-btn active" data-hr="10" onclick="this.classList.toggle('active')">10</button>
+    <button class="hr-btn active" data-hr="11" onclick="this.classList.toggle('active')">11</button>
+    <button class="hr-btn active" data-hr="12" onclick="this.classList.toggle('active')">12</button>
+    <button class="hr-btn active" data-hr="13" onclick="this.classList.toggle('active')">13</button>
+    <button class="hr-btn active" data-hr="14" onclick="this.classList.toggle('active')">14</button>
+    <button class="hr-btn active" data-hr="15" onclick="this.classList.toggle('active')">15</button>
+    <button class="hr-btn active" data-hr="16" onclick="this.classList.toggle('active')">16</button>
+    <button class="hr-btn active" data-hr="17" onclick="this.classList.toggle('active')">17</button>
+    <button class="hr-btn active" data-hr="18" onclick="this.classList.toggle('active')">18</button>
+    <button class="hr-btn active" data-hr="19" onclick="this.classList.toggle('active')">19</button>
+    <button class="hr-btn active" data-hr="20" onclick="this.classList.toggle('active')">20</button>
+    <button class="hr-btn active" data-hr="21" onclick="this.classList.toggle('active')">21</button>
+    <button class="hr-btn active" data-hr="22" onclick="this.classList.toggle('active')">22</button>
+    <button class="hr-btn active" data-hr="23" onclick="this.classList.toggle('active')">23</button>
   </div>
   <div class="config-title" style="margin-top:10px;">// FAN LEVELS</div>
   <div id="level-toggles" style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px;">
@@ -411,6 +446,8 @@ async function runBacktest(){
   const days    = parseInt(document.getElementById('cfg-days').value);
   const activeLevels = Array.from(document.querySelectorAll('.lvl-btn.active')).map(b=>parseInt(b.dataset.deg));
   if(!activeLevels.length){ alert('SELECT AT LEAST ONE FAN LEVEL'); return; }
+  const activeHours = new Set(Array.from(document.querySelectorAll('.hr-btn.active')).map(b=>parseInt(b.dataset.hr)));
+  if(!activeHours.size){ alert('SELECT AT LEAST ONE HOUR'); return; }
 
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
@@ -468,6 +505,7 @@ async function runBacktest(){
     const anchorSec = anchor.getTime() / 1000;
     const levels    = getLevelsAt(prev, anchorSec, anchorOpen, activeLevels);
     const hour      = new Date(c.time * 1000).getUTCHours();
+    if(!activeHours.has(hour)) continue;
 
     for(const lv of levels){
       if(lv.label === 'LEQ') continue; // skip EQ
@@ -557,14 +595,49 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
   const avgR      = totalNet / (totalTrades * risk);
   const breakEven = (1 / (1 + rrRatio)) * 100;
 
-  // Max drawdown
-  let peak = 0, trough = 0, maxDD = 0, runningPnl = 0;
+  // Detailed drawdown
+  let peak = 0, runningPnl = 0, maxDD = 0;
+  let ddStart = null, ddEnd = null, ddStartPeak = null;
+  let curDDStart = null, curPeak = 0;
+  const equity = [];
   for(const t of trades){
     runningPnl += t.netPnl;
-    if(runningPnl > peak) peak = runningPnl;
+    equity.push(runningPnl);
+    if(runningPnl > peak){
+      peak = runningPnl;
+      curPeak = peak;
+      curDDStart = null;
+    }
     const dd = peak - runningPnl;
-    if(dd > maxDD) maxDD = dd;
+    if(dd > 0 && curDDStart === null) curDDStart = t.time;
+    if(dd > maxDD){
+      maxDD = dd;
+      ddStart = curDDStart;
+      ddEnd = t.time;
+      ddStartPeak = curPeak;
+    }
   }
+  // Recovery — how many trades after worst DD to get back to peak
+  let ddRecovery = null;
+  if(ddEnd){
+    const ddEndIdx = trades.findIndex(t=>t.time===ddEnd);
+    const peakAfterDD = ddStartPeak;
+    let recovPnl = equity[ddEndIdx] || 0;
+    for(let i=ddEndIdx+1; i<trades.length; i++){
+      recovPnl += trades[i].netPnl;
+      if(recovPnl >= peakAfterDD){ ddRecovery = i - ddEndIdx; break; }
+    }
+  }
+  // Avg drawdown
+  let totalDD = 0, ddCount = 0, inDD = false;
+  let localPeak = 0, localPnl = 0;
+  for(const t of trades){
+    localPnl += t.netPnl;
+    if(localPnl > localPeak){ localPeak = localPnl; inDD = false; }
+    const dd = localPeak - localPnl;
+    if(dd > 0){ totalDD += dd; ddCount++; inDD = true; }
+  }
+  const avgDD = ddCount ? totalDD / ddCount : 0;
 
   // Max consecutive losses
   let maxConsecLoss = 0, consecLoss = 0;
@@ -575,6 +648,8 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
     if(consecLoss > maxConsecLoss) maxConsecLoss = consecLoss;
     if(consecWin  > maxConsecWin)  maxConsecWin  = consecWin;
   }
+  // Expected max consec losses (statistical)
+  const expConsecLoss = Math.ceil(Math.log(totalTrades) / Math.log(1/(1-(wins/totalTrades||0.5))));
 
   // Profit factor
   const grossWins   = trades.filter(t=>t.result==='WIN').reduce((s,t)=>s+t.grossPnl,0);
@@ -603,9 +678,11 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate){
     ${statCard('DAILY EDGE', '$'+(totalNet/30).toFixed(2)+'/day', totalNet>0?'green':'red',
         `TRADES/DAY: ${(totalTrades/30).toFixed(1)}`)}
     ${statCard('MAX DRAWDOWN', '$'+maxDD.toFixed(2), 'red',
-        `${peak>0?(maxDD/peak*100).toFixed(1):0}% OF PEAK EQUITY`)}
+        `${peak>0?(maxDD/peak*100).toFixed(1):0}% OF PEAK &nbsp;|&nbsp; AVG: $${avgDD.toFixed(0)}`)}
+    ${statCard('DD RECOVERY', ddRecovery!==null?ddRecovery+' TRADES':'NOT RECOVERED', ddRecovery!==null&&ddRecovery<20?'green':ddRecovery!==null?'amber':'red',
+        ddStart?'WORST DD: '+new Date(ddStart*1000).toUTCString().slice(5,12).toUpperCase():'—')}
     ${statCard('MAX CONSEC LOSS', maxConsecLoss, maxConsecLoss<=3?'green':maxConsecLoss<=6?'amber':'red',
-        `MAX CONSEC WIN: ${maxConsecWin}`)}
+        `EXPECTED: ~${expConsecLoss} &nbsp;|&nbsp; MAX WIN STREAK: ${maxConsecWin}`)}
     ${statCard('PROFIT FACTOR', profitFactor, parseFloat(profitFactor)>=2?'green':parseFloat(profitFactor)>=1.5?'amber':'red',
         `GROSS WINS: $${grossWins.toFixed(0)} / LOSSES: $${grossLosses.toFixed(0)}`)}
   `;
