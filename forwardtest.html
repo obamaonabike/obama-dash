@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070d07">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ObamaDash — Forward Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#030803;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:11px;}
+#app{display:flex;flex-direction:column;width:100%;min-height:100dvh;}
+.bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#070d07;color:#006618;font-size:10px;letter-spacing:2px;text-transform:uppercase;}
+.bar-top{border-bottom:1px solid #0f2a0f;padding-top:env(safe-area-inset-top);min-height:calc(32px + env(safe-area-inset-top));align-items:flex-end;padding-bottom:6px;}
+.bar-bottom{border-top:1px solid #0f2a0f;padding-top:5px;padding-bottom:calc(env(safe-area-inset-bottom) + 5px);min-height:24px;height:auto;align-items:flex-start;}
+.bar-title{font-size:11px;letter-spacing:4px;color:#00cc33;}
+.nav-link{color:#004a14;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px;}
+.content{flex:1;overflow-y:auto;padding:10px;}
+
+.panel{border:1px solid #0f2a0f;background:#050f05;padding:10px;margin-bottom:10px;}
+.panel-title{color:#00cc33;letter-spacing:3px;font-size:10px;margin-bottom:10px;border-bottom:1px solid #0f2a0f;padding-bottom:6px;}
+.row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.lbl{color:#006618;font-size:10px;letter-spacing:1px;}
+.inp{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:‘Share Tech Mono’,monospace;font-size:11px;padding:4px 6px;width:160px;outline:none;}
+.inp:focus{border-color:#00cc33;}
+.inp.full{width:100%;margin-top:4px;}
+
+/* Status indicator */
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;background:#004a14;}
+.status-dot.live{background:#00ff41;box-shadow:0 0 6px #00ff41;}
+.status-dot.warn{background:#ffb300;}
+.status-dot.err{background:#ff3131;}
+
+/* Big start button */
+.start-btn{width:100%;padding:12px;background:#001a06;border:1px solid #00cc33;color:#00cc33;font-family:‘Share Tech Mono’,monospace;font-size:12px;letter-spacing:4px;cursor:pointer;text-transform:uppercase;margin-bottom:10px;}
+.start-btn.running{background:#00cc33;color:#030803;}
+.start-btn:disabled{opacity:0.4;}
+
+/* Signal cards */
+.signal-card{border:1px solid #0f2a0f;padding:8px 10px;margin-bottom:6px;position:relative;}
+.signal-card.long{border-left:3px solid #00ff41;}
+.signal-card.short{border-left:3px solid #ff3131;}
+.signal-card.win{border-left:3px solid #00ff41;background:#001a06;}
+.signal-card.loss{border-left:3px solid #ff3131;background:#1a0000;}
+.signal-card.open{border-left:3px solid #ffb300;}
+.sig-header{display:flex;justify-content:space-between;margin-bottom:4px;}
+.sig-level{color:#ffb300;font-size:11px;letter-spacing:2px;}
+.sig-dir{font-size:11px;}
+.sig-dir.long{color:#00ff41;}
+.sig-dir.short{color:#ff3131;}
+.sig-prices{display:flex;gap:12px;font-size:10px;color:#006618;margin-bottom:4px;}
+.sig-result{font-size:11px;letter-spacing:2px;}
+.sig-result.win{color:#00ff41;}
+.sig-result.loss{color:#ff3131;}
+.sig-result.open{color:#ffb300;}
+.sig-pnl{font-size:10px;}
+.sig-pnl.pos{color:#00ff41;}
+.sig-pnl.neg{color:#ff3131;}
+.sig-time{color:#004a14;font-size:9px;}
+
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.stat-box{border:1px solid #0f2a0f;background:#050f05;padding:6px 8px;text-align:center;}
+.stat-val{font-size:14px;color:#00cc33;}
+.stat-val.green{color:#00ff41;}
+.stat-val.red{color:#ff3131;}
+.stat-val.amber{color:#ffb300;}
+.stat-lbl{font-size:8px;color:#004a14;letter-spacing:1px;margin-top:2px;}
+
+.section-title{color:#00cc33;letter-spacing:3px;font-size:10px;margin:12px 0 6px;border-bottom:1px solid #0f2a0f;padding-bottom:6px;}
+.empty{color:#004a14;font-size:10px;letter-spacing:1px;padding:10px 0;text-align:center;}
+
+.tg-test-btn{background:#030803;border:1px solid #0f2a0f;color:#006618;font-family:‘Share Tech Mono’,monospace;font-size:9px;letter-spacing:1px;padding:4px 8px;cursor:pointer;}
+.tg-test-btn:active{color:#00cc33;border-color:#00cc33;}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+  <div class="bar bar-top">
+    <span class="bar-title">FORWARD TEST</span>
+    <span>
+      <a href="index.html" class="nav-link">BTC</a>
+      <a href="mnq.html" class="nav-link">MNQ</a>
+      <a href="backtest.html" class="nav-link">BT</a>
+    </span>
+  </div>
+
+  <div class="content">
+
+```
+<!-- CONFIG -->
+<div class="panel">
+  <div class="panel-title">// TELEGRAM CONFIG</div>
+  <div class="row">
+    <span class="lbl">BOT TOKEN</span>
+    <input class="inp" id="cfg-token" type="password" placeholder="paste token" value="8664286768:AAGnDl2X2fybooezONnrhJ2SKBOpZcGezN0">
+  </div>
+  <div class="row">
+    <span class="lbl">CHAT ID / USERNAME</span>
+    <input class="inp" id="cfg-chat" type="text" placeholder="@username or ID" value="@obamaonabike">
+  </div>
+  <div class="row">
+    <span class="lbl">TEST MESSAGE</span>
+    <button class="tg-test-btn" onclick="sendTest()">▶ SEND TEST</button>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">// STRATEGY CONFIG</div>
+  <div class="row">
+    <span class="lbl">RISK PER TRADE ($)</span>
+    <input class="inp" id="cfg-risk" type="number" value="500" min="1">
+  </div>
+  <div class="row">
+    <span class="lbl">STOP DISTANCE ($)</span>
+    <input class="inp" id="cfg-stop" type="number" value="1500" min="10">
+  </div>
+  <div class="row">
+    <span class="lbl">REWARD RATIO</span>
+    <input class="inp" id="cfg-rr" type="number" value="0.3" step="0.05" min="0.1">
+  </div>
+  <div class="row">
+    <span class="lbl">TOUCH TOLERANCE (%)</span>
+    <input class="inp" id="cfg-tol" type="number" value="0.08" step="0.01" min="0.01">
+  </div>
+</div>
+
+<!-- START/STOP -->
+<button class="start-btn" id="start-btn" onclick="toggleBot()">▶ START FORWARD TEST</button>
+
+<!-- LIVE STATUS -->
+<div class="panel" id="status-panel" style="display:none;">
+  <div class="panel-title">// LIVE STATUS</div>
+  <div class="row">
+    <span class="lbl"><span class="status-dot" id="ws-dot"></span>BINANCE WS</span>
+    <span id="ws-status" style="color:#006618;font-size:10px;">CONNECTING...</span>
+  </div>
+  <div class="row">
+    <span class="lbl"><span class="status-dot" id="tg-dot"></span>TELEGRAM</span>
+    <span id="tg-status" style="color:#006618;font-size:10px;">STANDBY</span>
+  </div>
+  <div class="row">
+    <span class="lbl">ANCHOR OPEN</span>
+    <span id="anchor-display" style="color:#00cc33;font-size:10px;">—</span>
+  </div>
+  <div class="row">
+    <span class="lbl">CANDLES PROCESSED</span>
+    <span id="candle-count" style="color:#006618;font-size:10px;">0</span>
+  </div>
+  <div class="row">
+    <span class="lbl">LAST PRICE</span>
+    <span id="last-price" style="color:#00cc33;font-size:11px;">—</span>
+  </div>
+</div>
+
+<!-- LIVE STATS -->
+<div id="stats-section" style="display:none;">
+  <div class="section-title">// SESSION P&L</div>
+  <div class="stats-bar">
+    <div class="stat-box"><div class="stat-val" id="stat-trades">0</div><div class="stat-lbl">SIGNALS</div></div>
+    <div class="stat-box"><div class="stat-val green" id="stat-winrate">—</div><div class="stat-lbl">WIN RATE</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-pnl">$0</div><div class="stat-lbl">NET P&L</div></div>
+    <div class="stat-box"><div class="stat-val amber" id="stat-open">0</div><div class="stat-lbl">OPEN</div></div>
+  </div>
+</div>
+
+<!-- SIGNAL LOG -->
+<div id="signals-section" style="display:none;">
+  <div class="section-title">// SIGNAL LOG</div>
+  <div id="signal-log"></div>
+</div>
+```
+
+  </div>
+
+  <div class="bar bar-bottom">
+    <span id="bar-status">STOPPED</span>
+    <span id="bar-time">—</span>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────
+const SYMBOL    = 'BTCUSDT';
+const HTF_RATIO = 73.3458;
+const ANGLES    = [27,-27,45,-45,60,-60,72,-72,78,-78];
+
+// ── STATE ─────────────────────────────────────────────
+let ws = null, running = false;
+let anchorTs, anchorOpen, anchorSec;
+let prevCandle = null, candleBuffer = {};
+let signals = [], candlesProcessed = 0;
+let statusInterval = null;
+
+// ── MATH ──────────────────────────────────────────────
+function anglePrice(anchor, bars, deg, ratio){
+  return anchor + bars*(ratio||1)*Math.tan(deg*Math.PI/180);
+}
+function getToday0900(){
+  const n=new Date();
+  const a=new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate(),9,0,0));
+  if(a>n) a.setUTCDate(a.getUTCDate()-1);
+  return a;
+}
+function getLevels(bar, anchorOpen){
+  const lvs = [];
+  for(const deg of ANGLES){
+    const label = deg>0?`L+${deg}`:`L${deg}`;
+    lvs.push({label, price: anglePrice(anchorOpen, bar, deg, 1), deg});
+  }
+  return lvs;
+}
+function fmt(n){ return n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1}); }
+
+// ── TELEGRAM ──────────────────────────────────────────
+async function tgSend(text){
+  const token = document.getElementById('cfg-token').value.trim();
+  const chat  = document.getElementById('cfg-chat').value.trim();
+  if(!token||!chat) return;
+  try{
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({chat_id:chat, text, parse_mode:'HTML'})
+    });
+    const d = await r.json();
+    if(d.ok){
+      document.getElementById('tg-dot').className='status-dot live';
+      document.getElementById('tg-status').textContent='OK';
+    } else {
+      document.getElementById('tg-dot').className='status-dot err';
+      document.getElementById('tg-status').textContent=d.description||'ERROR';
+    }
+    return d.ok;
+  }catch(e){
+    document.getElementById('tg-dot').className='status-dot err';
+    document.getElementById('tg-status').textContent='NETWORK ERROR';
+    return false;
+  }
+}
+
+async function sendTest(){
+  const ok = await tgSend('🤖 <b>ObamaDash Forward Test</b>\nBot connected and ready.\n\n<i>Obama Scalp Bot online</i>');
+  document.getElementById('tg-status').textContent = ok ? '✓ CONNECTED' : 'FAILED — start bot first: @Obama_Scalp_Bot';
+}
+
+// ── SIGNAL DETECTION ──────────────────────────────────
+const debounce = {};
+
+function detectSignals(closedCandle){
+  if(!anchorOpen) return;
+  const bar = Math.floor((closedCandle.time - anchorSec) / 60);
+  const levels = getLevels(bar, anchorOpen);
+  const tolPct = parseFloat(document.getElementById('cfg-tol').value)/100;
+  const risk   = parseFloat(document.getElementById('cfg-risk').value);
+  const stop   = parseFloat(document.getElementById('cfg-stop').value);
+  const rr     = parseFloat(document.getElementById('cfg-rr').value);
+
+  const dateKey = new Date(closedCandle.time*1000).toISOString().slice(0,10);
+
+  for(const lv of levels){
+    const tol = lv.price * tolPct;
+    const debKeyL = `${dateKey}_${lv.label}_L`;
+    const debKeyS = `${dateKey}_${lv.label}_S`;
+
+    // LONG: wick down to level, close above
+    const touchedBelow = closedCandle.low  <= lv.price+tol && closedCandle.low  >= lv.price-tol;
+    const rejectedUp   = closedCandle.close > lv.price;
+    if(touchedBelow && rejectedUp && !debounce[debKeyL]){
+      debounce[debKeyL] = true;
+      fireSignal('LONG', lv, closedCandle, risk, stop, rr);
+    }
+
+    // SHORT: wick up to level, close below
+    const touchedAbove = closedCandle.high >= lv.price-tol && closedCandle.high <= lv.price+tol;
+    const rejectedDown = closedCandle.close < lv.price;
+    if(touchedAbove && rejectedDown && !debounce[debKeyS]){
+      debounce[debKeyS] = true;
+      fireSignal('SHORT', lv, closedCandle, risk, stop, rr);
+    }
+  }
+}
+
+function fireSignal(dir, lv, candle, risk, stopDist, rr){
+  const entry  = candle.close;
+  const d      = dir==='LONG'?1:-1;
+  const target = entry + d*stopDist*rr;
+  const stop   = entry - d*stopDist;
+  const gross  = risk*rr;
+
+  const sig = {
+    id: Date.now(), time: candle.time,
+    level: lv.label, dir,
+    entry, target, stop,
+    grossWin: gross, risk,
+    result: 'OPEN', netPnl: null,
+    alertSent: false
+  };
+  signals.unshift(sig);
+
+  // Send Telegram alert
+  const emoji = dir==='LONG'?'🟢':'🔴';
+  const msg = `${emoji} <b>ObamaDash Signal</b>\n\n`
+    + `<b>${dir}</b> @ <b>$${fmt(entry)}</b>\n`
+    + `Level: <code>${lv.label}</code>\n`
+    + `Target: $${fmt(target)} (+$${gross.toFixed(0)})\n`
+    + `Stop: $${fmt(stop)} (-$${risk.toFixed(0)})\n`
+    + `RR: ${rr}:1\n\n`
+    + `<i>${new Date(candle.time*1000).toUTCString().slice(5,22).toUpperCase()} UTC</i>`;
+
+  tgSend(msg);
+  updateUI();
+}
+
+// ── TRADE MONITORING (paper P&L) ──────────────────────
+function updateOpenTrades(currentPrice){
+  let changed = false;
+  for(const sig of signals){
+    if(sig.result !== 'OPEN') continue;
+    const d = sig.dir==='LONG'?1:-1;
+    let result = null;
+    if(d===1 && currentPrice >= sig.target) result = 'WIN';
+    if(d===1 && currentPrice <= sig.stop)   result = 'LOSS';
+    if(d===-1 && currentPrice <= sig.target) result = 'WIN';
+    if(d===-1 && currentPrice >= sig.stop)   result = 'LOSS';
+
+    if(result){
+      sig.result = result;
+      sig.netPnl = result==='WIN' ? sig.grossWin : -sig.risk;
+      changed = true;
+
+      const emoji = result==='WIN'?'✅':'❌';
+      const msg = `${emoji} <b>Trade ${result}</b>\n\n`
+        + `${sig.dir} ${sig.level} @ $${fmt(sig.entry)}\n`
+        + `Exit: $${fmt(currentPrice)}\n`
+        + `P&L: ${sig.netPnl>=0?'+':''}$${sig.netPnl.toFixed(2)}\n\n`
+        + `<i>${new Date().toUTCString().slice(5,22).toUpperCase()} UTC</i>`;
+      tgSend(msg);
+    }
+  }
+  if(changed) updateUI();
+}
+
+// ── WEBSOCKET ─────────────────────────────────────────
+function startWS(){
+  ws = new WebSocket(`wss://stream.binance.com:9443/ws/${SYMBOL.toLowerCase()}@kline_1m`);
+
+  ws.onopen = ()=>{
+    document.getElementById('ws-dot').className='status-dot live';
+    document.getElementById('ws-status').textContent='CONNECTED';
+    document.getElementById('bar-status').textContent='LIVE';
+  };
+
+  ws.onmessage = (e)=>{
+    const d = JSON.parse(e.data);
+    const k = d.k;
+    const candle = {
+      time:  k.t/1000,
+      open:  parseFloat(k.o),
+      high:  parseFloat(k.h),
+      low:   parseFloat(k.l),
+      close: parseFloat(k.c),
+      closed: k.x
+    };
+
+    document.getElementById('last-price').textContent = '$'+fmt(candle.close);
+    document.getElementById('bar-time').textContent = new Date().toUTCString().slice(5,22).toUpperCase()+' UTC';
+
+    // Update open paper trades on every tick
+    updateOpenTrades(candle.close);
+
+    if(candle.closed){
+      candlesProcessed++;
+      document.getElementById('candle-count').textContent = candlesProcessed;
+      detectSignals(candle);
+      prevCandle = candle;
+    }
+  };
+
+  ws.onerror = ()=>{
+    document.getElementById('ws-dot').className='status-dot err';
+    document.getElementById('ws-status').textContent='ERROR';
+  };
+  ws.onclose = ()=>{
+    document.getElementById('ws-dot').className='status-dot warn';
+    document.getElementById('ws-status').textContent='DISCONNECTED';
+    if(running) setTimeout(startWS, 3000); // auto-reconnect
+  };
+}
+
+// ── ANCHOR FETCH ──────────────────────────────────────
+async function fetchAnchorOpen(){
+  try{
+    anchorTs  = getToday0900();
+    anchorSec = anchorTs.getTime()/1000;
+    const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=1m&startTime=${anchorTs.getTime()}&limit=1`);
+    const d = await r.json();
+    anchorOpen = d.length ? parseFloat(d[0][1]) : null;
+    document.getElementById('anchor-display').textContent = anchorOpen ? '$'+fmt(anchorOpen)+' (09:00 UTC)' : 'NOT FOUND';
+  }catch(e){
+    document.getElementById('anchor-display').textContent = 'FETCH ERROR';
+  }
+}
+
+// ── START / STOP ──────────────────────────────────────
+async function toggleBot(){
+  if(!running){
+    running = true;
+    const btn = document.getElementById('start-btn');
+    btn.textContent = '■ STOP FORWARD TEST';
+    btn.className = 'start-btn running';
+    document.getElementById('status-panel').style.display='block';
+    document.getElementById('stats-section').style.display='block';
+    document.getElementById('signals-section').style.display='block';
+
+    await fetchAnchorOpen();
+    startWS();
+
+    // Re-fetch anchor every hour
+    statusInterval = setInterval(fetchAnchorOpen, 3600000);
+
+    await tgSend('🚀 <b>ObamaDash Forward Test STARTED</b>\n\nMonitoring BTC LTF fan levels\nAnchor: '+new Date(anchorSec*1000).toUTCString().slice(5,22).toUpperCase()+' UTC\n\nSignals will fire here automatically.');
+  } else {
+    running = false;
+    if(ws) ws.close();
+    if(statusInterval) clearInterval(statusInterval);
+    const btn = document.getElementById('start-btn');
+    btn.textContent = '▶ START FORWARD TEST';
+    btn.className = 'start-btn';
+    document.getElementById('ws-dot').className='status-dot';
+    document.getElementById('bar-status').textContent='STOPPED';
+    tgSend('⏹ <b>ObamaDash Forward Test STOPPED</b>');
+  }
+}
+
+// ── UI UPDATE ─────────────────────────────────────────
+function updateUI(){
+  const closed   = signals.filter(s=>s.result!=='OPEN');
+  const wins     = signals.filter(s=>s.result==='WIN').length;
+  const openSigs = signals.filter(s=>s.result==='OPEN').length;
+  const netPnl   = closed.reduce((s,t)=>s+(t.netPnl||0),0);
+  const winRate  = closed.length ? (wins/closed.length*100).toFixed(1)+'%' : '—';
+
+  document.getElementById('stat-trades').textContent  = signals.length;
+  document.getElementById('stat-winrate').textContent = winRate;
+  document.getElementById('stat-pnl').textContent     = (netPnl>=0?'+':'')+'$'+netPnl.toFixed(0);
+  document.getElementById('stat-pnl').className       = 'stat-val '+(netPnl>=0?'green':'red');
+  document.getElementById('stat-open').textContent    = openSigs;
+
+  const log = document.getElementById('signal-log');
+  if(!signals.length){
+    log.innerHTML = '<div class="empty">WAITING FOR SIGNALS...</div>';
+    return;
+  }
+  log.innerHTML = signals.slice(0,50).map(s=>{
+    const dirCls = s.dir.toLowerCase();
+    const resCls = s.result.toLowerCase();
+    const pnlTxt = s.netPnl!==null ? (s.netPnl>=0?'+':'')+' $'+s.netPnl.toFixed(2) : '';
+    const pnlCls = s.netPnl>0?'pos':s.netPnl<0?'neg':'';
+    const dt = new Date(s.time*1000).toUTCString().slice(5,17).toUpperCase();
+    return `<div class="signal-card ${resCls}">
+      <div class="sig-header">
+        <span class="sig-level">${s.level}</span>
+        <span class="sig-dir ${dirCls}">${s.dir}</span>
+      </div>
+      <div class="sig-prices">
+        <span>ENTRY $${fmt(s.entry)}</span>
+        <span>TP $${fmt(s.target)}</span>
+        <span>SL $${fmt(s.stop)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="sig-result ${resCls}">${s.result}</span>
+        <span class="sig-pnl ${pnlCls}">${pnlTxt}</span>
+        <span class="sig-time">${dt}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+</script>
+
+</body>
+</html>
