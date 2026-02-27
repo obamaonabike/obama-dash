@@ -192,12 +192,12 @@ display:none;
     <input class="config-input" id="cfg-risk" type="number" value="100" min="1">
   </div>
   <div class="config-row">
-    <span class="config-label">STRATEGY</span>
-    <span style="color:#00cc33;font-size:10px;">0.3R — FAN REJECTION</span>
+    <span class="config-label">REWARD RATIO</span>
+    <input class="config-input" id="cfg-rr" type="number" value="0.3" step="0.05" min="0.1">
   </div>
   <div class="config-row">
-    <span class="config-label">STOP</span>
-    <span style="color:#00cc33;font-size:10px;">NEXT FAN LEVEL</span>
+    <span class="config-label">STOP DISTANCE ($)</span>
+    <input class="config-input" id="cfg-stop" type="number" value="150" min="10">
   </div>
   <div class="config-row">
     <span class="config-label">TAKER FEE (%)</span>
@@ -347,7 +347,8 @@ function simulateTrade(candles, entryIdx, dir, entryPrice, stopDist, rrRatio, fe
 // ── MAIN BACKTEST ──────────────────────────────────────
 async function runBacktest(){
   const risk    = parseFloat(document.getElementById('cfg-risk').value);
-  const rrRatio = 0.3; // fixed strategy
+  const rrRatio = parseFloat(document.getElementById('cfg-rr').value);
+  const stopDist= parseFloat(document.getElementById('cfg-stop').value);
   const feeRate = parseFloat(document.getElementById('cfg-fee').value) / 100;
   const tolPct  = parseFloat(document.getElementById('cfg-tol').value) / 100;
   const days    = parseInt(document.getElementById('cfg-days').value);
@@ -421,11 +422,9 @@ async function runBacktest(){
       if(touchedBelow && rejectedUp && !debounce[debKey]){
         debounce[debKey] = true;
         const entry  = c.open;
-        // Stop = distance to next fan level below (or fixed fallback)
-        const nextBelow = levels.filter(l=>l.price < lv.price).sort((a,b)=>b.price-a.price)[0];
-        const stopDist  = nextBelow ? Math.abs(lv.price - nextBelow.price) : lv.price * 0.003;
         const result = simulateTrade(candles, i+1, 1, entry, stopDist, rrRatio, feeRate);
         if(result !== 'TIMEOUT'){
+          // Fee calc: position size = risk / stopDist, fees = posSize × price × feeRate × 2
           const posSize  = risk / stopDist;
           const feeCost  = posSize * entry * feeRate * 2;
           const grossPnl = result === 'WIN' ? risk * rrRatio : -risk;
@@ -446,9 +445,6 @@ async function runBacktest(){
       if(touchedAbove && rejectedDown && !debounce[debKey + '_S']){
         debounce[debKey + '_S'] = true;
         const entry  = c.open;
-        // Stop = distance to next fan level above
-        const nextAbove = levels.filter(l=>l.price > lv.price).sort((a,b)=>a.price-b.price)[0];
-        const stopDist  = nextAbove ? Math.abs(nextAbove.price - lv.price) : lv.price * 0.003;
         const result = simulateTrade(candles, i+1, -1, entry, stopDist, rrRatio, feeRate);
         if(result !== 'TIMEOUT'){
           const posSize  = risk / stopDist;
