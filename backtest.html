@@ -622,8 +622,8 @@ async function runBacktest(){
       // ── SHORT signal: prev candle wicked UP to level, closed BELOW it
       const touchedAbove = prev.high >= lv.price - tol && prev.high <= lv.price + tol;
       const rejectedDown = prev.close < lv.price && prev.open < prev.close + tol;
-      if(touchedAbove && rejectedDown && !debounce[debKey + '_S']){
-        debounce[debKey + '_S'] = true;
+      if(touchedAbove && rejectedDown && !debounce[debKey]){
+        debounce[debKey] = true;
         const entry  = c.open;
         const result = simulateTrade(candles, i+1, -1, entry, stopDist, rrRatio, feeRate);
         if(result !== 'TIMEOUT'){
