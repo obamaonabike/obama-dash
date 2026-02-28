@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+
+<html>
+<head><meta charset="UTF-8"><title>WXDBG2</title></head>
+<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:14px">
+<div id="x">WAITING</div>
+<script type="text/javascript">
+document.getElementById("x").textContent = "STEP1 OK";
+fetch("https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&minutely_15=temperature_2m&timezone=UTC&past_days=2&forecast_days=1").then(function(r){return r.json();}).then(function(d){var m=d.minutely_15;document.getElementById("x").textContent=m?"GOT "+m.time.length+" ROWS, FIRST="+m.time[0]+" "+m.temperature_2m[0]+"C":"NO minutely_15, KEYS="+Object.keys(d).join(",");}).catch(function(e){document.getElementById("x").textContent="FAIL: "+e.message;});
+</script>
+</body>
+</html>
