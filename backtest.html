@@ -562,7 +562,7 @@ async function runBacktest(){
     const key    = anchor.toISOString().slice(0,10);
     if(!anchorOpens[key]){
       const anchorSec = anchor.getTime() / 1000;
-      if(Math.abs(c.time - anchorSec) < 180){ // within 3 min of anchor
+      if(Math.abs(c.time - anchorSec) < 180){ // within 3 min of 09:00
         anchorOpens[key] = c.open;
       }
     }
@@ -577,7 +577,13 @@ async function runBacktest(){
     const c    = candles[i];
     const prev = candles[i-1];
 
-    const anchor    = getAnchor0900(c.time * 1000);
+    // Use prev candle's session for everything — prevents cross-session false signals
+    const prevAnchor  = getAnchor0900(prev.time * 1000);
+    const cAnchor     = getAnchor0900(c.time * 1000);
+    // Skip if prev and c straddle a session boundary
+    if(prevAnchor.getTime() !== cAnchor.getTime()) continue;
+
+    const anchor    = prevAnchor;
     const anchorKey = anchor.toISOString().slice(0,10);
     const anchorOpen= anchorOpens[anchorKey];
     if(!anchorOpen) continue;
