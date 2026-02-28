@@ -15,7 +15,7 @@ import json, math, time, threading, requests, os, signal, sys
 from datetime import datetime, timezone
 from websocket import WebSocketApp
 
-# ── CONFIG ────────────────────────────────────────────
+# CONFIG
 
 SYMBOL      = ‘BTCUSDT’
 ANGLES      = [27, -27, 45, -45, 60, -60, 72, -72, 78, -78]
@@ -29,7 +29,7 @@ TOL_PCT     = 0.0008     # 0.08% touch tolerance
 MIN_BAR     = 5          # ignore signals within first N bars of anchor (avoids anchor candle false triggers)
 LOG_FILE    = ‘signals.json’
 
-# ── STATE ─────────────────────────────────────────────
+# STATE
 
 signals     = []
 open_trades = {}   # key: signal id
@@ -38,7 +38,7 @@ anchor_open = None
 anchor_sec  = None
 lock        = threading.Lock()
 
-# ── MATH ──────────────────────────────────────────────
+# MATH
 
 def angle_price(anchor, bars, deg):
 return anchor + bars * math.tan(math.radians(deg))
@@ -54,7 +54,7 @@ return anchor
 def fmt(n):
 return f”{n:,.1f}”
 
-# ── PERSISTENCE ───────────────────────────────────────
+# PERSISTENCE
 
 def save_signals():
 try:
@@ -74,7 +74,7 @@ except Exception as e:
 print(f”[LOAD ERROR] {e}”)
 signals = []
 
-# ── TELEGRAM ──────────────────────────────────────────
+# TELEGRAM
 
 def tg_send(text):
 try:
@@ -91,7 +91,7 @@ except Exception as e:
 print(f”[TG NETWORK] {e}”)
 return False
 
-# ── SESSION STATS ─────────────────────────────────────
+# SESSION STATS
 
 def compute_stats():
 closed = [s for s in signals if s[‘result’] != ‘OPEN’]
@@ -153,9 +153,9 @@ if not st:
 return ‘’
 
 ```
-emoji = '✅' if net_pnl >= 0 else '❌'
+emoji = ' ' if net_pnl >= 0 else ' '
 pnl_str = f"+${net_pnl:.2f}" if net_pnl >= 0 else f"-${abs(net_pnl):.2f}"
-wr_emoji = '✅' if st['win_rate'] >= 85 else '⚠️' if st['win_rate'] >= st['break_even'] else '❌'
+wr_emoji = ' ' if st['win_rate'] >= 85 else '  ' if st['win_rate'] >= st['break_even'] else ' '
 dd_pct = f"{st['max_dd']/st['peak']*100:.1f}%" if st['peak'] > 0 else "0%"
 
 lines = [
@@ -165,7 +165,7 @@ lines = [
     f"Exit: ${fmt(exit_price)}  |  P&amp;L: {pnl_str}",
     f"Fee: -${fee_cost:.2f}",
     "",
-    "─── SESSION STATS ───────────",
+    "    SESSION STATS            ",
     f"Trades:     {st['total']}  ({st['wins']}W / {st['losses']}L / {st['open']} open)",
     f"Win Rate:   {st['win_rate']:.1f}%  {wr_emoji}  (B/E: {st['break_even']:.1f}%)",
     f"Net P&amp;L:    {'+' if st['net_pnl']>=0 else ''}${st['net_pnl']:.2f}",
@@ -173,13 +173,13 @@ lines = [
     f"Fees Paid:  ${st['total_fees']:.2f}",
     f"Max DD:     ${st['max_dd']:.2f}  ({dd_pct} of peak)",
     f"Max C.Loss: {st['max_consec']}",
-    "─────────────────────────────",
+    "                             ",
     f"<i>{datetime.now(timezone.utc).strftime('%d %b %Y %H:%M UTC').upper()}</i>",
 ]
 return '\n'.join(lines)
 ```
 
-# ── ANCHOR FETCH ──────────────────────────────────────
+# ANCHOR FETCH
 
 def fetch_anchor():
 global anchor_open, anchor_sec
@@ -206,7 +206,7 @@ while True:
 time.sleep(3600)
 fetch_anchor()
 
-# ── SIGNAL DETECTION ──────────────────────────────────
+# SIGNAL DETECTION
 
 def detect_signals(candle):
 if not anchor_open or not anchor_sec:
@@ -279,7 +279,7 @@ with lock:
     save_signals()
 
 dt = datetime.fromtimestamp(candle['time'], timezone.utc).strftime('%d %b %Y %H:%M UTC').upper()
-emoji = '🟢' if direction == 'LONG' else '🔴'
+emoji = ' ' if direction == 'LONG' else ' '
 msg = (
     f"{emoji} <b>ObamaDash Signal</b>\n\n"
     f"<b>{direction}</b> @ <b>${fmt(entry)}</b>\n"
@@ -293,7 +293,7 @@ tg_send(msg)
 print(f"[SIGNAL] {direction} {label} entry={entry:.1f} target={target:.1f} stop={stop:.1f}")
 ```
 
-# ── PAPER TRADE MONITORING ────────────────────────────
+# PAPER TRADE MONITORING
 
 def check_open_trades(price):
 to_close = []
@@ -329,7 +329,7 @@ for sig_id, sig, exit_price in to_close:
     print(f"[CLOSED] {sig['dir']} {sig['level']} result={sig['result']} pnl={sig['net_pnl']:.2f}")
 ```
 
-# ── WEBSOCKET ─────────────────────────────────────────
+# WEBSOCKET
 
 def on_message(ws, message):
 try:
@@ -351,10 +351,10 @@ print(f”[WS MSG ERROR] {e}”)
 
 def on_open(ws):
 print(”[WS] Connected to Binance”)
-tg_send(‘🟢 <b>ObamaDash Bot ONLINE</b>\nMonitoring BTCUSDT LTF fan levels.\nAlerts will fire here automatically.’)
+tg_send(’  <b>ObamaDash Bot ONLINE</b>\nMonitoring BTCUSDT LTF fan levels.\nAlerts will fire here automatically.’)
 
 def on_close(ws, code, msg):
-print(f”[WS] Disconnected ({code}) — reconnecting in 5s”)
+print(f”[WS] Disconnected ({code})   reconnecting in 5s”)
 time.sleep(5)
 start_ws()
 
@@ -370,10 +370,10 @@ ws.run_forever(ping_interval=30, ping_timeout=10)
 def shutdown(sig, frame):
 print(”\n[SHUTDOWN] Saving signals…”)
 save_signals()
-tg_send(‘⏹ <b>ObamaDash Bot OFFLINE</b>’)
+tg_send(’  <b>ObamaDash Bot OFFLINE</b>’)
 sys.exit(0)
 
-# ── MAIN ──────────────────────────────────────────────
+# MAIN
 
 if **name** == ‘**main**’:
 print(”=” * 50)
