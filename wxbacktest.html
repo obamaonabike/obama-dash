@@ -15,7 +15,7 @@ a{color:#004a14;font-size:9px;letter-spacing:2px;text-decoration:none;margin-lef
 .content{padding:10px;overflow-y:auto}
 .row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .lbl{font-size:9px;color:#006618;letter-spacing:1px;min-width:160px}
-input{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;padding:4px 6px;width:80px}
+input{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;padding:4px 6px;width:90px}
 button{background:#030803;border:1px solid #00cc33;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:2px;padding:7px 20px;cursor:pointer;margin-top:8px;-webkit-appearance:none}
 button:disabled{border-color:#0f2a0f;color:#006618}
 #msg{font-size:9px;margin:6px 0;min-height:14px;letter-spacing:1px;word-break:break-all}
@@ -25,10 +25,10 @@ button:disabled{border-color:#0f2a0f;color:#006618}
 .cval{font-size:16px;letter-spacing:1px}
 .csub{font-size:8px;color:#004a14;margin-top:2px}
 .sec{font-size:9px;color:#006618;letter-spacing:3px;padding:8px 0 4px;border-bottom:1px solid #0f2a0f;margin-bottom:6px}
-.note{font-size:8px;color:#004a14;margin-bottom:8px;line-height:1.6}
-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px}
+.note{font-size:8px;color:#004a14;margin-bottom:8px;line-height:1.6;letter-spacing:.3px}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9px}
 th{color:#004a14;padding:5px 4px;border-bottom:1px solid #0f2a0f;text-align:left;font-size:8px;letter-spacing:1px}
-td{padding:5px 4px;border-bottom:1px solid #0a1a0a}
+td{padding:4px;border-bottom:1px solid #0a1a0a}
 .hi{color:#00ff41}.lo{color:#ff4444}.dim{color:#006618}.ok{color:#00cc33}.no{color:#444}
 </style>
 </head>
@@ -39,35 +39,37 @@ td{padding:5px 4px;border-bottom:1px solid #0a1a0a}
 </div>
 <div class="content">
   <div class="sec">// CONFIG</div>
-  <div class="row"><span class="lbl">DAYS (MAX 7)</span><input id="i-days" type="number" value="5" min="1" max="7"></div>
+  <div class="row"><span class="lbl">START DATE</span><input id="i-s" type="date" value="2025-10-01"></div>
+  <div class="row"><span class="lbl">END DATE</span><input id="i-e" type="date" value="2026-02-20"></div>
   <div class="row"><span class="lbl">ANCHOR HOUR UTC</span><input id="i-anc" type="number" value="9" min="0" max="23"></div>
   <div class="row"><span class="lbl">PREDICT HI AT HOUR</span><input id="i-phi" type="number" value="14" min="0" max="23"></div>
   <div class="row"><span class="lbl">HTF RATIO</span><input id="i-rat" type="number" value="60" step="1" min="1"></div>
   <button id="btn" onclick="run()">RUN BACKTEST</button>
-  <div id="msg" style="color:#006618">READY</div>
+  <div id="msg" style="color:#006618">SOURCE: OPEN-METEO ARCHIVE (FREE, BACK TO 1940)</div>
   <div id="results" style="display:none">
     <div class="sec">// SUMMARY</div>
-    <div class="note">
-      STRATEGY: at anchor time, each fan level projects a HIGH prediction for the expected peak hour.<br>
-      CORRECT = predicted degree bracket matches actual high (rounded to nearest 1C).<br>
-      POLYMARKET: predict which 1C bracket the daily high falls in.
-    </div>
+    <div class="note">Each fan angle projects a HIGH prediction at the configured hour. CORRECT = predicted integer bracket matches actual daily max. AVG HI TIME = when daily max actually occurs (UTC hr).</div>
     <div class="grid">
       <div class="card"><div class="clbl">DAYS TESTED</div><div class="cval" id="s-n">-</div></div>
-      <div class="card"><div class="clbl">BEST LEVEL ACC</div><div class="cval hi" id="s-best">-</div><div class="csub">EXACT DEGREE</div></div>
-      <div class="card"><div class="clbl">BEST LEVEL</div><div class="cval" id="s-blv">-</div><div class="csub">ANGLE</div></div>
+      <div class="card"><div class="clbl">BEST ANGLE</div><div class="cval hi" id="s-ba">-</div><div class="csub">ANGLE / ACC</div></div>
       <div class="card"><div class="clbl">WITHIN 1C</div><div class="cval" id="s-w1">-</div><div class="csub">NEAREST LEVEL</div></div>
       <div class="card"><div class="clbl">AVG ERR</div><div class="cval" id="s-avg">-</div><div class="csub">NEAREST FAN</div></div>
-      <div class="card"><div class="clbl">AVG HI TIME</div><div class="cval" id="s-ht">-</div><div class="csub">UTC</div></div>
+      <div class="card"><div class="clbl">AVG HI HOUR</div><div class="cval" id="s-ht">-</div><div class="csub">UTC</div></div>
+      <div class="card"><div class="clbl">DUAL BRACKET</div><div class="cval" id="s-db">-</div><div class="csub">FLOOR+CEIL</div></div>
     </div>
-    <div class="sec">// LEVEL ACCURACY (each angle vs actual high)</div>
+    <div class="sec">// ANGLE ACCURACY</div>
     <table>
-      <thead><tr><th>ANGLE</th><th>PREDICTED</th><th>CORRECT</th><th>ACC</th><th>AVG ERR</th></tr></thead>
-      <tbody id="ltbl"></tbody>
+      <thead><tr><th>ANGLE</th><th>CORRECT</th><th>ACC</th><th>WITHIN 1C</th><th>AVG ERR</th></tr></thead>
+      <tbody id="atbl"></tbody>
     </table>
-    <div class="sec">// DAY LOG</div>
+    <div class="sec">// MONTHLY BREAKDOWN</div>
     <table>
-      <thead><tr><th>DATE</th><th>ANCHOR</th><th>ACTUAL HI</th><th>TIME</th><th>BEST FAN</th><th>PRED</th><th>ERR</th><th>OK</th></tr></thead>
+      <thead><tr><th>MONTH</th><th>DAYS</th><th>BEST ACC</th><th>AVG ERR</th><th>WITHIN 1C</th></tr></thead>
+      <tbody id="mtbl"></tbody>
+    </table>
+    <div class="sec">// DAY LOG (MOST RECENT 30)</div>
+    <table>
+      <thead><tr><th>DATE</th><th>ANC</th><th>HI</th><th>ANGLE</th><th>PRED</th><th>ERR</th><th>OK</th></tr></thead>
       <tbody id="dtbl"></tbody>
     </table>
   </div>
@@ -91,108 +93,113 @@ function setMsg(s, col) {
   document.getElementById("bst").textContent = s;
 }
 function pct(a,b){ return b>0?(a/b*100).toFixed(0)+"%":"--"; }
-function fmt(t){ return t?t.toUTCString().slice(17,22):"--"; }
 
 function run() {
-  var days  = Math.min(parseInt(document.getElementById("i-days").value)||5, 7);
+  var start = document.getElementById("i-s").value;
+  var end   = document.getElementById("i-e").value;
   var anc   = parseInt(document.getElementById("i-anc").value)||9;
-  var phi   = parseInt(document.getElementById("i-phi").value)||14;  // predicted high hour
+  var phi   = parseInt(document.getElementById("i-phi").value)||14;
   var ratio = parseFloat(document.getElementById("i-rat").value)||60;
+
+  if (!start || !end) { setMsg("Set start and end dates","#ff4444"); return; }
 
   document.getElementById("btn").disabled = true;
   document.getElementById("results").style.display = "none";
-  setMsg("Fetching Open-Meteo...");
+  setMsg("Fetching archive data from Open-Meteo...");
 
-  var url = "https://api.open-meteo.com/v1/forecast"
+  // Archive API: hourly temps + daily max going back years
+  var url = "https://archive-api.open-meteo.com/v1/archive"
     + "?latitude=51.5048&longitude=0.0495"
-    + "&minutely_15=temperature_2m&hourly=temperature_2m"
+    + "&hourly=temperature_2m"
+    + "&daily=temperature_2m_max"
     + "&temperature_unit=celsius&timezone=UTC"
-    + "&past_days=" + (days+1) + "&forecast_days=0";
+    + "&start_date=" + start
+    + "&end_date=" + end;
 
   fetch(url)
     .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
     .then(function(d){
       setMsg("Analysing...");
 
-      var m15t=(d.minutely_15&&d.minutely_15.time)||[];
-      var m15v=(d.minutely_15&&d.minutely_15.temperature_2m)||[];
-      var ht=(d.hourly&&d.hourly.time)||[];
-      var hv=(d.hourly&&d.hourly.temperature_2m)||[];
+      var ht  = (d.hourly && d.hourly.time) || [];
+      var hv  = (d.hourly && d.hourly.temperature_2m) || [];
+      var dt  = (d.daily  && d.daily.time) || [];
+      var dv  = (d.daily  && d.daily.temperature_2m_max) || [];
 
-      if (!m15t.length) throw new Error("No 15min data returned");
+      if (!ht.length) throw new Error("No hourly data returned");
+      if (isNaN(pt(ht[0]).getTime())) throw new Error("Date parse failed: " + ht[0]);
 
-      var m15=[],hr=[];
-      for(var i=0;i<m15t.length;i++){if(m15v[i]!=null)m15.push({t:pt(m15t[i]),v:m15v[i]});}
-      for(var i=0;i<ht.length;i++){if(hv[i]!=null)hr.push({t:pt(ht[i]),v:hv[i]});}
+      // Build hourly lookup
+      var hr = [];
+      for (var i=0; i<ht.length; i++) {
+        if (hv[i]==null) continue;
+        hr.push({ t: pt(ht[i]), v: hv[i] });
+      }
 
-      if(isNaN(m15[0].t.getTime())) throw new Error("Date parse failed: "+m15t[0]);
+      // Build daily max lookup
+      var daily = {};
+      for (var i=0; i<dt.length; i++) {
+        if (dv[i]==null) continue;
+        daily[dt[i]] = dv[i]; // key = "YYYY-MM-DD"
+      }
 
-      var now=new Date();
-      var dates=[];
-      for(var i=days;i>=1;i--)
-        dates.push(new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-i)));
+      setMsg("Running " + dt.length + " days...");
 
-      var results=[];
-      // per-angle tracking
-      var angData={};
-      ANGLES.forEach(function(a){angData[a]={correct:0,total:0,errSum:0,preds:[]};});
+      var results = [];
+      var angData = {};
+      ANGLES.forEach(function(a){ angData[a]={correct:0,w1:0,total:0,errSum:0}; });
+      var monthly = {};
 
-      var hiTimes=[];
+      dt.forEach(function(ds) {
+        var actualHi = daily[ds];
+        if (actualHi == null) return;
 
-      dates.forEach(function(date){
-        var ds=date.toISOString().slice(0,10);
-        var ancTime=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate(),anc));
-        var dayEnd =new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate(),23,59));
+        // Parse date parts safely
+        var parts = ds.split("-");
+        var yr=parseInt(parts[0]),mo=parseInt(parts[1])-1,dy=parseInt(parts[2]);
+        var ancTime = new Date(Date.UTC(yr,mo,dy,anc));
+        var phiHrs  = phi - anc; if (phiHrs<=0) phiHrs+=24;
 
-        // anchor temp from hourly
-        var ae=null;
-        for(var i=0;i<hr.length;i++){if(Math.abs(hr[i].t-ancTime)<1800000){ae=hr[i];break;}}
-        if(!ae)return;
-        var aT=ae.v;
-
-        // actual high from 15min data after anchor
-        var mins=m15.filter(function(m){return m.t>ancTime&&m.t<=dayEnd;});
-        if(mins.length<4)return;
-
-        var dHi=-Infinity,hiE=null;
-        mins.forEach(function(m){if(m.v>dHi){dHi=m.v;hiE=m;}});
-
-        var hiTimeUTC=hiE?hiE.t:null;
-        if(hiTimeUTC) hiTimes.push((hiTimeUTC-ancTime)/3600000+anc); // hour of day UTC
-
-        // For each angle: project high prediction at phi hours from anchor
-        var phiHrs = phi - anc;
-        if (phiHrs <= 0) phiHrs += 24;
+        // Anchor temp from hourly
+        var ae = null;
+        for (var i=0; i<hr.length; i++) {
+          if (Math.abs(hr[i].t - ancTime) < 1800000) { ae=hr[i]; break; }
+        }
+        if (!ae) return;
+        var aT = ae.v;
 
         var bestErr=Infinity, bestAngle=null, bestPred=null;
 
         ANGLES.forEach(function(deg){
-          // Standard fan at phi hours
-          var pred1 = fan(aT, phiHrs, deg, 1);
-          // Ratio fan at phi hours
-          var pred2 = fan(aT, phiHrs/ratio, deg, ratio);
-          // Use the one closest to actual high (in hindsight - to find best angle)
-          var e1=Math.abs(dHi-pred1), e2=Math.abs(dHi-pred2);
-          var pred=e1<e2?pred1:pred2;
-          var err=Math.min(e1,e2);
+          var p1 = fan(aT, phiHrs, deg, 1);
+          var p2 = fan(aT, phiHrs/ratio, deg, ratio);
+          var e1 = Math.abs(actualHi-p1), e2 = Math.abs(actualHi-p2);
+          var pred = e1<e2?p1:p2;
+          var err  = Math.min(e1,e2);
 
-          var correct = Math.round(pred) === Math.round(dHi);
+          var correct = Math.round(pred)===Math.round(actualHi);
+          var w1 = err<=1.0;
           angData[deg].total++;
           angData[deg].errSum+=err;
-          angData[deg].preds.push({pred:pred,actual:dHi,correct:correct});
           if(correct) angData[deg].correct++;
+          if(w1) angData[deg].w1++;
 
           if(err<bestErr){bestErr=err;bestAngle=deg;bestPred=pred;}
         });
 
-        results.push({
-          ds:ds, aT:aT, dHi:dHi, hiT:hiTimeUTC,
-          bestErr:bestErr, bestAngle:bestAngle, bestPred:bestPred,
-          bestCorrect: Math.round(bestPred)===Math.round(dHi)
-        });
+        // Monthly tracking
+        var mkey = ds.slice(0,7);
+        if (!monthly[mkey]) monthly[mkey]={n:0,correct:0,w1:0,errSum:0};
+        var mc=Math.round(bestPred)===Math.round(actualHi);
+        monthly[mkey].n++;
+        monthly[mkey].errSum+=bestErr;
+        if(mc) monthly[mkey].correct++;
+        if(bestErr<=1.0) monthly[mkey].w1++;
+
+        results.push({ ds:ds, aT:aT, actualHi:actualHi, bestErr:bestErr, bestAngle:bestAngle, bestPred:bestPred });
       });
 
-      render(results, angData, hiTimes, anc, phi);
+      render(results, angData, monthly, anc, phi);
       document.getElementById("btn").disabled=false;
     })
     .catch(function(e){
@@ -201,67 +208,88 @@ function run() {
     });
 }
 
-function render(results, angData, hiTimes, anc, phi) {
-  if(!results.length){setMsg("No data","#ff4444");return;}
-  var n=results.length;
+function render(results, angData, monthly, anc, phi) {
+  if (!results.length) { setMsg("No results","#ff4444"); return; }
+  var n = results.length;
 
-  // Best single angle
-  var bestAcc=0,bestAngle=null;
+  // Best angle overall
+  var bestAcc=0, bestAngle=null;
   ANGLES.forEach(function(a){
-    var acc=angData[a].total>0?angData[a].correct/angData[a].total:0;
+    var acc = angData[a].total?angData[a].correct/angData[a].total:0;
     if(acc>bestAcc){bestAcc=acc;bestAngle=a;}
   });
 
-  // Nearest fan within 1C
-  var w1=results.filter(function(r){return r.bestErr<=1.0;}).length;
-  var avgErr=results.reduce(function(a,r){return a+r.bestErr;},0)/n;
-  var avgHiHr=hiTimes.length?hiTimes.reduce(function(a,b){return a+b;},0)/hiTimes.length:phi;
+  var w1   = results.filter(function(r){return r.bestErr<=1.0;}).length;
+  var avgE = results.reduce(function(a,r){return a+r.bestErr;},0)/n;
 
-  document.getElementById("s-n").textContent=n;
-  document.getElementById("s-best").textContent=pct(angData[bestAngle]?angData[bestAngle].correct:0,n);
-  document.getElementById("s-blv").textContent=(bestAngle>0?"+":"")+bestAngle;
-  document.getElementById("s-w1").textContent=pct(w1,n);
-  document.getElementById("s-avg").textContent=avgErr.toFixed(2)+"C";
-  document.getElementById("s-ht").textContent=avgHiHr.toFixed(1)+"H UTC";
+  // Dual bracket (floor+ceil of prediction)
+  var dualHit = results.filter(function(r){
+    var lo=Math.floor(r.bestPred), hi2=lo+1, act=Math.round(r.actualHi);
+    return act===lo||act===hi2;
+  }).length;
 
-  // Level table
-  var tb=document.getElementById("ltbl"); tb.innerHTML="";
+  document.getElementById("s-n").textContent   = n;
+  document.getElementById("s-ba").textContent  = (bestAngle>0?"+":"")+bestAngle+" / "+pct(angData[bestAngle].correct,n);
+  document.getElementById("s-w1").textContent  = pct(w1,n);
+  document.getElementById("s-avg").textContent = avgE.toFixed(2)+"C";
+  document.getElementById("s-ht").textContent  = phi+"H";
+  document.getElementById("s-db").textContent  = pct(dualHit,n);
+
+  // Angle table
+  var at=document.getElementById("atbl"); at.innerHTML="";
   ANGLES.slice().sort(function(a,b){
-    var ra=angData[a].correct/angData[a].total, rb=angData[b].correct/angData[b].total;
-    return rb-ra;
+    return (angData[b].correct/angData[b].total)-(angData[a].correct/angData[a].total);
   }).forEach(function(deg){
     var ad=angData[deg];
-    var avgE=ad.total?ad.errSum/ad.total:0;
     var acc=ad.total?ad.correct/ad.total:0;
-    // Show predictions for each day
-    var preds=ad.preds.map(function(p){return Math.round(p.pred)+"C";}).join(" ");
     var tr=document.createElement("tr");
     tr.innerHTML="<td>"+(deg>0?"+":"")+deg+"</td>"
-      +"<td class='dim'>"+preds+"</td>"
       +"<td class='"+(ad.correct>0?"hi":"dim")+"'>"+ad.correct+"/"+ad.total+"</td>"
-      +"<td class='"+(acc>=0.6?"hi":acc>=0.4?"ok":"dim")+"'>"+pct(ad.correct,ad.total)+"</td>"
-      +"<td class='dim'>"+avgE.toFixed(2)+"C</td>";
-    tb.appendChild(tr);
+      +"<td class='"+(acc>=0.3?"hi":acc>=0.2?"ok":"dim")+"'>"+pct(ad.correct,ad.total)+"</td>"
+      +"<td>"+pct(ad.w1,ad.total)+"</td>"
+      +"<td class='dim'>"+(ad.total?ad.errSum/ad.total:0).toFixed(2)+"C</td>";
+    at.appendChild(tr);
   });
 
-  // Day log table
+  // Monthly table
+  var mt=document.getElementById("mtbl"); mt.innerHTML="";
+  Object.keys(monthly).sort().forEach(function(m){
+    var mo=monthly[m];
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td>"+m+"</td>"
+      +"<td>"+mo.n+"</td>"
+      +"<td class='"+(mo.correct/mo.n>=0.3?"hi":"ok")+"'>"+pct(mo.correct,mo.n)+"</td>"
+      +"<td class='dim'>"+(mo.errSum/mo.n).toFixed(2)+"C</td>"
+      +"<td>"+pct(mo.w1,mo.n)+"</td>";
+    mt.appendChild(tr);
+  });
+
+  // Day log (last 30)
   var dt=document.getElementById("dtbl"); dt.innerHTML="";
-  results.slice().reverse().forEach(function(r){
+  results.slice(-30).reverse().forEach(function(r){
+    var correct=Math.round(r.bestPred)===Math.round(r.actualHi);
     var tr=document.createElement("tr");
     tr.innerHTML="<td>"+r.ds+"</td>"
-      +"<td>"+r.aT.toFixed(1)+"C</td>"
-      +"<td class='hi'>"+r.dHi.toFixed(1)+"C ("+Math.round(r.dHi)+"C)</td>"
-      +"<td>"+fmt(r.hiT)+"</td>"
+      +"<td>"+r.aT.toFixed(1)+"</td>"
+      +"<td class='hi'>"+r.actualHi.toFixed(1)+"("+Math.round(r.actualHi)+"C)</td>"
       +"<td class='dim'>"+(r.bestAngle>0?"+":"")+r.bestAngle+"</td>"
-      +"<td>"+r.bestPred.toFixed(1)+"C ("+Math.round(r.bestPred)+"C)</td>"
+      +"<td>"+r.bestPred.toFixed(1)+"("+Math.round(r.bestPred)+"C)</td>"
       +"<td class='"+(r.bestErr<=0.5?"hi":r.bestErr<=1?"ok":"dim")+"'>"+r.bestErr.toFixed(2)+"C</td>"
-      +"<td class='"+(r.bestCorrect?"ok":"no")+"'>"+(r.bestCorrect?"YES":"NO")+"</td>";
+      +"<td class='"+(correct?"ok":"no")+"'>"+(correct?"Y":"N")+"</td>";
     dt.appendChild(tr);
   });
 
   document.getElementById("results").style.display="block";
-  setMsg("DONE -- "+n+" days | predict high @ "+phi+"UTC","#00cc33");
+  setMsg("DONE -- "+n+" days | "+start+" to "+end,"#00cc33");
 }
+
+var start="", end="";
+document.getElementById("i-s").addEventListener("change",function(){start=this.value;});
+document.getElementById("i-e").addEventListener("change",function(){end=this.value;});
+window.addEventListener("load",function(){
+  start=document.getElementById("i-s").value;
+  end=document.getElementById("i-e").value;
+});
 </script>
 
 </body>
