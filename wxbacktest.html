@@ -100,7 +100,9 @@ el.style.color=col||”#006618”;
 function prog(p){document.getElementById(“pbar”).style.width=p+”%”;}
 function pct(h,t){return t>0?(h/t*100).toFixed(0)+”%”:”–”;}
 
+window.onerror=function(msg,src,line,col,err){document.getElementById(“msg”).textContent=“JS ERR: “+msg+” L”+line;document.getElementById(“msg”).style.color=”#ff4444”;return false;};
 function run(){
+try{
 var days=Math.min(parseInt(document.getElementById(“i-days”).value)||7,7);
 var tol=parseFloat(document.getElementById(“i-tol”).value)||0.3;
 var anc=parseInt(document.getElementById(“i-anc”).value)||9;
@@ -218,7 +220,7 @@ msg(“ERROR: “+e.message,”#ff4444”);
 console.error(e);
 document.getElementById(“run-btn”).disabled=false;
 });
-}
+}catch(e2){msg(“RUN ERR: “+e2.message,”#ff4444”);document.getElementById(“run-btn”).disabled=false;}}
 
 function render(results,hits,tol){
 if(!results.length){msg(“No data - try fewer days”,”#ff4444”);return;}
