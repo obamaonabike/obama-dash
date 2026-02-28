@@ -238,6 +238,7 @@ display:none;
   <div class="config-row">
     <span class="config-label">MIN BAR OFFSET</span>
     <input class="config-input" id="cfg-minbar" type="number" value="5" min="1" max="60">
+
   </div>
   <div class="config-row">
     <span class="config-label">DAYS</span>
@@ -595,6 +596,7 @@ async function runBacktest(){
     const barOffset = Math.floor((prev.time - anchorSec) / 60);
     const minBar    = parseInt(document.getElementById('cfg-minbar').value) || 5;
     if(barOffset < minBar) continue; // skip bars too close to anchor
+
 
     for(const lv of levels){
       if(lv.label === 'LEQ') continue; // skip EQ
