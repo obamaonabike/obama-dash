@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html>
+<head><meta charset="UTF-8"><title>WX Test</title></head>
+<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:12px">
+<div id="out">Testing...</div>
+<script>
+var out = document.getElementById("out");
+function log(s, col) {
+  var d = document.createElement("div");
+  d.style.color = col || "#00cc33";
+  d.style.marginBottom = "4px";
+  d.textContent = s;
+  out.appendChild(d);
+}
+
+log(“Fetching Open-Meteo…”);
+var url = “https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC&past_days=3&forecast_days=1”;
+
+fetch(url).then(function(r) {
+log(“HTTP status: “ + r.status, r.ok ? “#00cc33” : “#ff4444”);
+return r.json();
+}).then(function(d) {
+log(“Keys: “ + Object.keys(d).join(”, “));
+if (d.minutely_15) {
+log(“minutely_15 count: “ + d.minutely_15.time.length);
+log(“first time: “ + d.minutely_15.time[0]);
+log(“last time: “ + d.minutely_15.time[d.minutely_15.time.length-1]);
+log(“first temp: “ + d.minutely_15.temperature_2m[0]);
+// Test date parsing
+var t = d.minutely_15.time[0];
+log(“raw time string: ‘” + t + “’ (len=” + t.length + “)”);
+log(“new Date(t+‘Z’): “ + new Date(t+“Z”).toISOString());
+} else {
+log(“NO minutely_15 in response!”, “#ff4444”);
+log(“hourly count: “ + (d.hourly ? d.hourly.time.length : “none”));
+}
+if (d.error) log(“API error: “ + d.reason, “#ff4444”);
+}).catch(function(e) {
+log(“FETCH ERROR: “ + e.message, “#ff4444”);
+});
+</script>
+
+</body>
+</html>
