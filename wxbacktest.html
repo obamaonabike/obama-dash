@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+
+<html lang="en" style="background:#050f05">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#070d07">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ObamaDash - WX Backtest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { background:#050f05; height:100%; }
+  body {
+    width:100%; min-height:100dvh;
+    background:#050f05; color:#00cc33;
+    font-family:'Share Tech Mono', monospace;
+    font-size:11px; letter-spacing:0.5px;
+    -webkit-text-size-adjust:100%;
+  }
+  #app { display:flex; flex-direction:column; min-height:100dvh; }
+  .bar {
+    flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+    padding:0 10px; height:24px; background:#070d07;
+    color:#006618; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  }
+  .bar-top {
+    border-bottom:1px solid #0f2a0f;
+    padding-top:env(safe-area-inset-top);
+    height:calc(24px + env(safe-area-inset-top));
+  }
+  .bar-bottom {
+    border-top:1px solid #0f2a0f; padding-top:5px;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 5px);
+    height:auto; min-height:24px; align-items:flex-start;
+  }
+  .bar-title { font-size:11px; letter-spacing:4px; color:#00cc33; }
+  .nav-link { color:#004a14; font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; text-decoration:none; margin-left:8px; }
+
+.content { flex:1; padding:10px; overflow-y:auto; }
+
+/* CONFIG */
+.cfg-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.cfg-label { font-size:9px; color:#006618; letter-spacing:1px; min-width:160px; }
+.cfg-input {
+background:#030803; border:1px solid #0f2a0f; color:#00cc33;
+font-family:‘Share Tech Mono’,monospace; font-size:10px;
+padding:4px 6px; width:80px;
+}
+.cfg-input:focus { border-color:#00cc33; outline:none; }
+.run-btn {
+background:#030803; border:1px solid #00cc33; color:#00cc33;
+font-family:‘Share Tech Mono’,monospace; font-size:10px;
+letter-spacing:2px; padding:7px 20px; cursor:pointer; margin-top:8px;
+}
+.run-btn:active { background:#001a06; }
+.run-btn:disabled { border-color:#0f2a0f; color:#006618; cursor:not-allowed; }
+
+/* SUMMARY CARDS */
+.summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin:10px 0; }
+.sum-card { background:#070d07; border:1px solid #0f2a0f; padding:8px; }
+.sum-label { font-size:8px; color:#006618; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.sum-val { font-size:15px; color:#00cc33; letter-spacing:1px; }
+.sum-sub { font-size:8px; color:#004a14; margin-top:2px; }
+
+/* LEVEL STATS TABLE */
+.section-title { font-size:9px; color:#006618; letter-spacing:3px; text-transform:uppercase; padding:8px 0 4px; border-bottom:1px solid #0f2a0f; margin-bottom:6px; }
+table { width:100%; border-collapse:collapse; margin-bottom:12px; font-size:9px; }
+th { color:#004a14; letter-spacing:2px; padding:4px; border-bottom:1px solid #0f2a0f; text-align:left; font-size:8px; }
+td { color:#00cc33; padding:4px; border-bottom:1px solid #050f05; }
+td.dim { color:#006618; }
+td.hi { color:#00ff41; }
+td.lo { color:#ff4444; }
+
+/* DAY LOG */
+.day-row { border-bottom:1px solid #0a1a0a; padding:6px 0; }
+.day-row .date { color:#006618; font-size:9px; letter-spacing:1px; }
+.day-row .detail { color:#004a14; font-size:8px; margin-top:2px; letter-spacing:0.5px; }
+.day-row .hit { color:#00cc33; }
+.day-row .miss { color:#333; }
+
+/* PROGRESS */
+.progress-wrap { background:#0a1a0a; border:1px solid #0f2a0f; height:6px; margin:8px 0; }
+.progress-bar { background:#00cc33; height:100%; width:0%; transition:width 0.2s; }
+</style>
+
+</head>
+<body>
+<div id="app">
+  <div class="bar bar-top">
+    <span class="bar-title">WX BACKTEST</span>
+    <div>
+      <a href="index.html" class="nav-link">BTC</a>
+      <a href="backtest.html" class="nav-link">BT</a>
+      <a href="weather.html" class="nav-link">WX</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+```
+<!-- CONFIG -->
+<div class="cfg-row">
+  <span class="cfg-label">DAYS TO BACKTEST</span>
+  <input class="cfg-input" id="cfg-days" type="number" value="7" min="1" max="7">
+  <span style="font-size:8px;color:#004a14">MAX 7 (API LIMIT)</span>
+</div>
+<div class="cfg-row">
+  <span class="cfg-label">TOUCH TOLERANCE (C)</span>
+  <input class="cfg-input" id="cfg-tol" type="number" value="0.3" step="0.05" min="0.05">
+</div>
+<div class="cfg-row">
+  <span class="cfg-label">ANCHOR HOUR UTC</span>
+  <input class="cfg-input" id="cfg-anchor" type="number" value="9" min="0" max="23">
+</div>
+<div class="cfg-row">
+  <span class="cfg-label">HTF RATIO</span>
+  <input class="cfg-input" id="cfg-ratio" type="number" value="60" step="1" min="1">
+</div>
+
+<button class="run-btn" id="run-btn" onclick="runBacktest()">RUN BACKTEST</button>
+
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-bar" id="progress-bar"></div>
+</div>
+<div id="status-line" style="font-size:9px;color:#006618;margin:4px 0;letter-spacing:1px;"></div>
+
+<!-- RESULTS -->
+<div id="results" style="display:none">
+
+  <div class="section-title">// SUMMARY</div>
+  <div class="summary-grid">
+    <div class="sum-card"><div class="sum-label">DAYS TESTED</div><div class="sum-val" id="s-days">--</div></div>
+    <div class="sum-card"><div class="sum-label">HIGH HIT RATE</div><div class="sum-val" id="s-high-rate">--</div><div class="sum-sub">DAILY HIGH TOUCHED FAN</div></div>
+    <div class="sum-card"><div class="sum-label">LOW HIT RATE</div><div class="sum-val" id="s-low-rate">--</div><div class="sum-sub">DAILY LOW TOUCHED FAN</div></div>
+    <div class="sum-card"><div class="sum-label">BOTH HIT</div><div class="sum-val" id="s-both-rate">--</div><div class="sum-sub">HIGH + LOW SAME DAY</div></div>
+    <div class="sum-card"><div class="sum-label">AVG HIGH DIST</div><div class="sum-val" id="s-high-dist">--</div><div class="sum-sub">FROM NEAREST LEVEL</div></div>
+    <div class="sum-card"><div class="sum-label">AVG LOW DIST</div><div class="sum-val" id="s-low-dist">--</div><div class="sum-sub">FROM NEAREST LEVEL</div></div>
+  </div>
+
+  <!-- LEVEL BREAKDOWN -->
+  <div class="section-title">// HIT RATE BY LEVEL</div>
+  <table>
+    <thead><tr><th>LEVEL</th><th>HIGH HITS</th><th>LOW HITS</th><th>TOTAL HITS</th><th>HIT RATE</th></tr></thead>
+    <tbody id="level-table"></tbody>
+  </table>
+
+  <!-- DAY BY DAY -->
+  <div class="section-title">// DAY BY DAY</div>
+  <div id="day-log"></div>
+
+</div>
+```
+
+  </div>
+
+  <div class="bar bar-bottom">
+    <span id="bar-status">READY</span>
+    <span id="bar-time" style="font-size:9px;color:#004a14"></span>
+  </div>
+</div>
+
+<script>
+const API_KEY = 'geHqAXyAgDTGlnyKJGK0wJX4RiBrpHeU';
+const LAT = 51.5048, LON = 0.0495;
+const ANGLES = [27, -27, 45, -45, 60, -60, 72, -72, 78, -78];
+
+function fanTemp(anchorT, hoursFromAnchor, deg, ratio) {
+  return anchorT + hoursFromAnchor * (ratio || 1) * Math.tan(deg * Math.PI / 180);
+}
+
+function setStatus(s) {
+  document.getElementById('bar-status').textContent = s;
+  document.getElementById('status-line').textContent = s;
+}
+
+function setProgress(pct) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+async function fetchHourly(startIso, endIso) {
+  const url = `https://api.tomorrow.io/v4/weather/history/recent`
+    + `?location=${LAT},${LON}`
+    + `&fields=temperature`
+    + `&timesteps=1h`
+    + `&startTime=${startIso}`
+    + `&endTime=${endIso}`
+    + `&units=metric`
+    + `&apikey=${API_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('API error ' + r.status);
+  const d = await r.json();
+  let intervals = [];
+  try { intervals = d.data.timelines[0].intervals; } catch(e) {}
+  return intervals.map(iv => ({
+    time: new Date(iv.startTime),
+    temp: iv.values.temperature
+  })).filter(r => r.temp !== null);
+}
+
+async function fetchMinutely(startIso, endIso) {
+  const url = `https://api.tomorrow.io/v4/weather/history/recent`
+    + `?location=${LAT},${LON}`
+    + `&fields=temperature`
+    + `&timesteps=1m`
+    + `&startTime=${startIso}`
+    + `&endTime=${endIso}`
+    + `&units=metric`
+    + `&apikey=${API_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('API error ' + r.status);
+  const d = await r.json();
+  let intervals = [];
+  try { intervals = d.data.timelines[0].intervals; } catch(e) {}
+  return intervals.map(iv => ({
+    time: new Date(iv.startTime),
+    temp: iv.values.temperature
+  })).filter(r => r.temp !== null);
+}
+
+async function runBacktest() {
+  const days = parseInt(document.getElementById('cfg-days').value) || 7;
+  const tol = parseFloat(document.getElementById('cfg-tol').value) || 0.3;
+  const anchorHour = parseInt(document.getElementById('cfg-anchor').value) || 9;
+  const ratio = parseFloat(document.getElementById('cfg-ratio').value) || 60;
+
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'block';
+  setProgress(0);
+
+  const now = new Date();
+  // Build list of dates to test (exclude today -- may be incomplete)
+  const dates = [];
+  for (let i = days; i >= 1; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+    dates.push(d);
+  }
+
+  const dayResults = [];
+  const levelHits = {}; // angle => {highHits, lowHits, days}
+  for (const deg of ANGLES) levelHits[deg] = { highHits: 0, lowHits: 0, days: 0 };
+
+  try {
+    // Fetch all data in one call (last N days)
+    setStatus('Fetching hourly data...');
+    const startAll = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - days - 1));
+    const endAll = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const allHourly = await fetchHourly(startAll.toISOString(), endAll.toISOString());
+
+    setStatus('Fetching minute data...');
+    setProgress(20);
+    // Fetch minutely in chunks to avoid timeout (3 days at a time)
+    let allMinutely = [];
+    const chunkDays = 3;
+    for (let chunk = 0; chunk < days; chunk += chunkDays) {
+      const cs = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - Math.min(days - chunk, chunkDays) - chunk - 1));
+      const ce = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - chunk));
+      const rows = await fetchMinutely(cs.toISOString(), ce.toISOString());
+      allMinutely = allMinutely.concat(rows);
+      setProgress(20 + (chunk / days) * 40);
+      await new Promise(r => setTimeout(r, 500)); // rate limit
+    }
+
+    setStatus('Analysing days...');
+    setProgress(65);
+
+    // Process each day
+    for (let di = 0; di < dates.length; di++) {
+      const date = dates[di];
+      const dateStr = date.toISOString().slice(0, 10);
+
+      // Get anchor open (temp at anchor hour UTC for this day)
+      const anchorTime = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), anchorHour, 0, 0));
+      const anchorEntry = allHourly.find(h => Math.abs(h.time.getTime() - anchorTime.getTime()) < 1800000);
+      if (!anchorEntry) continue;
+      const anchorTemp = anchorEntry.temp;
+
+      // Get all minute readings for this day (after anchor)
+      const dayStart = anchorTime;
+      const dayEnd = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 0));
+      const dayMinutes = allMinutely.filter(m => m.time >= dayStart && m.time <= dayEnd);
+      if (dayMinutes.length < 10) continue;
+
+      const dayHigh = Math.max(...dayMinutes.map(m => m.temp));
+      const dayLow  = Math.min(...dayMinutes.map(m => m.temp));
+
+      // For each minute, calc all fan levels and check touches
+      let highHitLevel = null, lowHitLevel = null;
+      let highMinDist = Infinity, lowMinDist = Infinity;
+      const dayLevelHits = {};
+
+      for (const m of dayMinutes) {
+        const hrs = (m.time.getTime() - anchorTime.getTime()) / 3600000;
+
+        for (const deg of ANGLES) {
+          // LTF fan
+          const ltfVal = fanTemp(anchorTemp, hrs, deg);
+          // HTF fan (hourly ratio)
+          const htfVal = fanTemp(anchorTemp, hrs / ratio, deg);
+
+          for (const val of [ltfVal, htfVal]) {
+            const distHigh = Math.abs(m.temp - val);
+            const distLow  = Math.abs(m.temp - val);
+
+            // Near daily high
+            if (Math.abs(m.temp - dayHigh) < 0.01) {
+              if (distHigh < highMinDist) {
+                highMinDist = distHigh;
+                if (distHigh <= tol) highHitLevel = deg;
+              }
+            }
+            // Near daily low
+            if (Math.abs(m.temp - dayLow) < 0.01) {
+              if (distLow < lowMinDist) {
+                lowMinDist = distLow;
+                if (distLow <= tol) lowHitLevel = deg;
+              }
+            }
+          }
+        }
+      }
+
+      // Check each angle against high and low at the exact time of high/low
+      const highEntry = dayMinutes.find(m => m.temp === dayHigh);
+      const lowEntry  = dayMinutes.find(m => m.temp === dayLow);
+      let bestHighDist = Infinity, bestLowDist = Infinity;
+      let bestHighDeg = null, bestLowDeg = null;
+
+      if (highEntry) {
+        const hrs = (highEntry.time.getTime() - anchorTime.getTime()) / 3600000;
+        for (const deg of ANGLES) {
+          for (const val of [fanTemp(anchorTemp, hrs, deg), fanTemp(anchorTemp, hrs / ratio, deg)]) {
+            const dist = Math.abs(dayHigh - val);
+            if (dist < bestHighDist) { bestHighDist = dist; bestHighDeg = deg; }
+            if (dist <= tol) levelHits[deg].highHits++;
+          }
+        }
+      }
+      if (lowEntry) {
+        const hrs = (lowEntry.time.getTime() - anchorTime.getTime()) / 3600000;
+        for (const deg of ANGLES) {
+          for (const val of [fanTemp(anchorTemp, hrs, deg), fanTemp(anchorTemp, hrs / ratio, deg)]) {
+            const dist = Math.abs(dayLow - val);
+            if (dist < bestLowDist) { bestLowDist = dist; bestLowDeg = deg; }
+            if (dist <= tol) levelHits[deg].lowHits++;
+          }
+        }
+      }
+
+      for (const deg of ANGLES) levelHits[deg].days++;
+
+      dayResults.push({
+        dateStr, anchorTemp,
+        dayHigh, dayLow,
+        highHit: bestHighDist <= tol,
+        lowHit:  bestLowDist <= tol,
+        bestHighDist, bestHighDeg,
+        bestLowDist, bestLowDeg,
+        highTime: highEntry ? highEntry.time : null,
+        lowTime:  lowEntry  ? lowEntry.time  : null,
+      });
+
+      setProgress(65 + (di / dates.length) * 35);
+    }
+
+    setProgress(100);
+    renderResults(dayResults, levelHits, tol);
+
+  } catch(e) {
+    setStatus('ERROR: ' + e.message);
+    console.error(e);
+  }
+
+  document.getElementById('run-btn').disabled = false;
+}
+
+function renderResults(dayResults, levelHits, tol) {
+  if (!dayResults.length) { setStatus('No data'); return; }
+
+  const highHits = dayResults.filter(d => d.highHit).length;
+  const lowHits  = dayResults.filter(d => d.lowHit).length;
+  const bothHits = dayResults.filter(d => d.highHit && d.lowHit).length;
+  const n = dayResults.length;
+
+  document.getElementById('s-days').textContent = n;
+  document.getElementById('s-high-rate').textContent = pct(highHits, n);
+  document.getElementById('s-low-rate').textContent  = pct(lowHits, n);
+  document.getElementById('s-both-rate').textContent = pct(bothHits, n);
+
+  const avgHighDist = dayResults.reduce((a,d) => a + d.bestHighDist, 0) / n;
+  const avgLowDist  = dayResults.reduce((a,d) => a + d.bestLowDist, 0) / n;
+  document.getElementById('s-high-dist').textContent = avgHighDist.toFixed(2) + 'C';
+  document.getElementById('s-low-dist').textContent  = avgLowDist.toFixed(2) + 'C';
+
+  // Level table
+  const tbody = document.getElementById('level-table');
+  tbody.innerHTML = '';
+  const sortedAngles = [...ANGLES].sort((a,b) => {
+    const ta = (levelHits[a].highHits + levelHits[a].lowHits);
+    const tb = (levelHits[b].highHits + levelHits[b].lowHits);
+    return tb - ta;
+  });
+  for (const deg of sortedAngles) {
+    const lv = levelHits[deg];
+    const total = lv.highHits + lv.lowHits;
+    const rate = lv.days > 0 ? (total / (lv.days * 2) * 100).toFixed(0) + '%' : '--';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${deg > 0 ? 'L+' : 'L'}${deg}</td>
+      <td class="${lv.highHits > 0 ? 'hi' : 'dim'}">${lv.highHits}</td>
+      <td class="${lv.lowHits  > 0 ? 'lo' : 'dim'}">${lv.lowHits}</td>
+      <td>${total}</td>
+      <td class="${total > lv.days ? 'hi' : total > 0 ? '' : 'dim'}">${rate}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  // Day log
+  const log = document.getElementById('day-log');
+  log.innerHTML = '';
+  for (const d of [...dayResults].reverse()) {
+    const div = document.createElement('div');
+    div.className = 'day-row';
+    const hIcon = d.highHit ? 'HIT' : 'x';
+    const lIcon = d.lowHit  ? 'HIT' : 'x';
+    const hCol  = d.highHit ? 'hit' : 'miss';
+    const lCol  = d.lowHit  ? 'hit' : 'miss';
+    const ht = d.highTime ? d.highTime.toUTCString().slice(17,22) + 'UTC' : '--';
+    const lt = d.lowTime  ? d.lowTime.toUTCString().slice(17,22) + 'UTC' : '--';
+    div.innerHTML = `
+      <div class="date">${d.dateStr} -- ANCHOR ${d.anchorTemp.toFixed(1)}C</div>
+      <div class="detail">
+        HIGH: ${d.dayHigh.toFixed(1)}C @ ${ht}
+        <span class="${hCol}"> ${hIcon} (nearest L${d.bestHighDeg>0?'+':''}${d.bestHighDeg}: ${d.bestHighDist.toFixed(2)}C away)</span>
+      </div>
+      <div class="detail">
+        LOW:  ${d.dayLow.toFixed(1)}C @ ${lt}
+        <span class="${lCol}"> ${lIcon} (nearest L${d.bestLowDeg>0?'+':''}${d.bestLowDeg}: ${d.bestLowDist.toFixed(2)}C away)</span>
+      </div>
+    `;
+    log.appendChild(div);
+  }
+
+  document.getElementById('results').style.display = 'block';
+  setStatus('DONE -- ' + n + ' days tested');
+}
+
+function pct(hits, total) {
+  return total > 0 ? (hits / total * 100).toFixed(0) + '%' : '--';
+}
+
+setInterval(() => {
+  document.getElementById('bar-time').textContent = new Date().toUTCString().slice(5,22).toUpperCase() + ' UTC';
+}, 1000);
+</script>
+
+</body>
+</html>
