@@ -87,6 +87,11 @@ td{color:#00cc33;padding:4px;border-bottom:1px solid #050f05}
   </div>
 </div>
 <script>
+function parseOMTime(s){
+  // Open-Meteo gives "2026-02-26T00:00" - Safari needs full seconds
+  if(s.length===16) s=s+":00";
+  return new Date(s+"Z");
+}
 var LAT=51.5048,LON=0.0495;
 var ANGLES=[27,-27,45,-45,60,-60,72,-72,78,-78];
 
@@ -137,13 +142,13 @@ if(m15t.length===0){throw new Error("No minutely_15 data returned from Open-Mete
 var m15rows=[];
 for(var i=0;i<m15t.length;i++){
   if(m15v[i]==null)continue;
-  m15rows.push({time:new Date(m15t[i]+"Z"),temp:m15v[i]});
+  m15rows.push({time:parseOMTime(m15t[i]),temp:m15v[i]});
 }
 // Parse hourly rows
 var hrows=[];
 for(var i=0;i<ht.length;i++){
   if(hv[i]==null)continue;
-  hrows.push({time:new Date(ht[i]+"Z"),temp:hv[i]});
+  hrows.push({time:parseOMTime(ht[i]),temp:hv[i]});
 }
 
 prog(55); msg("Analysing "+days+" days...");
