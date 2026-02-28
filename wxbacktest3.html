@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>WX Backtest 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050f05;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:11px;min-height:100dvh;-webkit-text-size-adjust:100%}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:0 10px;height:24px;background:#070d07;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid #0f2a0f}
+.bar.bot{border-top:1px solid #0f2a0f;border-bottom:none;padding-bottom:env(safe-area-inset-bottom)}
+a{color:#004a14;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px}
+.content{padding:10px;overflow-y:auto}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lbl{font-size:9px;color:#006618;letter-spacing:1px;min-width:160px}
+input{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;padding:4px 6px;width:90px}
+button{background:#030803;border:1px solid #00cc33;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:2px;padding:7px 20px;cursor:pointer;margin-top:8px;-webkit-appearance:none}
+button:disabled{border-color:#0f2a0f;color:#006618}
+#msg{font-size:9px;margin:6px 0;min-height:14px;letter-spacing:1px;word-break:break-all}
+.sec{font-size:9px;color:#006618;letter-spacing:3px;padding:8px 0 4px;border-bottom:1px solid #0f2a0f;margin-bottom:6px}
+.note{font-size:8px;color:#004a14;margin-bottom:8px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.card{background:#070d07;border:1px solid #0f2a0f;padding:10px}
+.clbl{font-size:8px;color:#006618;letter-spacing:2px;margin-bottom:4px}
+.cval{font-size:20px;letter-spacing:1px}
+.csub{font-size:8px;color:#004a14;margin-top:2px}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9px}
+th{color:#004a14;padding:4px;border-bottom:1px solid #0f2a0f;text-align:left;font-size:8px;letter-spacing:1px}
+td{padding:4px;border-bottom:1px solid #0a1a0a}
+.hi{color:#00ff41}.ok{color:#00cc33}.dim{color:#006618}.no{color:#444}
+.rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.rule-box{background:#070d07;border:1px solid #0f2a0f;padding:8px}
+.rule-title{font-size:8px;color:#006618;letter-spacing:2px;margin-bottom:6px}
+.rule-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.rule-lbl{font-size:8px;color:#004a14;min-width:80px}
+.rule-inp{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;padding:3px 5px;width:55px}
+select.rule-inp{width:65px}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span style="letter-spacing:4px;color:#00cc33">WX BACKTEST 3</span>
+  <div><a href="index.html">BTC</a><a href="weather.html">WX</a><a href="wxbacktest.html">WXB</a><a href="wxbacktest2.html">WXB2</a></div>
+</div>
+<div class="content">
+  <div class="sec">// DATE RANGE</div>
+  <div class="row"><span class="lbl">START DATE</span><input id="i-s" type="date" value="2025-10-01"></div>
+  <div class="row"><span class="lbl">END DATE</span><input id="i-e" type="date" value="2026-02-20"></div>
+  <div class="row"><span class="lbl">ANCHOR HOUR UTC</span><input id="i-anc" type="number" value="9" min="0" max="23"></div>
+  <div class="row"><span class="lbl">CONFIRM HOUR UTC</span><input id="i-con" type="number" value="10" min="0" max="23"></div>
+  <div class="row"><span class="lbl">PREDICT HI AT HOUR</span><input id="i-phi" type="number" value="13" min="0" max="23"></div>
+  <div class="row"><span class="lbl">HTF RATIO</span><input id="i-rat" type="number" value="60" step="1" min="1"></div>
+
+  <div class="sec">// ANGLE SELECTION RULES</div>
+  <div class="note">
+    If anchor temp is below threshold, use ALT ANGLE instead of +27.<br>
+    Rule 1 checked first, then Rule 2, then default +27 + 10am confirm.
+  </div>
+  <div class="rule-grid">
+    <div class="rule-box">
+      <div class="rule-title">RULE 1</div>
+      <div class="rule-row"><span class="rule-lbl">IF ANCHOR &lt;</span><input class="rule-inp" id="r1-thresh" type="number" value="5" step="0.5"></div>
+      <div class="rule-row"><span class="rule-lbl">USE ANGLE</span>
+        <select class="rule-inp" id="r1-angle">
+          <option value="27">+27</option>
+          <option value="45" selected>+45</option>
+          <option value="60">+60</option>
+        </select>
+      </div>
+      <div class="rule-row"><span class="rule-lbl">WITH CONFIRM</span>
+        <select class="rule-inp" id="r1-confirm">
+          <option value="1">YES</option>
+          <option value="0">NO</option>
+        </select>
+      </div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-title">RULE 2</div>
+      <div class="rule-row"><span class="rule-lbl">IF ANCHOR &lt;</span><input class="rule-inp" id="r2-thresh" type="number" value="8" step="0.5"></div>
+      <div class="rule-row"><span class="rule-lbl">USE ANGLE</span>
+        <select class="rule-inp" id="r2-angle">
+          <option value="27">+27</option>
+          <option value="45" selected>+45</option>
+          <option value="60">+60</option>
+        </select>
+      </div>
+      <div class="rule-row"><span class="rule-lbl">WITH CONFIRM</span>
+        <select class="rule-inp" id="r2-confirm">
+          <option value="1">YES</option>
+          <option value="0">NO</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:4px">DEFAULT (anchor >= rule 2 threshold): +27 with 10am confirm</div>
+
+<button id="btn" onclick="run()">RUN BACKTEST</button>
+<button onclick="autoFind()" style="margin-left:8px;border-color:#006618;color:#006618">AUTO-FIND BEST RULES</button>
+
+  <div id="msg" style="color:#006618">READY</div>
+
+  <div id="results" style="display:none">
+    <div class="sec">// RESULTS VS BASELINES</div>
+    <div class="grid">
+      <div class="card" style="border-color:#004a14">
+        <div class="clbl">MODEL A (9AM +27)</div>
+        <div class="cval" id="ba-w1">-</div><div class="csub">WITHIN 1C</div>
+        <div class="cval" id="ba-dual" style="margin-top:6px">-</div><div class="csub">DUAL BRACKET</div>
+        <div class="cval" id="ba-err" style="margin-top:6px">-</div><div class="csub">AVG ERR</div>
+      </div>
+      <div class="card" style="border-color:#006618">
+        <div class="clbl">MODEL B (10AM CONFIRM)</div>
+        <div class="cval" id="bb-w1">-</div><div class="csub">WITHIN 1C</div>
+        <div class="cval" id="bb-dual" style="margin-top:6px">-</div><div class="csub">DUAL BRACKET</div>
+        <div class="cval" id="bb-err" style="margin-top:6px">-</div><div class="csub">AVG ERR</div>
+      </div>
+      <div class="card" style="border-color:#00cc33">
+        <div class="clbl">MODEL C (ANGLE RULES)</div>
+        <div class="cval hi" id="bc-w1">-</div><div class="csub">WITHIN 1C</div>
+        <div class="cval hi" id="bc-dual" style="margin-top:6px">-</div><div class="csub">DUAL BRACKET</div>
+        <div class="cval hi" id="bc-err" style="margin-top:6px">-</div><div class="csub">AVG ERR</div>
+      </div>
+    </div>
+
+```
+<div class="sec">// RULE COVERAGE</div>
+<table>
+  <thead><tr><th>RULE</th><th>DAYS</th><th>ANGLE</th><th>EXACT</th><th>W1C</th><th>DUAL</th><th>AVG ERR</th></tr></thead>
+  <tbody id="rtbl"></tbody>
+</table>
+
+<div class="sec">// MONTHLY BREAKDOWN</div>
+<table>
+  <thead><tr><th>MONTH</th><th>DAYS</th><th>A ERR</th><th>B ERR</th><th>C ERR</th><th>A W1C</th><th>B W1C</th><th>C W1C</th><th>BEST</th></tr></thead>
+  <tbody id="mtbl"></tbody>
+</table>
+
+<div class="sec">// DAY LOG (MOST RECENT 30)</div>
+<table>
+  <thead><tr><th>DATE</th><th>ANC</th><th>RULE</th><th>ANG</th><th>ACTUAL</th><th>A ERR</th><th>B ERR</th><th>C ERR</th><th>BEST</th></tr></thead>
+  <tbody id="dtbl"></tbody>
+</table>
+```
+
+  </div>
+</div>
+<div class="bar bot"><span id="bst">READY</span></div>
+
+<script type="text/javascript">
+var ANGLES = [27,-27,45,-45,60,-60,72,-72,78,-78];
+
+function pt(s) {
+  if (!s) return new Date(NaN);
+  if (s.length > 16) return new Date(s);
+  return new Date(s + ":00Z");
+}
+function fan(aT, hrs, deg, ratio) {
+  return aT + hrs * ratio * Math.tan(deg * Math.PI / 180);
+}
+function setMsg(s, col) {
+  document.getElementById("msg").textContent = s;
+  document.getElementById("msg").style.color = col || "#006618";
+  document.getElementById("bst").textContent = s;
+}
+function pct(a,b){ return b>0?(a/b*100).toFixed(0)+"%":"--"; }
+
+var cachedData = null;
+
+function fetchData(start, end, cb) {
+  if (cachedData && cachedData.start===start && cachedData.end===end) { cb(cachedData.d); return; }
+  var url = "https://archive-api.open-meteo.com/v1/archive"
+    + "?latitude=51.5048&longitude=0.0495"
+    + "&hourly=temperature_2m&daily=temperature_2m_max"
+    + "&temperature_unit=celsius&timezone=UTC"
+    + "&start_date="+start+"&end_date="+end;
+  fetch(url)
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(d){
+      cachedData={start:start,end:end,d:d};
+      cb(d);
+    })
+    .catch(function(e){ setMsg("ERROR: "+e.message,"#ff4444"); document.getElementById("btn").disabled=false; });
+}
+
+function analyse(d, cfg) {
+  var ht=(d.hourly&&d.hourly.time)||[];
+  var hv=(d.hourly&&d.hourly.temperature_2m)||[];
+  var dt=(d.daily&&d.daily.time)||[];
+  var dv=(d.daily&&d.daily.temperature_2m_max)||[];
+
+  if(!ht.length) throw new Error("No data");
+  if(isNaN(pt(ht[0]).getTime())) throw new Error("Date parse failed: "+ht[0]);
+
+  var hr=[];
+  for(var i=0;i<ht.length;i++){ if(hv[i]!=null) hr.push({t:pt(ht[i]),v:hv[i]}); }
+  var daily={};
+  for(var i=0;i<dt.length;i++){ if(dv[i]!=null) daily[dt[i]]=dv[i]; }
+
+  var phiH = cfg.phi - cfg.anc; if(phiH<=0) phiH+=24;
+  var conH = cfg.con - cfg.anc;
+
+  var results=[];
+
+  dt.forEach(function(ds){
+    var actualHi=daily[ds];
+    if(actualHi==null) return;
+    var parts=ds.split("-");
+    var yr=parseInt(parts[0]),mo=parseInt(parts[1])-1,dy=parseInt(parts[2]);
+    var ancTime=new Date(Date.UTC(yr,mo,dy,cfg.anc));
+    var conTime=new Date(Date.UTC(yr,mo,dy,cfg.con));
+
+    var ae=null; for(var i=0;i<hr.length;i++){ if(Math.abs(hr[i].t-ancTime)<1800000){ae=hr[i];break;} }
+    if(!ae) return;
+    var ce=null; for(var i=0;i<hr.length;i++){ if(Math.abs(hr[i].t-conTime)<1800000){ce=hr[i];break;} }
+    if(!ce) return;
+
+    var aT=ae.v, cT=ce.v;
+
+    // Model A: +27 no confirm
+    var aPred = fan(aT, phiH/cfg.ratio, 27, cfg.ratio);
+    var aErr  = Math.abs(actualHi-aPred);
+
+    // Model B: +27 + confirm
+    var fanAtCon = fan(aT, conH/cfg.ratio, 27, cfg.ratio);
+    var dev = cT - fanAtCon;
+    var bPred = aPred + dev;
+    var bErr  = Math.abs(actualHi-bPred);
+
+    // Model C: rule-based angle selection
+    var rule, cAngle, useConfirm;
+    if (aT < cfg.r1thresh) {
+      rule="R1"; cAngle=cfg.r1angle; useConfirm=cfg.r1confirm;
+    } else if (aT < cfg.r2thresh) {
+      rule="R2"; cAngle=cfg.r2angle; useConfirm=cfg.r2confirm;
+    } else {
+      rule="DEF"; cAngle=27; useConfirm=true;
+    }
+    var cBase = fan(aT, phiH/cfg.ratio, cAngle, cfg.ratio);
+    var cPred = cBase;
+    if (useConfirm) {
+      var fanAtConC = fan(aT, conH/cfg.ratio, cAngle, cfg.ratio);
+      cPred = cBase + (cT - fanAtConC);
+    }
+    var cErr = Math.abs(actualHi-cPred);
+
+    results.push({
+      ds:ds, aT:aT, cT:cT, dev:dev, actualHi:actualHi, rule:rule, cAngle:cAngle,
+      aPred:aPred, aErr:aErr, aW1:aErr<=1, aDual:(Math.round(actualHi)===Math.floor(aPred)||Math.round(actualHi)===Math.floor(aPred)+1),
+      bPred:bPred, bErr:bErr, bW1:bErr<=1, bDual:(Math.round(actualHi)===Math.floor(bPred)||Math.round(actualHi)===Math.floor(bPred)+1),
+      cPred:cPred, cErr:cErr, cW1:cErr<=1, cDual:(Math.round(actualHi)===Math.floor(cPred)||Math.round(actualHi)===Math.floor(cPred)+1)
+    });
+  });
+
+  return results;
+}
+
+function summarise(results) {
+  var n=results.length;
+  if(!n) return null;
+  var s={n:n,aW1:0,aDual:0,aErr:0,bW1:0,bDual:0,bErr:0,cW1:0,cDual:0,cErr:0};
+  results.forEach(function(r){
+    if(r.aW1)s.aW1++; if(r.aDual)s.aDual++; s.aErr+=r.aErr;
+    if(r.bW1)s.bW1++; if(r.bDual)s.bDual++; s.bErr+=r.bErr;
+    if(r.cW1)s.cW1++; if(r.cDual)s.cDual++; s.cErr+=r.cErr;
+  });
+  return s;
+}
+
+function run() {
+  var start=document.getElementById("i-s").value;
+  var end=document.getElementById("i-e").value;
+  if(!start||!end){setMsg("Set dates","#ff4444");return;}
+
+  var cfg={
+    anc:parseInt(document.getElementById("i-anc").value)||9,
+    con:parseInt(document.getElementById("i-con").value)||10,
+    phi:parseInt(document.getElementById("i-phi").value)||13,
+    ratio:parseFloat(document.getElementById("i-rat").value)||60,
+    r1thresh:parseFloat(document.getElementById("r1-thresh").value)||5,
+    r1angle:parseInt(document.getElementById("r1-angle").value)||45,
+    r1confirm:parseInt(document.getElementById("r1-confirm").value)===1,
+    r2thresh:parseFloat(document.getElementById("r2-thresh").value)||8,
+    r2angle:parseInt(document.getElementById("r2-angle").value)||45,
+    r2confirm:parseInt(document.getElementById("r2-confirm").value)===1
+  };
+
+  document.getElementById("btn").disabled=true;
+  document.getElementById("results").style.display="none";
+  setMsg("Fetching...");
+
+  fetchData(start, end, function(d){
+    try {
+      var results=analyse(d, cfg);
+      render(results, cfg);
+    } catch(e) { setMsg("ERROR: "+e.message,"#ff4444"); }
+    document.getElementById("btn").disabled=false;
+  });
+}
+
+function autoFind() {
+  var start=document.getElementById("i-s").value;
+  var end=document.getElementById("i-e").value;
+  if(!start||!end){setMsg("Set dates","#ff4444");return;}
+
+  var cfg={
+    anc:parseInt(document.getElementById("i-anc").value)||9,
+    con:parseInt(document.getElementById("i-con").value)||10,
+    phi:parseInt(document.getElementById("i-phi").value)||13,
+    ratio:parseFloat(document.getElementById("i-rat").value)||60
+  };
+
+  document.getElementById("btn").disabled=true;
+  setMsg("Auto-searching... (this takes ~5 seconds)");
+
+  fetchData(start, end, function(d){
+    var thresholds=[3,4,5,6,7,8,9,10];
+    var angles=[27,45,60];
+    var confirms=[true,false];
+
+    var bestErr=Infinity, bestCfg=null;
+
+    // Try all combinations of rule1 and rule2
+    for(var t1=0;t1<thresholds.length;t1++){
+      for(var t2=t1+1;t2<thresholds.length;t2++){
+        for(var a1=0;a1<angles.length;a1++){
+          for(var a2=0;a2<angles.length;a2++){
+            for(var c1=0;c1<confirms.length;c1++){
+              for(var c2=0;c2<confirms.length;c2++){
+                var testCfg=Object.assign({},cfg,{
+                  r1thresh:thresholds[t1],r1angle:angles[a1],r1confirm:confirms[c1],
+                  r2thresh:thresholds[t2],r2angle:angles[a2],r2confirm:confirms[c2]
+                });
+                try {
+                  var res=analyse(d,testCfg);
+                  var s=summarise(res);
+                  if(s && s.cErr/s.n < bestErr){
+                    bestErr=s.cErr/s.n;
+                    bestCfg=testCfg;
+                  }
+                } catch(e){}
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if(bestCfg){
+      // Apply best config to UI
+      document.getElementById("r1-thresh").value=bestCfg.r1thresh;
+      document.getElementById("r1-angle").value=bestCfg.r1angle;
+      document.getElementById("r1-confirm").value=bestCfg.r1confirm?1:0;
+      document.getElementById("r2-thresh").value=bestCfg.r2thresh;
+      document.getElementById("r2-angle").value=bestCfg.r2angle;
+      document.getElementById("r2-confirm").value=bestCfg.r2confirm?1:0;
+
+      var res=analyse(d,bestCfg);
+      render(res,bestCfg);
+      setMsg("AUTO-FOUND: R1<"+bestCfg.r1thresh+"=+"+bestCfg.r1angle+" R2<"+bestCfg.r2thresh+"=+"+bestCfg.r2angle+" avgErr="+bestErr.toFixed(2)+"C","#00cc33");
+    } else {
+      setMsg("No improvement found","#ff4444");
+    }
+    document.getElementById("btn").disabled=false;
+  });
+}
+
+function render(results, cfg) {
+  if(!results.length){setMsg("No results","#ff4444");return;}
+  var s=summarise(results);
+  var n=s.n;
+
+  document.getElementById("ba-w1").textContent  = pct(s.aW1,n);
+  document.getElementById("ba-dual").textContent = pct(s.aDual,n);
+  document.getElementById("ba-err").textContent  = (s.aErr/n).toFixed(2)+"C";
+  document.getElementById("bb-w1").textContent   = pct(s.bW1,n);
+  document.getElementById("bb-dual").textContent = pct(s.bDual,n);
+  document.getElementById("bb-err").textContent  = (s.bErr/n).toFixed(2)+"C";
+  document.getElementById("bc-w1").textContent   = pct(s.cW1,n);
+  document.getElementById("bc-dual").textContent = pct(s.cDual,n);
+  document.getElementById("bc-err").textContent  = (s.cErr/n).toFixed(2)+"C";
+
+  // Rule coverage
+  var ruleData={R1:{n:0,exact:0,w1:0,dual:0,err:0,ang:cfg.r1angle},R2:{n:0,exact:0,w1:0,dual:0,err:0,ang:cfg.r2angle},DEF:{n:0,exact:0,w1:0,dual:0,err:0,ang:27}};
+  results.forEach(function(r){
+    var rd=ruleData[r.rule];
+    rd.n++; rd.err+=r.cErr;
+    if(r.cW1)rd.w1++;
+    if(r.cDual)rd.dual++;
+    if(Math.round(r.cPred)===Math.round(r.actualHi))rd.exact++;
+  });
+  var rt=document.getElementById("rtbl"); rt.innerHTML="";
+  ["R1","R2","DEF"].forEach(function(rk){
+    var rd=ruleData[rk];
+    if(!rd.n) return;
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td>"+rk+(rk==="R1"?" (<"+cfg.r1thresh+"C)":rk==="R2"?" (<"+cfg.r2thresh+"C)":"")+"</td>"
+      +"<td>"+rd.n+"</td>"
+      +"<td>+"+(rd.ang)+"</td>"
+      +"<td>"+pct(rd.exact,rd.n)+"</td>"
+      +"<td class='"+(rd.w1/rd.n>=0.7?"hi":"ok")+"'>"+pct(rd.w1,rd.n)+"</td>"
+      +"<td>"+pct(rd.dual,rd.n)+"</td>"
+      +"<td class='dim'>"+(rd.n?rd.err/rd.n:0).toFixed(2)+"C</td>";
+    rt.appendChild(tr);
+  });
+
+  // Monthly
+  var monthly={};
+  results.forEach(function(r){
+    var mk=r.ds.slice(0,7);
+    if(!monthly[mk])monthly[mk]={n:0,aErr:0,bErr:0,cErr:0,aW1:0,bW1:0,cW1:0};
+    var m=monthly[mk]; m.n++;
+    m.aErr+=r.aErr; m.bErr+=r.bErr; m.cErr+=r.cErr;
+    if(r.aW1)m.aW1++; if(r.bW1)m.bW1++; if(r.cW1)m.cW1++;
+  });
+  var mt=document.getElementById("mtbl"); mt.innerHTML="";
+  Object.keys(monthly).sort().forEach(function(mk){
+    var m=monthly[mk];
+    var ae=m.aErr/m.n,be=m.bErr/m.n,ce=m.cErr/m.n;
+    var best=ce<=ae&&ce<=be?"C":be<=ae?"B":"A";
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td>"+mk+"</td><td>"+m.n+"</td>"
+      +"<td class='dim'>"+ae.toFixed(2)+"</td>"
+      +"<td class='dim'>"+be.toFixed(2)+"</td>"
+      +"<td class='"+(ce<ae&&ce<be?"hi":"ok")+"'>"+ce.toFixed(2)+"</td>"
+      +"<td>"+pct(m.aW1,m.n)+"</td>"
+      +"<td>"+pct(m.bW1,m.n)+"</td>"
+      +"<td class='"+(m.cW1>=m.bW1&&m.cW1>=m.aW1?"hi":"ok")+"'>"+pct(m.cW1,m.n)+"</td>"
+      +"<td class='"+(best==="C"?"hi":best==="B"?"ok":"dim")+"'>"+best+"</td>";
+    mt.appendChild(tr);
+  });
+
+  // Day log
+  var dt=document.getElementById("dtbl"); dt.innerHTML="";
+  results.slice(-30).reverse().forEach(function(r){
+    var best=r.cErr<=r.aErr&&r.cErr<=r.bErr?"C":r.bErr<=r.aErr?"B":"A";
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td>"+r.ds+"</td>"
+      +"<td>"+r.aT.toFixed(1)+"</td>"
+      +"<td>"+r.rule+"</td>"
+      +"<td>+"+(r.cAngle)+"</td>"
+      +"<td class='hi'>"+r.actualHi.toFixed(1)+"("+Math.round(r.actualHi)+")</td>"
+      +"<td class='"+(r.aErr<=0.5?"hi":r.aErr<=1?"ok":"dim")+"'>"+r.aErr.toFixed(2)+"</td>"
+      +"<td class='"+(r.bErr<=0.5?"hi":r.bErr<=1?"ok":"dim")+"'>"+r.bErr.toFixed(2)+"</td>"
+      +"<td class='"+(r.cErr<=0.5?"hi":r.cErr<=1?"ok":"dim")+"'>"+r.cErr.toFixed(2)+"</td>"
+      +"<td class='"+(best==="C"?"ok":"dim")+"'>"+best+"</td>";
+    dt.appendChild(tr);
+  });
+
+  document.getElementById("results").style.display="block";
+  setMsg("DONE -- "+n+" days | C: "+pct(s.cW1,n)+" w1C, "+pct(s.cDual,n)+" dual","#00cc33");
+}
+</script>
+
+</body>
+</html>
