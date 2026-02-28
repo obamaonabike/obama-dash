@@ -312,36 +312,27 @@ function autoFind() {
   };
 
   document.getElementById("btn").disabled=true;
-  setMsg("Auto-searching... (this takes ~5 seconds)");
+  setMsg("AUTO-FIND: fetching data...");
 
   fetchData(start, end, function(d){
-    setTimeout(function(){
-    var thresholds=[3,4,5,6,7,8,9,10];
+    setMsg("AUTO-FIND: testing combinations...");
+
+    var thresholds=[3,5,7,9];
     var angles=[27,45,60];
     var confirms=[true,false];
 
-    var bestErr=Infinity, bestCfg=null;
-
-    // Try all combinations of rule1 and rule2
+    // Build all combos upfront
+    var combos=[];
     for(var t1=0;t1<thresholds.length;t1++){
       for(var t2=t1+1;t2<thresholds.length;t2++){
         for(var a1=0;a1<angles.length;a1++){
           for(var a2=0;a2<angles.length;a2++){
             for(var c1=0;c1<confirms.length;c1++){
               for(var c2=0;c2<confirms.length;c2++){
-                var testCfg={
-                  anc:cfg.anc,con:cfg.con,phi:cfg.phi,ratio:cfg.ratio,
+                combos.push({
                   r1thresh:thresholds[t1],r1angle:angles[a1],r1confirm:confirms[c1],
                   r2thresh:thresholds[t2],r2angle:angles[a2],r2confirm:confirms[c2]
-                };
-                try {
-                  var res=analyse(d,testCfg);
-                  var s=summarise(res);
-                  if(s && s.cErr/s.n < bestErr){
-                    bestErr=s.cErr/s.n;
-                    bestCfg=testCfg;
-                  }
-                } catch(e){}
+                });
               }
             }
           }
@@ -349,25 +340,56 @@ function autoFind() {
       }
     }
 
-    if(bestCfg){
-      // Apply best config to UI
-      document.getElementById("r1-thresh").value=bestCfg.r1thresh;
-      document.getElementById("r1-angle").value=bestCfg.r1angle;
-      document.getElementById("r1-confirm").value=bestCfg.r1confirm?1:0;
-      document.getElementById("r2-thresh").value=bestCfg.r2thresh;
-      document.getElementById("r2-angle").value=bestCfg.r2angle;
-      document.getElementById("r2-confirm").value=bestCfg.r2confirm?1:0;
+    setMsg("AUTO-FIND: testing "+combos.length+" combos...");
 
-      var res=analyse(d,bestCfg);
-      render(res,bestCfg);
-      setMsg("AUTO-FOUND: R1<"+bestCfg.r1thresh+"=+"+bestCfg.r1angle+" R2<"+bestCfg.r2thresh+"=+"+bestCfg.r2angle+" avgErr="+bestErr.toFixed(2)+"C","#00cc33");
-    } else {
-      setMsg("No improvement found","#ff4444");
+    var bestErr=Infinity, bestCombo=null;
+    var i=0;
+    var CHUNK=20;
+
+    function step(){
+      try {
+        var end2=Math.min(i+CHUNK,combos.length);
+        for(;i<end2;i++){
+          var combo=combos[i];
+          var testCfg={
+            anc:cfg.anc,con:cfg.con,phi:cfg.phi,ratio:cfg.ratio,
+            r1thresh:combo.r1thresh,r1angle:combo.r1angle,r1confirm:combo.r1confirm,
+            r2thresh:combo.r2thresh,r2angle:combo.r2angle,r2confirm:combo.r2confirm
+          };
+          var res=analyse(d,testCfg);
+          if(!res.length) continue;
+          var s=summarise(res);
+          var avgErr=s.cErr/s.n;
+          if(avgErr<bestErr){bestErr=avgErr;bestCombo=testCfg;}
+        }
+        if(i<combos.length){
+          setMsg("AUTO-FIND: "+i+"/"+combos.length+" tested...");
+          setTimeout(step,0);
+        } else {
+          if(bestCombo){
+            document.getElementById("r1-thresh").value=bestCombo.r1thresh;
+            document.getElementById("r1-angle").value=bestCombo.r1angle;
+            document.getElementById("r1-confirm").value=bestCombo.r1confirm?1:0;
+            document.getElementById("r2-thresh").value=bestCombo.r2thresh;
+            document.getElementById("r2-angle").value=bestCombo.r2angle;
+            document.getElementById("r2-confirm").value=bestCombo.r2confirm?1:0;
+            var res=analyse(d,bestCombo);
+            render(res,bestCombo);
+            setMsg("AUTO-FOUND: R1<"+bestCombo.r1thresh+"=+"+bestCombo.r1angle+" R2<"+bestCombo.r2thresh+"=+"+bestCombo.r2angle+" avgErr="+bestErr.toFixed(2)+"C","#00cc33");
+          } else {
+            setMsg("No improvement found","#ff4444");
+          }
+          document.getElementById("btn").disabled=false;
+        }
+      } catch(e) {
+        setMsg("AUTO-FIND ERROR: "+e.message,"#ff4444");
+        document.getElementById("btn").disabled=false;
+      }
     }
-    document.getElementById("btn").disabled=false;
-    },10);
+    setTimeout(step,50);
   });
 }
+
 
 function render(results, cfg) {
   if(!results.length){setMsg("No results","#ff4444");return;}
