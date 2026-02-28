@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>WX Backtest 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050f05;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:11px;min-height:100dvh;-webkit-text-size-adjust:100%}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:0 10px;height:24px;background:#070d07;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid #0f2a0f}
+.bar.bot{border-top:1px solid #0f2a0f;border-bottom:none;padding-bottom:env(safe-area-inset-bottom)}
+a{color:#004a14;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px}
+.content{padding:10px;overflow-y:auto}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lbl{font-size:9px;color:#006618;letter-spacing:1px;min-width:160px}
+input{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;padding:4px 6px;width:90px}
+button{background:#030803;border:1px solid #00cc33;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:2px;padding:7px 20px;cursor:pointer;margin-top:8px;-webkit-appearance:none}
+button:disabled{border-color:#0f2a0f;color:#006618}
+#msg{font-size:9px;margin:6px 0;min-height:14px;letter-spacing:1px;word-break:break-all}
+.sec{font-size:9px;color:#006618;letter-spacing:3px;padding:8px 0 4px;border-bottom:1px solid #0f2a0f;margin-bottom:6px}
+.note{font-size:8px;color:#004a14;margin-bottom:8px;line-height:1.6}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.model{background:#070d07;border:1px solid #0f2a0f;padding:10px}
+.model.a{border-color:#006618}
+.model.b{border-color:#00cc33}
+.mtitle{font-size:9px;letter-spacing:2px;margin-bottom:8px}
+.model.a .mtitle{color:#006618}
+.model.b .mtitle{color:#00cc33}
+.mstat{margin-bottom:6px}
+.mslbl{font-size:8px;color:#004a14;letter-spacing:1px}
+.msval{font-size:18px;letter-spacing:1px}
+.msval.hi{color:#00ff41}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9px}
+th{color:#004a14;padding:4px;border-bottom:1px solid #0f2a0f;text-align:left;font-size:8px;letter-spacing:1px}
+td{padding:4px;border-bottom:1px solid #0a1a0a}
+.hi{color:#00ff41}.ok{color:#00cc33}.dim{color:#006618}.no{color:#444}
+.win-a{background:#0a0a03}.win-b{background:#030f03}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span style="letter-spacing:4px;color:#00cc33">WX BACKTEST 2</span>
+  <div><a href="index.html">BTC</a><a href="weather.html">WX</a><a href="wxbacktest.html">WXB</a></div>
+</div>
+<div class="content">
+  <div class="sec">// CONFIG</div>
+  <div class="row"><span class="lbl">START DATE</span><input id="i-s" type="date" value="2025-10-01"></div>
+  <div class="row"><span class="lbl">END DATE</span><input id="i-e" type="date" value="2026-02-20"></div>
+  <div class="row"><span class="lbl">ANCHOR HOUR UTC</span><input id="i-anc" type="number" value="9" min="0" max="23"></div>
+  <div class="row"><span class="lbl">CONFIRM HOUR UTC</span><input id="i-con" type="number" value="10" min="0" max="23"></div>
+  <div class="row"><span class="lbl">PREDICT HI AT HOUR</span><input id="i-phi" type="number" value="13" min="0" max="23"></div>
+  <div class="row"><span class="lbl">HTF RATIO</span><input id="i-rat" type="number" value="60" step="1" min="1"></div>
+  <button id="btn" onclick="run()">RUN BACKTEST</button>
+  <div id="msg" style="color:#006618">READY</div>
+
+  <div id="results" style="display:none">
+    <div class="sec">// MODEL COMPARISON</div>
+    <div class="note">
+      MODEL A: +27 fan at ANCHOR hour, projected to PREDICT HI hour. Original model.<br>
+      MODEL B: same projection, then CONFIRM hour actual temp adjusts the prediction up/down by deviation from fan at that hour.
+    </div>
+    <div class="compare">
+      <div class="model a">
+        <div class="mtitle">MODEL A -- 9AM ONLY</div>
+        <div class="mstat"><div class="mslbl">EXACT BRACKET</div><div class="msval" id="a-exact">-</div></div>
+        <div class="mstat"><div class="mslbl">WITHIN 1C</div><div class="msval hi" id="a-w1">-</div></div>
+        <div class="mstat"><div class="mslbl">DUAL BRACKET</div><div class="msval" id="a-dual">-</div></div>
+        <div class="mstat"><div class="mslbl">AVG ERR</div><div class="msval" id="a-err">-</div></div>
+      </div>
+      <div class="model b">
+        <div class="mtitle">MODEL B -- 10AM CONFIRM</div>
+        <div class="mstat"><div class="mslbl">EXACT BRACKET</div><div class="msval" id="b-exact">-</div></div>
+        <div class="mstat"><div class="mslbl">WITHIN 1C</div><div class="msval hi" id="b-w1">-</div></div>
+        <div class="mstat"><div class="mslbl">DUAL BRACKET</div><div class="msval" id="b-dual">-</div></div>
+        <div class="mstat"><div class="mslbl">AVG ERR</div><div class="msval" id="b-err">-</div></div>
+      </div>
+    </div>
+
+```
+<div class="sec">// MONTHLY BREAKDOWN</div>
+<table>
+  <thead><tr><th>MONTH</th><th>DAYS</th><th>A EXACT</th><th>B EXACT</th><th>A W1C</th><th>B W1C</th><th>A ERR</th><th>B ERR</th><th>WINNER</th></tr></thead>
+  <tbody id="mtbl"></tbody>
+</table>
+
+<div class="sec">// DAY LOG (MOST RECENT 30)</div>
+<table>
+  <thead><tr><th>DATE</th><th>ANC</th><th>10AM</th><th>DEV</th><th>ACTUAL</th><th>A PRED</th><th>A ERR</th><th>B PRED</th><th>B ERR</th><th>WIN</th></tr></thead>
+  <tbody id="dtbl"></tbody>
+</table>
+```
+
+  </div>
+</div>
+<div class="bar bot"><span id="bst">READY</span></div>
+
+<script type="text/javascript">
+function pt(s) {
+  if (!s) return new Date(NaN);
+  if (s.length > 16) return new Date(s);
+  return new Date(s + ":00Z");
+}
+function fan(aT, hrs, deg, ratio) {
+  return aT + hrs * ratio * Math.tan(deg * Math.PI / 180);
+}
+function setMsg(s, col) {
+  document.getElementById("msg").textContent = s;
+  document.getElementById("msg").style.color = col || "#006618";
+  document.getElementById("bst").textContent = s;
+}
+function pct(a,b){ return b>0?(a/b*100).toFixed(0)+"%":"--"; }
+
+function run() {
+  var start = document.getElementById("i-s").value;
+  var end   = document.getElementById("i-e").value;
+  var anc   = parseInt(document.getElementById("i-anc").value)||9;
+  var con   = parseInt(document.getElementById("i-con").value)||10;
+  var phi   = parseInt(document.getElementById("i-phi").value)||13;
+  var ratio = parseFloat(document.getElementById("i-rat").value)||60;
+
+  if (!start||!end) { setMsg("Set dates","#ff4444"); return; }
+  if (con <= anc)   { setMsg("CONFIRM HOUR must be after ANCHOR HOUR","#ff4444"); return; }
+
+  document.getElementById("btn").disabled = true;
+  document.getElementById("results").style.display = "none";
+  setMsg("Fetching archive...");
+
+  var url = "https://archive-api.open-meteo.com/v1/archive"
+    + "?latitude=51.5048&longitude=0.0495"
+    + "&hourly=temperature_2m"
+    + "&daily=temperature_2m_max"
+    + "&temperature_unit=celsius&timezone=UTC"
+    + "&start_date=" + start + "&end_date=" + end;
+
+  fetch(url)
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(d){
+      setMsg("Analysing...");
+
+      var ht = (d.hourly&&d.hourly.time)||[];
+      var hv = (d.hourly&&d.hourly.temperature_2m)||[];
+      var dt = (d.daily&&d.daily.time)||[];
+      var dv = (d.daily&&d.daily.temperature_2m_max)||[];
+
+      if (!ht.length) throw new Error("No data");
+      if (isNaN(pt(ht[0]).getTime())) throw new Error("Date parse failed: "+ht[0]);
+
+      var hr=[];
+      for(var i=0;i<ht.length;i++){ if(hv[i]!=null) hr.push({t:pt(ht[i]),v:hv[i]}); }
+
+      var daily={};
+      for(var i=0;i<dt.length;i++){ if(dv[i]!=null) daily[dt[i]]=dv[i]; }
+
+      var phiH = phi - anc; if(phiH<=0) phiH+=24;
+      var conH = con - anc; // hours from anchor to confirm
+
+      // Stats
+      var aExact=0,aW1=0,aDual=0,aErrSum=0;
+      var bExact=0,bW1=0,bDual=0,bErrSum=0;
+      var n=0;
+      var monthly={};
+      var results=[];
+
+      dt.forEach(function(ds){
+        var actualHi=daily[ds];
+        if(actualHi==null) return;
+
+        var parts=ds.split("-");
+        var yr=parseInt(parts[0]),mo=parseInt(parts[1])-1,dy=parseInt(parts[2]);
+        var ancTime=new Date(Date.UTC(yr,mo,dy,anc));
+        var conTime=new Date(Date.UTC(yr,mo,dy,con));
+
+        // Anchor temp
+        var ae=null;
+        for(var i=0;i<hr.length;i++){ if(Math.abs(hr[i].t-ancTime)<1800000){ae=hr[i];break;} }
+        if(!ae) return;
+        var aT=ae.v;
+
+        // Confirm temp
+        var ce=null;
+        for(var i=0;i<hr.length;i++){ if(Math.abs(hr[i].t-conTime)<1800000){ce=hr[i];break;} }
+        if(!ce) return;
+        var cT=ce.v;
+
+        // MODEL A: +27 fan from anchor projected to phi
+        var aPred = fan(aT, phiH/ratio, 27, ratio);
+        var aErr  = Math.abs(actualHi - aPred);
+
+        // MODEL B: same base, then adjust by deviation at confirm hour
+        // Expected temp at confirm hour per +27 fan:
+        var fanAtCon  = fan(aT, conH/ratio, 27, ratio);
+        var deviation = cT - fanAtCon; // positive = running hot, negative = running cold
+        var bPred = aPred + deviation;
+        var bErr  = Math.abs(actualHi - bPred);
+
+        var aLo=Math.floor(aPred),aHi2=aLo+1,aAct=Math.round(actualHi);
+        var bLo=Math.floor(bPred),bHi2=bLo+1;
+
+        var aExactHit = Math.round(aPred)===aAct;
+        var aW1Hit    = aErr<=1.0;
+        var aDualHit  = aAct===aLo||aAct===aHi2;
+
+        var bExactHit = Math.round(bPred)===aAct;
+        var bW1Hit    = bErr<=1.0;
+        var bDualHit  = aAct===bLo||aAct===bHi2;
+
+        if(aExactHit) aExact++;
+        if(aW1Hit)    aW1++;
+        if(aDualHit)  aDual++;
+        aErrSum+=aErr;
+
+        if(bExactHit) bExact++;
+        if(bW1Hit)    bW1++;
+        if(bDualHit)  bDual++;
+        bErrSum+=bErr;
+        n++;
+
+        // Monthly
+        var mk=ds.slice(0,7);
+        if(!monthly[mk]) monthly[mk]={n:0,aEx:0,bEx:0,aW1:0,bW1:0,aErr:0,bErr:0};
+        monthly[mk].n++;
+        if(aExactHit) monthly[mk].aEx++;
+        if(bExactHit) monthly[mk].bEx++;
+        if(aW1Hit) monthly[mk].aW1++;
+        if(bW1Hit) monthly[mk].bW1++;
+        monthly[mk].aErr+=aErr;
+        monthly[mk].bErr+=bErr;
+
+        results.push({ds:ds,aT:aT,cT:cT,dev:deviation,actualHi:actualHi,
+          aPred:aPred,aErr:aErr,aEx:aExactHit,
+          bPred:bPred,bErr:bErr,bEx:bExactHit});
+      });
+
+      if(!n) throw new Error("No days analysed");
+
+      // Summary
+      document.getElementById("a-exact").textContent = pct(aExact,n);
+      document.getElementById("a-w1").textContent    = pct(aW1,n);
+      document.getElementById("a-dual").textContent  = pct(aDual,n);
+      document.getElementById("a-err").textContent   = (aErrSum/n).toFixed(2)+"C";
+
+      document.getElementById("b-exact").textContent = pct(bExact,n);
+      document.getElementById("b-w1").textContent    = pct(bW1,n);
+      document.getElementById("b-dual").textContent  = pct(bDual,n);
+      document.getElementById("b-err").textContent   = (bErrSum/n).toFixed(2)+"C";
+
+      // Monthly table
+      var mt=document.getElementById("mtbl"); mt.innerHTML="";
+      Object.keys(monthly).sort().forEach(function(mk){
+        var m=monthly[mk];
+        var bWins = m.bEx>m.aEx || m.bErr<m.aErr;
+        var tr=document.createElement("tr");
+        tr.className=bWins?"win-b":"win-a";
+        tr.innerHTML="<td>"+mk+"</td>"
+          +"<td>"+m.n+"</td>"
+          +"<td class='"+(m.aEx/m.n>=0.4?"hi":"ok")+"'>"+pct(m.aEx,m.n)+"</td>"
+          +"<td class='"+(m.bEx/m.n>=0.4?"hi":"ok")+"'>"+pct(m.bEx,m.n)+"</td>"
+          +"<td>"+pct(m.aW1,m.n)+"</td>"
+          +"<td>"+pct(m.bW1,m.n)+"</td>"
+          +"<td class='dim'>"+(m.aErr/m.n).toFixed(2)+"C</td>"
+          +"<td class='dim'>"+(m.bErr/m.n).toFixed(2)+"C</td>"
+          +"<td class='"+(bWins?"ok":"dim")+"'>"+(bWins?"B":"A")+"</td>";
+        mt.appendChild(tr);
+      });
+
+      // Day log (last 30)
+      var dt2=document.getElementById("dtbl"); dt2.innerHTML="";
+      results.slice(-30).reverse().forEach(function(r){
+        var bBetter=r.bErr<r.aErr;
+        var tr=document.createElement("tr");
+        tr.innerHTML="<td>"+r.ds+"</td>"
+          +"<td>"+r.aT.toFixed(1)+"</td>"
+          +"<td>"+r.cT.toFixed(1)+"</td>"
+          +"<td class='"+(r.dev>0?"hi":r.dev<0?"no":"dim")+">"+( r.dev>0?"+":"")+r.dev.toFixed(2)+"</td>"
+          +"<td class='hi'>"+r.actualHi.toFixed(1)+"("+Math.round(r.actualHi)+"C)</td>"
+          +"<td class='"+(r.aEx?"ok":"dim")+"'>"+r.aPred.toFixed(1)+"("+Math.round(r.aPred)+"C)</td>"
+          +"<td class='"+(r.aErr<=0.5?"hi":r.aErr<=1?"ok":"dim")+"'>"+r.aErr.toFixed(2)+"</td>"
+          +"<td class='"+(r.bEx?"ok":"dim")+"'>"+r.bPred.toFixed(1)+"("+Math.round(r.bPred)+"C)</td>"
+          +"<td class='"+(r.bErr<=0.5?"hi":r.bErr<=1?"ok":"dim")+"'>"+r.bErr.toFixed(2)+"</td>"
+          +"<td class='"+(bBetter?"ok":"dim")+">'"+(bBetter?"B":"A")+"</td>";
+        dt2.appendChild(tr);
+      });
+
+      document.getElementById("results").style.display="block";
+      setMsg("DONE -- "+n+" days | A:"+pct(aExact,n)+" exact, B:"+pct(bExact,n)+" exact","#00cc33");
+      document.getElementById("btn").disabled=false;
+    })
+    .catch(function(e){
+      setMsg("ERROR: "+e.message,"#ff4444");
+      document.getElementById("btn").disabled=false;
+    });
+}
+</script>
+
+</body>
+</html>
