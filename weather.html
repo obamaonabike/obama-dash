@@ -16,101 +16,127 @@ a{color:#004a14;font-size:9px;letter-spacing:2px;text-decoration:none;margin-lef
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .content{padding:12px;overflow-y:auto}
 .sec{font-size:9px;color:#006618;letter-spacing:3px;padding:10px 0 4px;border-bottom:1px solid #0f2a0f;margin-bottom:8px;text-transform:uppercase}
-.big{font-size:52px;letter-spacing:2px;color:#00ff41;line-height:1;margin:8px 0}
-.sub{font-size:10px;color:#006618;letter-spacing:2px;margin-bottom:4px}
+.big{font-size:52px;letter-spacing:2px;line-height:1;margin:6px 0}
+.big.conf-hi{color:#00ff41}
+.big.conf-mid{color:#ffb300}
+.big.conf-lo{color:#ff6600}
+.sub{font-size:9px;color:#006618;letter-spacing:2px;margin-bottom:3px}
 .brackets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
 .bkt{background:#070d07;border:2px solid #0f2a0f;padding:14px 10px;text-align:center}
 .bkt.hot{border-color:#00cc33;background:#030f03}
-.bkt-val{font-size:28px;color:#00ff41;letter-spacing:1px}
+.bkt-val{font-size:28px;letter-spacing:1px}
+.bkt.hot .bkt-val{color:#00ff41}
 .bkt-lbl{font-size:8px;color:#006618;letter-spacing:2px;margin-top:4px}
 .bkt.hot .bkt-lbl{color:#00cc33}
+.conf-bar{height:4px;background:#0a1a0a;border-radius:2px;margin:6px 0 10px}
+.conf-fill{height:100%;border-radius:2px;transition:width .3s}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
 .card{background:#070d07;border:1px solid #0f2a0f;padding:10px}
 .clbl{font-size:8px;color:#006618;letter-spacing:2px;margin-bottom:4px}
 .cval{font-size:18px;letter-spacing:1px}
 .csub{font-size:8px;color:#004a14;margin-top:2px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.phase{display:inline-block;font-size:8px;letter-spacing:2px;padding:2px 8px;border:1px solid #0f2a0f;margin-bottom:6px}
+.phase.wait{color:#006618;border-color:#0f2a0f}
+.phase.anc{color:#ffb300;border-color:#ffb300}
+.phase.conf{color:#00ff41;border-color:#00ff41}
 table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px}
 th{color:#004a14;padding:4px;border-bottom:1px solid #0f2a0f;text-align:left;font-size:8px;letter-spacing:1px}
 td{padding:4px;border-bottom:1px solid #0a1a0a}
 .hi{color:#00ff41}.ok{color:#00cc33}.dim{color:#006618}.no{color:#444}
-.err{color:#ff4444;font-size:9px;margin:8px 0;word-break:break-all}
-#cur-temp{font-size:13px;color:#00cc33;letter-spacing:1px}
+.err{color:#ff4444;font-size:9px;margin:6px 0;word-break:break-all}
 </style>
 </head>
 <body>
 <div class="bar">
   <span style="letter-spacing:4px;color:#00cc33">WX LONDON</span>
   <div><a href="index.html">BTC</a><a href="backtest.html">BT</a><a href="wxbacktest.html">WXB</a><a href="wxbacktest2.html">WXB2</a><a href="wxbacktest3.html">WXB3</a></div>
-  <div style="display:flex;align-items:center;gap:6px"><span id="cur-temp">--</span><div class="dot"></div></div>
+  <div style="display:flex;align-items:center;gap:6px"><span id="cur-temp" style="font-size:12px;color:#00cc33;letter-spacing:1px">--</span><div class="dot"></div></div>
 </div>
 <div class="content">
 
-  <div class="sec">// TODAY'S PREDICTION</div>
-  <div class="sub" id="anchor-lbl">ANCHOR @ 09:00 UTC: --</div>
-  <div class="big" id="pred-hi">--</div>
-  <div class="sub">PREDICTED DAILY HIGH (C) - +27 FAN @ 13H UTC</div>
+  <div class="sec">// STATUS</div>
+  <div id="phase-badge" class="phase wait">WAITING FOR 09:00 UTC</div>
   <div id="err-msg" class="err" style="display:none"></div>
 
+  <div class="sec">// PREDICTION</div>
+  <div class="sub" id="anc-lbl">ANCHOR @ 09:00 UTC: --</div>
+  <div class="sub" id="model-lbl">MODEL: --</div>
+  <div id="pred-hi" class="big conf-hi">--</div>
+  <div class="sub" id="pred-lbl">PREDICTED DAILY HIGH</div>
+
+  <div class="conf-bar"><div id="conf-fill" class="conf-fill" style="width:0%;background:#006618"></div></div>
+  <div class="sub" id="conf-lbl">CONFIDENCE: --</div>
+
   <div class="sec">// BET THESE BRACKETS</div>
-  <div class="sub" style="margin-bottom:8px;font-size:8px;color:#004a14">DUAL BRACKET STRATEGY - 83% HIT RATE OVER 143 DAYS</div>
+  <div class="sub" id="dual-lbl" style="font-size:8px;color:#004a14;margin-bottom:8px">DUAL BRACKET -- 66% HIT RATE (143 DAYS)</div>
   <div class="brackets">
-    <div class="bkt hot" id="bkt-lo">
-      <div class="bkt-val" id="bkt-lo-val">--</div>
-      <div class="bkt-lbl">FLOOR BRACKET</div>
+    <div class="bkt hot">
+      <div class="bkt-val" id="bkt-lo">--</div>
+      <div class="bkt-lbl">FLOOR</div>
     </div>
-    <div class="bkt hot" id="bkt-hi">
-      <div class="bkt-val" id="bkt-hi-val">--</div>
-      <div class="bkt-lbl">CEIL BRACKET</div>
+    <div class="bkt hot">
+      <div class="bkt-val" id="bkt-hi">--</div>
+      <div class="bkt-lbl">CEILING</div>
     </div>
   </div>
 
-  <div class="sec">// CONFIDENCE</div>
-  <div class="grid2">
-    <div class="card">
-      <div class="clbl">AVG ERROR</div>
-      <div class="cval" id="avg-err">0.56C</div>
-      <div class="csub">143 DAY BACKTEST</div>
+  <div id="confirm-section" style="display:none">
+    <div class="sec">// 10AM CONFIRMATION</div>
+    <div class="grid3">
+      <div class="card">
+        <div class="clbl">10AM ACTUAL</div>
+        <div class="cval" id="con-actual">--</div>
+      </div>
+      <div class="card">
+        <div class="clbl">FAN AT 10AM</div>
+        <div class="cval" id="con-fan">--</div>
+      </div>
+      <div class="card">
+        <div class="clbl">DEVIATION</div>
+        <div class="cval" id="con-dev">--</div>
+        <div class="csub" id="con-dir">--</div>
+      </div>
     </div>
+    <div class="sub" id="base-lbl" style="margin-bottom:4px">BASE PRED: -- &rarr; ADJUSTED: --</div>
+  </div>
+
+  <div class="sec">// MODEL STATS</div>
+  <div class="grid3">
     <div class="card">
       <div class="clbl">WITHIN 1C</div>
-      <div class="cval hi">87%</div>
-      <div class="csub">OCT 25 - FEB 26</div>
+      <div class="cval hi" id="stat-w1">70%</div>
+      <div class="csub">143 DAYS</div>
     </div>
     <div class="card">
-      <div class="clbl">THIS MONTH</div>
-      <div class="cval hi" id="mo-acc">65%</div>
-      <div class="csub">EXACT BRACKET</div>
+      <div class="clbl">DUAL HIT</div>
+      <div class="cval hi">66%</div>
+      <div class="csub">143 DAYS</div>
     </div>
     <div class="card">
-      <div class="clbl">DUAL BRACKET</div>
-      <div class="cval hi">83%</div>
-      <div class="csub">HIT RATE</div>
+      <div class="clbl">AVG ERROR</div>
+      <div class="cval">0.89C</div>
+      <div class="csub">143 DAYS</div>
     </div>
   </div>
 
   <div class="sec">// RECENT DAYS</div>
   <table>
-    <thead><tr><th>DATE</th><th>ANC</th><th>ACTUAL HI</th><th>PRED</th><th>ERR</th><th>OK</th></tr></thead>
+    <thead><tr><th>DATE</th><th>ANC</th><th>RULE</th><th>ACTUAL</th><th>PRED</th><th>ERR</th><th>OK</th></tr></thead>
     <tbody id="recent-tbl"></tbody>
   </table>
-
-  <div class="sec">// SETTINGS</div>
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-    <span style="font-size:9px;color:#006618;letter-spacing:1px;min-width:160px">PREDICT HI AT HOUR</span>
-    <input id="cfg-phi" type="number" value="13" min="0" max="23" style="background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 6px;width:60px">
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-    <span style="font-size:9px;color:#006618;letter-spacing:1px;min-width:160px">HTF RATIO</span>
-    <input id="cfg-ratio" type="number" value="60" min="1" style="background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 6px;width:60px">
-  </div>
-  <button onclick="load()" style="background:#030803;border:1px solid #00cc33;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:6px 16px;cursor:pointer;-webkit-appearance:none;margin-bottom:10px">REFRESH</button>
 
 </div>
 <div class="bar bot"><span id="bst">LOADING...</span></div>
 
 <script type="text/javascript">
-var ANGLES = [27,-27,45,-45,60,-60,72,-72,78,-78];
+var ANC_HOUR  = 9;
+var CON_HOUR  = 10;
+var PHI_HOUR  = 13;
+var RATIO     = 60;
+var R1_THRESH = 3;   // below this -> +45
+var R1_ANGLE  = 45;
+// else +27 + confirm
 
 function pt(s) {
   if (!s) return new Date(NaN);
@@ -120,117 +146,126 @@ function pt(s) {
 function fan(aT, hrs, deg, ratio) {
   return aT + hrs * ratio * Math.tan(deg * Math.PI / 180);
 }
-function setStatus(s){ document.getElementById("bst").textContent = s; }
+function setStatus(s){ document.getElementById("bst").textContent=s; }
 function showErr(s){ var e=document.getElementById("err-msg"); e.textContent=s; e.style.display="block"; }
 
+function getAngle(aT) {
+  return aT < R1_THRESH ? R1_ANGLE : 27;
+}
+function getRuleLabel(aT) {
+  return aT < R1_THRESH ? "R1 (+45, ANC<3C)" : "+27 + 10AM CONFIRM";
+}
+function getConfidence(aT, phase) {
+  // phase: "anchor" or "confirmed"
+  var base = aT < 3 ? 41 : aT < 5 ? 58 : 74;
+  if (phase === "confirmed") base = Math.min(base + 10, 92);
+  return base;
+}
+
 function load() {
-  var phi   = parseInt(document.getElementById("cfg-phi").value) || 13;
-  var ratio = parseFloat(document.getElementById("cfg-ratio").value) || 60;
-  var ANC   = 9;
-
   setStatus("FETCHING...");
-  document.getElementById("err-msg").style.display = "none";
+  document.getElementById("err-msg").style.display="none";
 
-  // Forecast for current temp + recent history for recent-days table
-  var fcastUrl = "https://api.open-meteo.com/v1/forecast"
+  var url = "https://api.open-meteo.com/v1/forecast"
     + "?latitude=51.5048&longitude=0.0495"
     + "&hourly=temperature_2m"
     + "&daily=temperature_2m_max"
     + "&temperature_unit=celsius&timezone=UTC"
     + "&past_days=14&forecast_days=1";
 
-  // Archive for monthly stats (last 90 days)
-  var now = new Date();
-  var mo  = now.toISOString().slice(0,7);
-  var archStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()-3, 1)).toISOString().slice(0,10);
-  var archEnd   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()-1)).toISOString().slice(0,10);
-
-  fetch(fcastUrl)
+  fetch(url)
     .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
     .then(function(d){
-      var ht = (d.hourly&&d.hourly.time)||[];
-      var hv = (d.hourly&&d.hourly.temperature_2m)||[];
-      var dt = (d.daily&&d.daily.time)||[];
-      var dv = (d.daily&&d.daily.temperature_2m_max)||[];
+      var ht=(d.hourly&&d.hourly.time)||[];
+      var hv=(d.hourly&&d.hourly.temperature_2m)||[];
+      var dt=(d.daily&&d.daily.time)||[];
+      var dv=(d.daily&&d.daily.temperature_2m_max)||[];
 
-      if (!ht.length) throw new Error("No data");
+      if(!ht.length) throw new Error("No data");
 
-      // Current temp (latest non-null hourly)
-      var curTemp = null;
-      for (var i=hv.length-1;i>=0;i--){ if(hv[i]!=null){curTemp=hv[i];break;} }
-      if (curTemp!=null) document.getElementById("cur-temp").textContent = curTemp.toFixed(1)+"C";
-
-      // Build hourly lookup
       var hr=[];
       for(var i=0;i<ht.length;i++){ if(hv[i]!=null) hr.push({t:pt(ht[i]),v:hv[i]}); }
 
-      // Today's anchor temp
-      var today = new Date();
-      var ancTime = new Date(Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate(),ANC));
-      var ae = null;
+      // Current temp
+      var nowSec=Date.now();
+      var curT=null;
+      for(var i=hr.length-1;i>=0;i--){ if(hr[i].t<=nowSec){curT=hr[i].v;break;} }
+      if(curT!=null) document.getElementById("cur-temp").textContent=curT.toFixed(1)+"C";
+
+      var now=new Date();
+      var ancTime=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),ANC_HOUR));
+      var conTime=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),CON_HOUR));
+      var phiH=PHI_HOUR-ANC_HOUR;
+      var conH=CON_HOUR-ANC_HOUR;
+
+      // Find anchor temp
+      var ae=null;
       for(var i=0;i<hr.length;i++){ if(Math.abs(hr[i].t-ancTime)<1800000){ae=hr[i];break;} }
 
-      if (!ae) { showErr("Anchor temp not yet available (before 09:00 UTC)"); setStatus("WAITING FOR ANCHOR"); return; }
-
-      var aT   = ae.v;
-      var phiH = phi - ANC; if(phiH<=0) phiH+=24;
-
-      // Best prediction (nearest fan to what we expect - use +27 as primary, find best vs recent avg)
-      var bestErr=Infinity, bestPred=null, bestAngle=null;
-      ANGLES.forEach(function(deg){
-        var p1=fan(aT,phiH,deg,1), p2=fan(aT,phiH/ratio,deg,ratio);
-        // We don't know actual yet - just show +27 prediction as primary
-        if(deg===27){
-          bestPred = Math.abs(p1-aT) < Math.abs(p2-aT) ? p2 : p1;
-          bestAngle = 27;
-        }
-      });
-
-      // Use +27 fan with ratio (this was best over 143 days)
-      var pred27 = fan(aT, phiH/ratio, 27, ratio);
-      var pred27s = fan(aT, phiH, 27, 1);
-      // Pick the one that's more reasonable (closer to anchor)
-      var pred = pred27;
-
-      document.getElementById("anchor-lbl").textContent = "ANCHOR @ 0"+ANC+":00 UTC: "+aT.toFixed(1)+"C";
-      document.getElementById("pred-hi").textContent    = pred.toFixed(1)+"C";
-
-      var lo = Math.floor(pred), hi2 = lo+1;
-      document.getElementById("bkt-lo-val").textContent = lo+"C";
-      document.getElementById("bkt-hi-val").textContent = hi2+"C";
-
-      // Recent days table
-      var tbody = document.getElementById("recent-tbl");
-      tbody.innerHTML = "";
-      var daily = {};
-      for(var i=0;i<dt.length;i++){ if(dv[i]!=null) daily[dt[i]]=dv[i]; }
-
-      var shown=0;
-      for(var i=dt.length-1;i>=0&&shown<10;i--){
-        var ds=dt[i], actualHi=daily[ds];
-        if(actualHi==null) continue;
-        var parts=ds.split("-");
-        var ancT2=new Date(Date.UTC(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]),ANC));
-        // skip today
-        if(Math.abs(ancT2-ancTime)<60000) continue;
-        var ae2=null;
-        for(var j=0;j<hr.length;j++){ if(Math.abs(hr[j].t-ancT2)<1800000){ae2=hr[j];break;} }
-        if(!ae2) continue;
-        var aT2=ae2.v;
-        var p=fan(aT2,phiH/ratio,27,ratio);
-        var err=Math.abs(actualHi-p);
-        var correct=Math.round(p)===Math.round(actualHi);
-        var tr=document.createElement("tr");
-        tr.innerHTML="<td>"+ds+"</td>"
-          +"<td>"+aT2.toFixed(1)+"</td>"
-          +"<td class='hi'>"+actualHi.toFixed(1)+"("+Math.round(actualHi)+"C)</td>"
-          +"<td>"+p.toFixed(1)+"("+Math.round(p)+"C)</td>"
-          +"<td class='"+(err<=0.5?"hi":err<=1?"ok":"dim")+"'>"+err.toFixed(2)+"C</td>"
-          +"<td class='"+(correct?"ok":"no")+"'>"+(correct?"Y":"N")+"</td>";
-        tbody.appendChild(tr);
-        shown++;
+      if(!ae || ae.t > now) {
+        // Before 9am
+        document.getElementById("phase-badge").textContent="WAITING FOR 09:00 UTC";
+        document.getElementById("phase-badge").className="phase wait";
+        document.getElementById("pred-hi").textContent="--";
+        setStatus("PRE-ANCHOR -- CHECK BACK AT 09:00 UTC");
+        buildRecentTable(hr, dt, dv, phiH, conH);
+        return;
       }
 
+      var aT=ae.v;
+      var angle=getAngle(aT);
+      var basePred=fan(aT, phiH/RATIO, angle, RATIO);
+
+      document.getElementById("anc-lbl").textContent="ANCHOR @ 0"+ANC_HOUR+":00 UTC: "+aT.toFixed(1)+"C";
+      document.getElementById("model-lbl").textContent="MODEL: "+getRuleLabel(aT);
+
+      // Find confirm temp (10am)
+      var ce=null;
+      for(var i=0;i<hr.length;i++){ if(Math.abs(hr[i].t-conTime)<1800000){ce=hr[i];break;} }
+
+      var finalPred=basePred;
+      var phase="anchor";
+      var dev=null;
+
+      if(ce && ce.t <= now && angle===27) {
+        // 10am data available and we're using +27 model -> apply confirmation
+        var fanAtCon=fan(aT, conH/RATIO, 27, RATIO);
+        dev=ce.v-fanAtCon;
+        finalPred=basePred+dev;
+        phase="confirmed";
+        document.getElementById("confirm-section").style.display="block";
+        document.getElementById("con-actual").textContent=ce.v.toFixed(1)+"C";
+        document.getElementById("con-fan").textContent=fanAtCon.toFixed(1)+"C";
+        document.getElementById("con-dev").textContent=(dev>=0?"+":"")+dev.toFixed(2)+"C";
+        document.getElementById("con-dev").style.color=dev>0?"#00ff41":dev<0?"#ff4444":"#00cc33";
+        document.getElementById("con-dir").textContent=dev>0.3?"RUNNING HOT":dev<-0.3?"RUNNING COLD":"ON TRACK";
+        document.getElementById("base-lbl").innerHTML="BASE: "+basePred.toFixed(1)+"C &rarr; ADJUSTED: "+finalPred.toFixed(1)+"C";
+        document.getElementById("phase-badge").textContent="CONFIRMED -- 10AM DATA";
+        document.getElementById("phase-badge").className="phase conf";
+      } else if (angle===27) {
+        document.getElementById("phase-badge").textContent="ANCHOR ONLY -- AWAITING 10:00 UTC";
+        document.getElementById("phase-badge").className="phase anc";
+      } else {
+        document.getElementById("phase-badge").textContent="ANCHOR -- R1 RULE (+45)";
+        document.getElementById("phase-badge").className="phase anc";
+      }
+
+      // Display prediction
+      var conf=getConfidence(aT, phase);
+      var confCol=conf>=70?"#00ff41":conf>=55?"#ffb300":"#ff6600";
+      document.getElementById("pred-hi").textContent=finalPred.toFixed(1)+"C";
+      document.getElementById("pred-hi").style.color=confCol;
+      document.getElementById("pred-lbl").textContent="PREDICTED DAILY HIGH ("+(phase==="confirmed"?"CONFIRMED":"ANCHOR ONLY")+")";
+      document.getElementById("conf-fill").style.width=conf+"%";
+      document.getElementById("conf-fill").style.background=confCol;
+      document.getElementById("conf-lbl").textContent="CONFIDENCE: "+conf+"% (WITHIN 1C HIST) -- ANCHOR "+(aT<3?"<3C LOW":aT<5?"<5C MED":">=5C HIGH");
+
+      var lo=Math.floor(finalPred), hi2=lo+1;
+      document.getElementById("bkt-lo").textContent=lo+"C";
+      document.getElementById("bkt-hi").textContent=hi2+"C";
+      document.getElementById("dual-lbl").textContent="BET BOTH -- "+(conf>=70?"HIGH CONFIDENCE":"MODERATE CONFIDENCE")+" | 66% DUAL HIT (143 DAYS)";
+
+      buildRecentTable(hr, dt, dv, phiH, conH);
       setStatus("UPDATED "+new Date().toUTCString().slice(5,22).toUpperCase()+" UTC");
     })
     .catch(function(e){
@@ -239,9 +274,61 @@ function load() {
     });
 }
 
+function buildRecentTable(hr, dt, dv, phiH, conH) {
+  var daily={};
+  for(var i=0;i<dt.length;i++){ if(dv[i]!=null) daily[dt[i]]=dv[i]; }
+
+  var now=new Date();
+  var tbody=document.getElementById("recent-tbl");
+  tbody.innerHTML="";
+  var shown=0;
+
+  for(var i=dt.length-1;i>=0&&shown<10;i--){
+    var ds=dt[i];
+    var actualHi=daily[ds];
+    if(actualHi==null) continue;
+
+    var parts=ds.split("-");
+    var ancT=new Date(Date.UTC(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]),ANC_HOUR));
+    var conT=new Date(Date.UTC(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]),CON_HOUR));
+
+    // skip today
+    if(ancT.toDateString()===now.toDateString()) continue;
+
+    var ae2=null; for(var j=0;j<hr.length;j++){ if(Math.abs(hr[j].t-ancT)<1800000){ae2=hr[j];break;} }
+    if(!ae2) continue;
+    var aT2=ae2.v;
+    var angle2=getAngle(aT2);
+    var base2=fan(aT2, phiH/RATIO, angle2, RATIO);
+
+    var pred2=base2;
+    if(angle2===27){
+      var ce2=null; for(var j=0;j<hr.length;j++){ if(Math.abs(hr[j].t-conT)<1800000){ce2=hr[j];break;} }
+      if(ce2){
+        var fanC=fan(aT2, conH/RATIO, 27, RATIO);
+        pred2=base2+(ce2.v-fanC);
+      }
+    }
+
+    var err=Math.abs(actualHi-pred2);
+    var correct=Math.round(pred2)===Math.round(actualHi);
+    var rule=angle2===45?"R1":"+27";
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td>"+ds+"</td>"
+      +"<td>"+aT2.toFixed(1)+"</td>"
+      +"<td class='"+(angle2===45?"ok":"dim")+"'>"+rule+"</td>"
+      +"<td class='hi'>"+actualHi.toFixed(1)+"("+Math.round(actualHi)+"C)</td>"
+      +"<td>"+pred2.toFixed(1)+"("+Math.round(pred2)+"C)</td>"
+      +"<td class='"+(err<=0.5?"hi":err<=1?"ok":"dim")+"'>"+err.toFixed(2)+"C</td>"
+      +"<td class='"+(correct?"ok":"no")+"'>"+(correct?"Y":"N")+"</td>";
+    tbody.appendChild(tr);
+    shown++;
+  }
+}
+
 window.addEventListener("load", function(){
   load();
-  setInterval(load, 300000); // refresh every 5min
+  setInterval(load, 300000);
 });
 </script>
 
