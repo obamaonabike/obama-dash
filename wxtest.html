@@ -1,28 +1,15 @@
 <!DOCTYPE html>
 
 <html>
-<head><meta charset="UTF-8"><title>WX Test</title></head>
+<head><meta charset="UTF-8"><title>WX Test v5</title></head>
 <body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:14px">
 <div id="a">A: waiting</div>
 <div id="b">B: waiting</div>
 <div id="c">C: waiting</div>
 <div id="d">D: waiting</div>
 <script type="text/javascript">
-document.getElementById("a").textContent = "A: JS runs";
-
-var url = “https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&hourly=temperature_2m&timezone=UTC&past_days=1&forecast_days=1”;
-
-document.getElementById(“b”).textContent = “B: fetching “ + url.slice(0,40) + “…”;
-
-fetch(url).then(function(r) {
-document.getElementById(“c”).textContent = “C: status=” + r.status;
-return r.json();
-}).then(function(d) {
-document.getElementById(“d”).textContent = “D: keys=” + Object.keys(d).join(”,”) + “ hourly rows=” + (d.hourly ? d.hourly.time.length : “none”);
-}).catch(function(e) {
-document.getElementById(“c”).textContent = “C: ERROR “ + e.name + “ “ + e.message;
-});
+document.getElementById("a").textContent = "A: JS OK v5";
+fetch("https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&hourly=temperature_2m&timezone=UTC&past_days=1&forecast_days=1").then(function(r){document.getElementById("b").textContent="B: HTTP "+r.status;return r.json();}).then(function(d){document.getElementById("c").textContent="C: keys="+Object.keys(d).join(",");document.getElementById("d").textContent="D: hourly rows="+(d.hourly?d.hourly.time.length:"none");}).catch(function(e){document.getElementById("b").textContent="B: FAIL "+e.name+" "+e.message;});
 </script>
-
 </body>
 </html>
