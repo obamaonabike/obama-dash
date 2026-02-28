@@ -236,8 +236,16 @@ display:none;
     <input class="config-input" id="cfg-tol" type="number" value="0.08" step="0.01" min="0.01">
   </div>
   <div class="config-row">
+    <span class="config-label">MIN BAR OFFSET</span>
+    <input class="config-input" id="cfg-minbar" type="number" value="5" min="1" max="60">
+  </div>
+  <div class="config-row">
     <span class="config-label">DAYS</span>
-    <input class="config-input" id="cfg-days" type="number" value="30" min="1" max="60">
+    <input class="config-input" id="cfg-days" type="number" value="30" min="1" max="60" onchange="updateCacheStatus()">
+  </div>
+  <div class="config-row" style="cursor:pointer;" onclick="clearCache()">
+    <span class="config-label">CANDLE CACHE</span>
+    <span id="cache-status" style="font-size:9px;letter-spacing:1px;color:#004a14;">CHECKING...</span>
   </div>
   <div class="config-title" style="margin-top:10px;">// TRADING HOURS (UTC)</div>
   <div style="font-size:9px;color:#004a14;letter-spacing:1px;padding:4px 0 6px;">TAP TO EXCLUDE</div>
@@ -383,6 +391,66 @@ async function fetchKlines(symbol, interval, startTime, endTime, limit=1000){
   }));
 }
 
+// ── CANDLE CACHE ──────────────────────────────────────
+const CACHE_VERSION = 'v1';
+
+function getCacheKey(days){
+  // Cache key includes days and the UTC date — expires each new day
+  const today = new Date().toISOString().slice(0,10);
+  return `obamadash_candles_${CACHE_VERSION}_${days}d_${today}`;
+}
+
+function loadCachedCandles(days){
+  try{
+    const key  = getCacheKey(days);
+    const data = localStorage.getItem(key);
+    if(!data) return null;
+    const parsed = JSON.parse(data);
+    // Also clear any old cache keys
+    for(const k of Object.keys(localStorage)){
+      if(k.startsWith('obamadash_candles_') && k !== key) localStorage.removeItem(k);
+    }
+    return parsed;
+  }catch(e){ return null; }
+}
+
+function saveCachedCandles(days, candles){
+  try{
+    const key = getCacheKey(days);
+    localStorage.setItem(key, JSON.stringify(candles));
+  }catch(e){
+    // Storage full — clear old entries and try again
+    for(const k of Object.keys(localStorage)){
+      if(k.startsWith('obamadash_candles_')) localStorage.removeItem(k);
+    }
+    try{ localStorage.setItem(getCacheKey(days), JSON.stringify(candles)); }catch(e2){}
+  }
+}
+
+function clearCache(){
+  let cleared = 0;
+  for(const k of Object.keys(localStorage)){
+    if(k.startsWith('obamadash_candles_')){ localStorage.removeItem(k); cleared++; }
+  }
+  updateCacheStatus();
+  alert(cleared ? `CLEARED ${cleared} CACHE ENTRY` : 'NO CACHE TO CLEAR');
+}
+
+function updateCacheStatus(){
+  const days = parseInt(document.getElementById('cfg-days').value) || 30;
+  const cached = loadCachedCandles(days);
+  const el = document.getElementById('cache-status');
+  if(!el) return;
+  if(cached){
+    el.textContent = `✓ CACHED (${cached.length.toLocaleString()} CANDLES) — CLICK TO CLEAR`;
+    el.style.color = '#00cc33';
+  } else {
+    el.textContent = 'NO CACHE — WILL FETCH FROM BINANCE';
+    el.style.color = '#004a14';
+  }
+}
+
+// ── FETCH (with cache) ────────────────────────────────
 async function fetchAllCandles(days, onProgress){
   const now   = Date.now();
   const start = now - days * 24 * 60 * 60 * 1000;
@@ -457,14 +525,23 @@ async function runBacktest(){
   setProgress(0, 'FETCHING ' + days + ' DAYS OF M1 CANDLES...');
 
   let candles;
-  try{
-    candles = await fetchAllCandles(days, pct=>{
-      setProgress(pct * 0.8, `FETCHING... ${pct}%`);
-    });
-  }catch(e){
-    setProgress(0, 'FETCH ERROR — CHECK CONNECTION');
-    btn.disabled = false;
-    return;
+  const cached = loadCachedCandles(days);
+  if(cached){
+    setProgress(80, `LOADED ${cached.length.toLocaleString()} CANDLES FROM CACHE`);
+    await new Promise(r=>setTimeout(r,300));
+    candles = cached;
+  } else {
+    try{
+      candles = await fetchAllCandles(days, pct=>{
+        setProgress(pct * 0.8, `FETCHING... ${pct}%`);
+      });
+      saveCachedCandles(days, candles);
+      updateCacheStatus();
+    }catch(e){
+      setProgress(0, 'FETCH ERROR — CHECK CONNECTION');
+      btn.disabled = false;
+      return;
+    }
   }
 
   setProgress(82, `PROCESSING ${candles.length.toLocaleString()} CANDLES...`);
@@ -509,6 +586,9 @@ async function runBacktest(){
     const levels    = getLevelsAt(prev, anchorSec, anchorOpen, activeLevels);
     const hour      = new Date(c.time * 1000).getUTCHours();
     if(!activeHours.has(hour)) continue;
+    const barOffset = Math.floor((prev.time - anchorSec) / 60);
+    const minBar    = parseInt(document.getElementById('cfg-minbar').value) || 5;
+    if(barOffset < minBar) continue; // skip bars too close to anchor
 
     for(const lv of levels){
       if(lv.label === 'LEQ') continue; // skip EQ
