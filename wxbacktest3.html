@@ -315,6 +315,7 @@ function autoFind() {
   setMsg("Auto-searching... (this takes ~5 seconds)");
 
   fetchData(start, end, function(d){
+    setTimeout(function(){
     var thresholds=[3,4,5,6,7,8,9,10];
     var angles=[27,45,60];
     var confirms=[true,false];
@@ -328,10 +329,11 @@ function autoFind() {
           for(var a2=0;a2<angles.length;a2++){
             for(var c1=0;c1<confirms.length;c1++){
               for(var c2=0;c2<confirms.length;c2++){
-                var testCfg=Object.assign({},cfg,{
+                var testCfg={
+                  anc:cfg.anc,con:cfg.con,phi:cfg.phi,ratio:cfg.ratio,
                   r1thresh:thresholds[t1],r1angle:angles[a1],r1confirm:confirms[c1],
                   r2thresh:thresholds[t2],r2angle:angles[a2],r2confirm:confirms[c2]
-                });
+                };
                 try {
                   var res=analyse(d,testCfg);
                   var s=summarise(res);
@@ -363,6 +365,7 @@ function autoFind() {
       setMsg("No improvement found","#ff4444");
     }
     document.getElementById("btn").disabled=false;
+    },10);
   });
 }
 
