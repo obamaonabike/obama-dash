@@ -1,69 +1,33 @@
 <!DOCTYPE html>
 
 <html>
-<head><meta charset="UTF-8"><title>EGLC Source Test</title></head>
-<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:12px">
-<pre id="o">Testing data sources for EGLC actual observations...\n</pre>
+<head><meta charset="UTF-8"><title>EGLC Test v2</title></head>
+<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:13px">
+<div id="o">starting...</div>
 <script type="text/javascript">
 var o = document.getElementById("o");
-function log(s){ o.textContent += s + "\n"; }
 
-// Test 1: NOAA NCEI - actual station obs, free, no key
-log(”=== TEST 1: NOAA NCEI ===”);
+o.textContent = “step 1 ok”;
+
 fetch(“https://www.ncei.noaa.gov/access/services/data/v1?dataset=global-summary-of-the-day&stations=03772099999&startDate=2025-10-01&endDate=2025-10-03&format=json&dataTypes=TMAX”)
-.then(function(r){ log(“Status: “ + r.status); return r.json(); })
+.then(function(r){
+o.textContent = “NOAA status: “ + r.status;
+return r.json();
+})
 .then(function(d){
-if(d.length){
-log(“Records: “ + d.length);
-log(“Sample DATE: “ + d[0].DATE + “ TMAX: “ + d[0].TMAX + “ = “ + (parseFloat(d[0].TMAX)/10).toFixed(1) + “C”);
-log(“NOAA: OK”);
-} else {
-log(“NOAA: empty response”);
-}
+o.textContent = “NOAA records: “ + d.length + “ | first: “ + JSON.stringify(d[0]);
 })
-.catch(function(e){ log(“NOAA FAILED: “ + e.message); });
+.catch(function(e){
+o.textContent = “NOAA failed: “ + e.message;
 
-// Test 2: Wunderground EGLC history JSON endpoint
-// Wunderground loads data via an internal API - try the known endpoint
-log(”\n=== TEST 2: WUNDERGROUND API ===”);
-var d = new Date();
-var yr = d.getUTCFullYear();
-var mo = String(d.getUTCMonth()+1).padStart(2,“0”);
-var dy = String(d.getUTCDate()).padStart(2,“0”);
-var wuUrl = “https://api.weather.com/v1/location/EGLC:9:GB/observations/historical.json”
+```
+fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent("https://www.wunderground.com/history/daily/gb/london/EGLC/date/2025-10-01"))
+  .then(function(r){ o.textContent += " | proxy status: " + r.status; return r.text(); })
+  .then(function(t){ o.textContent += " | len: " + t.length; })
+  .catch(function(e2){ o.textContent += " | proxy failed: " + e2.message; });
+```
 
-- “?apiKey=6532d6454b8aa370768e63d6ba5a832e”
-- “&units=m&startDate=” + yr+mo+dy + “&endDate=” + yr+mo+dy;
-  log(“URL: “ + wuUrl.slice(0,80) + “…”);
-  fetch(wuUrl)
-  .then(function(r){ log(“WU status: “ + r.status); return r.text(); })
-  .then(function(t){ log(“WU response (first 200): “ + t.slice(0,200)); })
-  .catch(function(e){ log(“WU FAILED: “ + e.message); });
-
-// Test 3: Wunderground scrape via allorigins CORS proxy
-log(”\n=== TEST 3: WUNDERGROUND VIA PROXY ===”);
-var wuPage = “https://www.wunderground.com/history/daily/gb/london/EGLC/date/”+yr+”-”+mo+”-”+dy;
-var proxyUrl = “https://api.allorigins.win/raw?url=” + encodeURIComponent(wuPage);
-log(“Proxy: allorigins -> WU”);
-fetch(proxyUrl)
-.then(function(r){ log(“Proxy status: “ + r.status); return r.text(); })
-.then(function(t){
-log(“Response length: “ + t.length + “ chars”);
-// Look for temperature data in the HTML
-var maxIdx = t.indexOf(“Max Temp”);
-if(maxIdx > 0){
-log(“Found ‘Max Temp’ at char “ + maxIdx);
-log(“Context: “ + t.slice(maxIdx, maxIdx+200).replace(/\s+/g,” “));
-} else {
-log(”‘Max Temp’ not found in response”);
-// Check if it’s a bot block
-if(t.indexOf(“blocked”)>0||t.indexOf(“Access Denied”)>0||t.indexOf(“captcha”)>0){
-log(“BLOCKED by Wunderground”);
-}
-log(“First 300 chars: “ + t.slice(0,300).replace(/\s+/g,” “));
-}
-})
-.catch(function(e){ log(“PROXY FAILED: “ + e.message); });
+});
 </script>
 
 </body>
