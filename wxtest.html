@@ -1,15 +1,47 @@
 <!DOCTYPE html>
 
 <html>
-<head><meta charset="UTF-8"><title>WX Test v5</title></head>
-<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:14px">
-<div id="a">A: waiting</div>
-<div id="b">B: waiting</div>
-<div id="c">C: waiting</div>
-<div id="d">D: waiting</div>
+<head><meta charset="UTF-8"><title>WX DEBUG</title></head>
+<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:13px">
+<div id="s1">1: waiting</div>
+<div id="s2">2: waiting</div>
+<div id="s3">3: waiting</div>
+<div id="s4">4: waiting</div>
+<div id="s5">5: waiting</div>
 <script type="text/javascript">
-document.getElementById("a").textContent = "A: JS OK v5";
-fetch("https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&hourly=temperature_2m&timezone=UTC&past_days=1&forecast_days=1").then(function(r){document.getElementById("b").textContent="B: HTTP "+r.status;return r.json();}).then(function(d){document.getElementById("c").textContent="C: keys="+Object.keys(d).join(",");document.getElementById("d").textContent="D: hourly rows="+(d.hourly?d.hourly.time.length:"none");}).catch(function(e){document.getElementById("b").textContent="B: FAIL "+e.name+" "+e.message;});
+window.onerror = function(m,s,l){document.getElementById("s1").textContent="GLOBAL ERR: "+m+" line "+l;};
+
+document.getElementById(“s1”).textContent = “1: JS running”;
+
+var url = “https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC&past_days=3&forecast_days=2”;
+
+document.getElementById(“s2”).textContent = “2: fetching…”;
+
+fetch(url)
+.then(function(r) {
+document.getElementById(“s2”).textContent = “2: HTTP “ + r.status;
+return r.json();
+})
+.then(function(d) {
+document.getElementById(“s3”).textContent = “3: got keys: “ + Object.keys(d).join(”, “);
+
+```
+var m15 = d.minutely_15;
+if (!m15) {
+  document.getElementById("s4").textContent = "4: NO minutely_15 - only: " + Object.keys(d).join(", ");
+  return;
+}
+document.getElementById("s4").textContent = "4: minutely_15 rows=" + m15.time.length + " first=" + m15.time[0] + " temp=" + m15.temperature_2m[0];
+
+var h = d.hourly;
+document.getElementById("s5").textContent = "5: hourly rows=" + h.time.length + " first=" + h.time[0] + " temp=" + h.temperature_2m[0];
+```
+
+})
+.catch(function(e) {
+document.getElementById(“s3”).textContent = “3: FETCH CATCH: “ + e.name + “ – “ + e.message;
+});
 </script>
+
 </body>
 </html>
