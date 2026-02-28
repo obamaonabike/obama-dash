@@ -65,6 +65,11 @@ body{width:100%;height:100%;height:-webkit-fill-available;min-height:100dvh;over
   </div>
 </div>
 <script>
+function parseOMTime(s){
+  // Open-Meteo gives "2026-02-26T00:00" - Safari needs full seconds
+  if(s.length===16) s=s+":00";
+  return new Date(s+"Z");
+}
 var TMR_KEY = "geHqAXyAgDTGlnyKJGK0wJX4RiBrpHeU";
 var LAT = 51.5048, LON = 0.0495;
 var HTF_RATIO = 60;
@@ -179,7 +184,7 @@ var rows = [];
 for (var i=0; i<times.length; i++) {
 if (temps[i]==null) continue;
 // open-meteo format: “2026-02-21T00:00” - needs Z
-var ts = Math.floor(new Date(times[i]+“Z”).getTime()/1000);
+var ts = Math.floor(parseOMTime(times[i]).getTime()/1000);
 rows.push({ts:ts, temp:temps[i]});
 }
 var out = [];
@@ -199,7 +204,7 @@ var temps = d.hourly && d.hourly.temperature_2m || [];
 var rows = [];
 for (var i=0; i<times.length; i++) {
 if (temps[i]==null) continue;
-rows.push({ts:Math.floor(new Date(times[i]+“Z”).getTime()/1000),temp:temps[i]});
+rows.push({ts:Math.floor(parseOMTime(times[i]).getTime()/1000),temp:temps[i]});
 }
 return rows.map(function(r,i){
 var o=i===0?r.temp:rows[i-1].temp, c=r.temp;
