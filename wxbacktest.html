@@ -11,39 +11,40 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { background:#050f05; }
-body { width:100%; min-height:100dvh; background:#050f05; color:#00cc33; font-family:"Share Tech Mono",monospace; font-size:11px; letter-spacing:0.5px; -webkit-text-size-adjust:100%; }
-#app { display:flex; flex-direction:column; min-height:100dvh; }
-.bar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 10px; height:24px; background:#070d07; color:#006618; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
-.bar-top { border-bottom:1px solid #0f2a0f; padding-top:env(safe-area-inset-top); height:calc(24px + env(safe-area-inset-top)); }
-.bar-bottom { border-top:1px solid #0f2a0f; padding-top:5px; padding-bottom:calc(env(safe-area-inset-bottom)+5px); height:auto; min-height:24px; align-items:flex-start; }
-.bar-title { font-size:11px; letter-spacing:4px; color:#00cc33; }
-.nav-link { color:#004a14; font-family:"Share Tech Mono",monospace; font-size:9px; letter-spacing:2px; text-decoration:none; margin-left:8px; }
-.content { flex:1; padding:10px; overflow-y:auto; }
-.cfg-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
-.cfg-label { font-size:9px; color:#006618; letter-spacing:1px; min-width:160px; }
-.cfg-input { background:#030803; border:1px solid #0f2a0f; color:#00cc33; font-family:"Share Tech Mono",monospace; font-size:10px; padding:4px 6px; width:80px; }
-.cfg-input:focus { border-color:#00cc33; outline:none; }
-.run-btn { background:#030803; border:1px solid #00cc33; color:#00cc33; font-family:"Share Tech Mono",monospace; font-size:10px; letter-spacing:2px; padding:7px 20px; cursor:pointer; margin-top:8px; }
-.run-btn:active { background:#001a06; }
-.run-btn:disabled { border-color:#0f2a0f; color:#006618; cursor:not-allowed; }
-.summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin:10px 0; }
-.sum-card { background:#070d07; border:1px solid #0f2a0f; padding:8px; }
-.sum-label { font-size:8px; color:#006618; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
-.sum-val { font-size:15px; color:#00cc33; letter-spacing:1px; }
-.sum-sub { font-size:8px; color:#004a14; margin-top:2px; }
-.section-title { font-size:9px; color:#006618; letter-spacing:3px; text-transform:uppercase; padding:8px 0 4px; border-bottom:1px solid #0f2a0f; margin-bottom:6px; }
-table { width:100%; border-collapse:collapse; margin-bottom:12px; font-size:9px; }
-th { color:#004a14; letter-spacing:2px; padding:4px; border-bottom:1px solid #0f2a0f; text-align:left; font-size:8px; }
-td { color:#00cc33; padding:4px; border-bottom:1px solid #050f05; }
-td.dim { color:#006618; } td.hi { color:#00ff41; } td.lo { color:#ff4444; }
-.day-row { border-bottom:1px solid #0a1a0a; padding:6px 0; }
-.day-date { color:#006618; font-size:9px; letter-spacing:1px; }
-.day-detail { color:#004a14; font-size:8px; margin-top:2px; letter-spacing:0.5px; }
-.ok { color:#00cc33; } .no { color:#333; }
-.progress-wrap { background:#0a1a0a; border:1px solid #0f2a0f; height:6px; margin:8px 0; }
-.progress-bar { background:#00cc33; height:100%; width:0%; transition:width 0.2s; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{background:#050f05}
+body{width:100%;min-height:100dvh;background:#050f05;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:11px;letter-spacing:.5px;-webkit-text-size-adjust:100%}
+#app{display:flex;flex-direction:column;min-height:100dvh}
+.bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 10px;height:24px;background:#070d07;color:#006618;font-size:10px;letter-spacing:2px;text-transform:uppercase}
+.bar-top{border-bottom:1px solid #0f2a0f;padding-top:env(safe-area-inset-top);height:calc(24px + env(safe-area-inset-top))}
+.bar-bottom{border-top:1px solid #0f2a0f;padding-top:5px;padding-bottom:calc(env(safe-area-inset-bottom)+5px);height:auto;min-height:24px;align-items:flex-start}
+.bar-title{font-size:11px;letter-spacing:4px;color:#00cc33}
+.nav-link{color:#004a14;font-family:"Share Tech Mono",monospace;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px}
+.content{flex:1;padding:10px;overflow-y:auto}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.lbl{font-size:9px;color:#006618;letter-spacing:1px;min-width:160px}
+input[type=number]{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;padding:4px 6px;width:80px}
+input[type=number]:focus{border-color:#00cc33;outline:none}
+button{background:#030803;border:1px solid #00cc33;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:2px;padding:7px 20px;cursor:pointer;margin-top:8px}
+button:active{background:#001a06}
+button:disabled{border-color:#0f2a0f;color:#006618;cursor:not-allowed}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:10px 0}
+.card{background:#070d07;border:1px solid #0f2a0f;padding:8px}
+.clbl{font-size:8px;color:#006618;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.cval{font-size:15px;color:#00cc33;letter-spacing:1px}
+.csub{font-size:8px;color:#004a14;margin-top:2px}
+.sec{font-size:9px;color:#006618;letter-spacing:3px;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid #0f2a0f;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9px}
+th{color:#004a14;letter-spacing:2px;padding:4px;border-bottom:1px solid #0f2a0f;text-align:left;font-size:8px}
+td{color:#00cc33;padding:4px;border-bottom:1px solid #050f05}
+.dim{color:#006618}.hi{color:#00ff41}.lo{color:#ff4444}
+.drow{border-bottom:1px solid #0a1a0a;padding:6px 0}
+.ddate{color:#006618;font-size:9px;letter-spacing:1px}
+.dline{color:#004a14;font-size:8px;margin-top:2px}
+.ok{color:#00cc33}.no{color:#333}
+.pbar-wrap{background:#0a1a0a;border:1px solid #0f2a0f;height:6px;margin:8px 0}
+.pbar{background:#00cc33;height:100%;width:0%;transition:width .2s}
+#msg{font-size:9px;color:#006618;margin:4px 0;letter-spacing:1px;min-height:14px}
 </style>
 </head>
 <body>
@@ -57,241 +58,209 @@ td.dim { color:#006618; } td.hi { color:#00ff41; } td.lo { color:#ff4444; }
     </div>
   </div>
   <div class="content">
-    <div class="cfg-row"><span class="cfg-label">DAYS (MAX 7)</span><input class="cfg-input" id="cfg-days" type="number" value="7" min="1" max="7"></div>
-    <div class="cfg-row"><span class="cfg-label">TOLERANCE (C)</span><input class="cfg-input" id="cfg-tol" type="number" value="0.3" step="0.05" min="0.05"></div>
-    <div class="cfg-row"><span class="cfg-label">ANCHOR HOUR UTC</span><input class="cfg-input" id="cfg-anchor" type="number" value="9" min="0" max="23"></div>
-    <div class="cfg-row"><span class="cfg-label">HTF RATIO</span><input class="cfg-input" id="cfg-ratio" type="number" value="60" step="1" min="1"></div>
-    <button class="run-btn" id="run-btn" onclick="runBacktest()">RUN BACKTEST</button>
-    <div class="progress-wrap" id="pwrap" style="display:none"><div class="progress-bar" id="pbar"></div></div>
-    <div id="status-line" style="font-size:9px;color:#006618;margin:4px 0;letter-spacing:1px;min-height:14px"></div>
+    <div class="row"><span class="lbl">DAYS (MAX 7)</span><input id="i-days" type="number" value="7" min="1" max="7"></div>
+    <div class="row"><span class="lbl">TOLERANCE (C)</span><input id="i-tol" type="number" value="0.3" step="0.05" min="0.05"></div>
+    <div class="row"><span class="lbl">ANCHOR HOUR UTC</span><input id="i-anc" type="number" value="9" min="0" max="23"></div>
+    <div class="row"><span class="lbl">HTF RATIO</span><input id="i-rat" type="number" value="60" step="1" min="1"></div>
+    <button id="run-btn" onclick="run()">RUN BACKTEST</button>
+    <div class="pbar-wrap" id="pwrap" style="display:none"><div class="pbar" id="pbar"></div></div>
+    <div id="msg"></div>
     <div id="results" style="display:none">
-      <div class="section-title">// SUMMARY</div>
-      <div class="summary-grid">
-        <div class="sum-card"><div class="sum-label">DAYS TESTED</div><div class="sum-val" id="s-days">--</div><div class="sum-sub">15MIN RESOLUTION</div></div>
-        <div class="sum-card"><div class="sum-label">HIGH HIT RATE</div><div class="sum-val" id="s-hi">--</div><div class="sum-sub">DAILY HIGH ON FAN</div></div>
-        <div class="sum-card"><div class="sum-label">LOW HIT RATE</div><div class="sum-val" id="s-lo">--</div><div class="sum-sub">DAILY LOW ON FAN</div></div>
-        <div class="sum-card"><div class="sum-label">BOTH HIT</div><div class="sum-val" id="s-both">--</div><div class="sum-sub">HIGH + LOW SAME DAY</div></div>
-        <div class="sum-card"><div class="sum-label">AVG DIST HIGH</div><div class="sum-val" id="s-hdist">--</div><div class="sum-sub">NEAREST LEVEL</div></div>
-        <div class="sum-card"><div class="sum-label">AVG DIST LOW</div><div class="sum-val" id="s-ldist">--</div><div class="sum-sub">NEAREST LEVEL</div></div>
+      <div class="sec">// SUMMARY</div>
+      <div class="grid3">
+        <div class="card"><div class="clbl">DAYS TESTED</div><div class="cval" id="s-n">--</div><div class="csub">15MIN DATA</div></div>
+        <div class="card"><div class="clbl">HIGH HIT RATE</div><div class="cval" id="s-hi">--</div><div class="csub">DAILY HIGH ON FAN</div></div>
+        <div class="card"><div class="clbl">LOW HIT RATE</div><div class="cval" id="s-lo">--</div><div class="csub">DAILY LOW ON FAN</div></div>
+        <div class="card"><div class="clbl">BOTH HIT</div><div class="cval" id="s-bo">--</div><div class="csub">HIGH + LOW SAME DAY</div></div>
+        <div class="card"><div class="clbl">AVG DIST HIGH</div><div class="cval" id="s-hd">--</div><div class="csub">NEAREST LEVEL</div></div>
+        <div class="card"><div class="clbl">AVG DIST LOW</div><div class="cval" id="s-ld">--</div><div class="csub">NEAREST LEVEL</div></div>
       </div>
-      <div class="section-title">// BY LEVEL</div>
-      <table><thead><tr><th>LEVEL</th><th>HIGH HITS</th><th>LOW HITS</th><th>TOTAL</th><th>RATE</th></tr></thead><tbody id="lvl-table"></tbody></table>
-      <div class="section-title">// DAY LOG</div>
-      <div id="day-log"></div>
+      <div class="sec">// BY LEVEL</div>
+      <table><thead><tr><th>LEVEL</th><th>HIGH HITS</th><th>LOW HITS</th><th>TOTAL</th><th>RATE</th></tr></thead><tbody id="ltbl"></tbody></table>
+      <div class="sec">// DAY LOG</div>
+      <div id="dlog"></div>
     </div>
   </div>
   <div class="bar bar-bottom">
-    <span id="bar-status">READY</span>
-    <span id="bar-time" style="font-size:9px;color:#004a14"></span>
+    <span id="bst">READY</span>
+    <span id="btm" style="font-size:9px;color:#004a14"></span>
   </div>
 </div>
 <script>
-var LAT = 51.5048, LON = 0.0495;
-var ANGLES = [27,-27,45,-45,60,-60,72,-72,78,-78];
+var LAT=51.5048,LON=0.0495;
+var ANGLES=[27,-27,45,-45,60,-60,72,-72,78,-78];
 
-function fanTemp(aT, hrs, deg, ratio) {
-return aT + hrs * (ratio||1) * Math.tan(deg * Math.PI / 180);
+function fan(aT,hrs,deg,ratio){return aT+hrs*(ratio||1)*Math.tan(deg*Math.PI/180);}
+function msg(s,col){
+document.getElementById(“bst”).textContent=s;
+var el=document.getElementById(“msg”);
+el.textContent=s;
+el.style.color=col||”#006618”;
 }
-function setStatus(s) {
-document.getElementById(“bar-status”).textContent = s;
-document.getElementById(“status-line”).textContent = s;
-}
-function setProgress(p) { document.getElementById(“pbar”).style.width = p + “%”; }
-function pct(h, t) { return t > 0 ? (h/t*100).toFixed(0) + “%” : “–”; }
+function prog(p){document.getElementById(“pbar”).style.width=p+”%”;}
+function pct(h,t){return t>0?(h/t*100).toFixed(0)+”%”:”–”;}
 
-// Open-Meteo: fetch last N days of 15min + hourly data
-// Returns one call covering the whole range
-function fetchOpenMeteo(days) {
-// past_days works on forecast endpoint and returns minutely_15 for recent history
-var url = “https://api.open-meteo.com/v1/forecast?latitude=” + LAT + “&longitude=” + LON +
-“&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC” +
-“&past_days=” + (days + 1) + “&forecast_days=1”;
-return fetch(url).then(function(r) {
-if (!r.ok) throw new Error(“Open-Meteo “ + r.status);
+function run(){
+var days=Math.min(parseInt(document.getElementById(“i-days”).value)||7,7);
+var tol=parseFloat(document.getElementById(“i-tol”).value)||0.3;
+var anc=parseInt(document.getElementById(“i-anc”).value)||9;
+var ratio=parseFloat(document.getElementById(“i-rat”).value)||60;
+
+document.getElementById(“run-btn”).disabled=true;
+document.getElementById(“results”).style.display=“none”;
+document.getElementById(“pwrap”).style.display=“block”;
+prog(5); msg(“Fetching Open-Meteo data…”);
+
+// past_days=N gives last N days of 15min data – free, no key
+var url=“https://api.open-meteo.com/v1/forecast?latitude=”+LAT+”&longitude=”+LON
++”&minutely_15=temperature_2m&hourly=temperature_2m”
++”&temperature_unit=celsius&timezone=UTC”
++”&past_days=”+(days+1)+”&forecast_days=0”;
+
+fetch(url).then(function(r){
+if(!r.ok)throw new Error(“Open-Meteo HTTP “+r.status);
 return r.json();
-}).then(function(d) {
-// Validate we got data
-if (!d.minutely_15 || !d.minutely_15.time || d.minutely_15.time.length === 0) {
-throw new Error(“Open-Meteo returned no minutely_15 data”);
-}
-return d;
-});
-}
-
-function runBacktest() {
-var days = Math.min(parseInt(document.getElementById(“cfg-days”).value)||7, 7);
-var tol  = parseFloat(document.getElementById(“cfg-tol”).value)||0.3;
-var anchorHour = parseInt(document.getElementById(“cfg-anchor”).value)||9;
-var ratio = parseFloat(document.getElementById(“cfg-ratio”).value)||60;
-
-document.getElementById(“run-btn”).disabled = true;
-document.getElementById(“results”).style.display = “none”;
-document.getElementById(“pwrap”).style.display = “block”;
-setProgress(5); setStatus(“Fetching data from Open-Meteo (free, no key)…”);
-
-fetchOpenMeteo(days).then(function(d) {
-setProgress(40); setStatus(“Parsing…”);
+}).then(function(d){
+prog(40); msg(“Parsing…”);
 
 ```
-// Parse 15min data
-var m15times = d.minutely_15 && d.minutely_15.time || [];
-var m15temps = d.minutely_15 && d.minutely_15.temperature_2m || [];
-var m15rows = [];
-for (var i = 0; i < m15times.length; i++) {
-  if (m15temps[i] === null || m15temps[i] === undefined) continue;
-  m15rows.push({ time: new Date(m15times[i].length === 16 ? m15times[i] + ":00Z" : m15times[i] + "Z"), temp: m15temps[i] });
+var m15t=d.minutely_15&&d.minutely_15.time||[];
+var m15v=d.minutely_15&&d.minutely_15.temperature_2m||[];
+var ht=d.hourly&&d.hourly.time||[];
+var hv=d.hourly&&d.hourly.temperature_2m||[];
+
+if(m15t.length===0){throw new Error("No minutely_15 data returned from Open-Meteo");}
+
+// Parse 15min rows
+var m15rows=[];
+for(var i=0;i<m15t.length;i++){
+  if(m15v[i]==null)continue;
+  m15rows.push({time:new Date(m15t[i]+"Z"),temp:m15v[i]});
+}
+// Parse hourly rows
+var hrows=[];
+for(var i=0;i<ht.length;i++){
+  if(hv[i]==null)continue;
+  hrows.push({time:new Date(ht[i]+"Z"),temp:hv[i]});
 }
 
-// Parse hourly data
-var htimes = d.hourly && d.hourly.time || [];
-var htemps = d.hourly && d.hourly.temperature_2m || [];
-var hrows = [];
-for (var i = 0; i < htimes.length; i++) {
-  if (htemps[i] === null || htemps[i] === undefined) continue;
-  hrows.push({ time: new Date(htimes[i].length === 16 ? htimes[i] + ":00Z" : htimes[i] + "Z"), temp: htemps[i] });
+prog(55); msg("Analysing "+days+" days...");
+
+var now=new Date();
+var dates=[];
+for(var i=days;i>=1;i--){
+  dates.push(new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-i)));
 }
 
-setProgress(55); setStatus("Analysing days...");
+var results=[];
+var hits={};
+ANGLES.forEach(function(deg){hits[deg]={hi:0,lo:0,n:0};});
 
-// Build date list: last N days excluding today
-var now = new Date();
-var dates = [];
-for (var i = days; i >= 1; i--) {
-  var d2 = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()-i));
-  dates.push(d2);
-}
+dates.forEach(function(date){
+  var ds=date.toISOString().slice(0,10);
+  var ancTime=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate(),anc));
+  var dayEnd=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate(),23,59));
 
-var dayResults = [];
-var levelHits = {};
-ANGLES.forEach(function(deg) { levelHits[deg] = {hi:0, lo:0, days:0}; });
-
-dates.forEach(function(date) {
-  var dateStr = date.toISOString().slice(0,10);
-  var anchorTime = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), anchorHour, 0, 0));
-  var dayEnd     = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 0));
-
-  // Anchor temp from hourly
-  var anchorEntry = null;
-  for (var i = 0; i < hrows.length; i++) {
-    if (Math.abs(hrows[i].time.getTime() - anchorTime.getTime()) < 1800000) { anchorEntry = hrows[i]; break; }
+  // anchor temp from hourly
+  var ae=null;
+  for(var i=0;i<hrows.length;i++){
+    if(Math.abs(hrows[i].time-ancTime)<1800000){ae=hrows[i];break;}
   }
-  if (!anchorEntry) return;
-  var aT = anchorEntry.temp;
+  if(!ae)return;
+  var aT=ae.temp;
 
-  // 15min readings for this day after anchor
-  var mins = m15rows.filter(function(m) { return m.time >= anchorTime && m.time <= dayEnd; });
-  if (mins.length < 4) return;
+  // 15min rows for this day post-anchor
+  var mins=m15rows.filter(function(m){return m.time>=ancTime&&m.time<=dayEnd;});
+  if(mins.length<4)return;
 
-  var dayHigh = -Infinity, dayLow = Infinity;
-  var highEntry = null, lowEntry = null;
-  mins.forEach(function(m) {
-    if (m.temp > dayHigh) { dayHigh = m.temp; highEntry = m; }
-    if (m.temp < dayLow)  { dayLow  = m.temp; lowEntry  = m; }
+  var dHi=-Infinity,dLo=Infinity,hiE=null,loE=null;
+  mins.forEach(function(m){
+    if(m.temp>dHi){dHi=m.temp;hiE=m;}
+    if(m.temp<dLo){dLo=m.temp;loE=m;}
   });
 
-  var bestHiDist = Infinity, bestHiDeg = null;
-  var bestLoDist = Infinity, bestLoDeg = null;
-
-  ANGLES.forEach(function(deg) {
-    if (highEntry) {
-      var hrs = (highEntry.time.getTime() - anchorTime.getTime()) / 3600000;
-      [fanTemp(aT, hrs, deg), fanTemp(aT, hrs/ratio, deg)].forEach(function(v) {
-        var dist = Math.abs(dayHigh - v);
-        if (dist < bestHiDist) { bestHiDist = dist; bestHiDeg = deg; }
-        if (dist <= tol) levelHits[deg].hi++;
+  var bHiD=Infinity,bHiDeg=null,bLoD=Infinity,bLoDeg=null;
+  ANGLES.forEach(function(deg){
+    if(hiE){
+      var hrs=(hiE.time-ancTime)/3600000;
+      [fan(aT,hrs,deg),fan(aT,hrs/ratio,deg)].forEach(function(v){
+        var d=Math.abs(dHi-v);
+        if(d<bHiD){bHiD=d;bHiDeg=deg;}
+        if(d<=tol)hits[deg].hi++;
       });
     }
-    if (lowEntry) {
-      var hrs = (lowEntry.time.getTime() - anchorTime.getTime()) / 3600000;
-      [fanTemp(aT, hrs, deg), fanTemp(aT, hrs/ratio, deg)].forEach(function(v) {
-        var dist = Math.abs(dayLow - v);
-        if (dist < bestLoDist) { bestLoDist = dist; bestLoDeg = deg; }
-        if (dist <= tol) levelHits[deg].lo++;
+    if(loE){
+      var hrs=(loE.time-ancTime)/3600000;
+      [fan(aT,hrs,deg),fan(aT,hrs/ratio,deg)].forEach(function(v){
+        var d=Math.abs(dLo-v);
+        if(d<bLoD){bLoD=d;bLoDeg=deg;}
+        if(d<=tol)hits[deg].lo++;
       });
     }
-    levelHits[deg].days++;
+    hits[deg].n++;
   });
 
-  dayResults.push({
-    dateStr:dateStr, aT:aT, dayHigh:dayHigh, dayLow:dayLow,
-    highHit:bestHiDist<=tol, lowHit:bestLoDist<=tol,
-    bestHiDist:bestHiDist, bestHiDeg:bestHiDeg,
-    bestLoDist:bestLoDist, bestLoDeg:bestLoDeg,
-    highTime:highEntry ? highEntry.time : null,
-    lowTime:lowEntry   ? lowEntry.time  : null
+  results.push({
+    ds:ds,aT:aT,dHi:dHi,dLo:dLo,
+    hiHit:bHiD<=tol,loHit:bLoD<=tol,
+    bHiD:bHiD,bHiDeg:bHiDeg,bLoD:bLoD,bLoDeg:bLoDeg,
+    hiT:hiE?hiE.time:null,loT:loE?loE.time:null
   });
 });
 
-setProgress(100);
-renderResults(dayResults, levelHits);
+prog(100);
+render(results,hits,tol);
+document.getElementById("run-btn").disabled=false;
 ```
 
-}).catch(function(e) {
-var msg = “ERROR: “ + e.message;
-setStatus(msg);
-// Also show big visible error
-var sl = document.getElementById(“status-line”);
-sl.style.color = “#ff4444”;
-sl.textContent = msg;
+}).catch(function(e){
+msg(“ERROR: “+e.message,”#ff4444”);
 console.error(e);
-document.getElementById(“run-btn”).disabled = false;
+document.getElementById(“run-btn”).disabled=false;
 });
 }
 
-function renderResults(dayResults, levelHits) {
-document.getElementById(“run-btn”).disabled = false;
-if (!dayResults.length) { setStatus(“No data returned”); return; }
-var n = dayResults.length;
-var hiHits   = dayResults.filter(function(d) { return d.highHit; }).length;
-var loHits   = dayResults.filter(function(d) { return d.lowHit; }).length;
-var bothHits = dayResults.filter(function(d) { return d.highHit && d.lowHit; }).length;
+function render(results,hits,tol){
+if(!results.length){msg(“No data - try fewer days”,”#ff4444”);return;}
+var n=results.length;
+var hi=results.filter(function(r){return r.hiHit;}).length;
+var lo=results.filter(function(r){return r.loHit;}).length;
+var bo=results.filter(function(r){return r.hiHit&&r.loHit;}).length;
+document.getElementById(“s-n”).textContent=n;
+document.getElementById(“s-hi”).textContent=pct(hi,n);
+document.getElementById(“s-lo”).textContent=pct(lo,n);
+document.getElementById(“s-bo”).textContent=pct(bo,n);
+document.getElementById(“s-hd”).textContent=(results.reduce(function(a,r){return a+r.bHiD;},0)/n).toFixed(2)+“C”;
+document.getElementById(“s-ld”).textContent=(results.reduce(function(a,r){return a+r.bLoD;},0)/n).toFixed(2)+“C”;
 
-document.getElementById(“s-days”).textContent  = n;
-document.getElementById(“s-hi”).textContent    = pct(hiHits, n);
-document.getElementById(“s-lo”).textContent    = pct(loHits, n);
-document.getElementById(“s-both”).textContent  = pct(bothHits, n);
-document.getElementById(“s-hdist”).textContent = (dayResults.reduce(function(a,d){return a+d.bestHiDist;},0)/n).toFixed(2)+“C”;
-document.getElementById(“s-ldist”).textContent = (dayResults.reduce(function(a,d){return a+d.bestLoDist;},0)/n).toFixed(2)+“C”;
-
-var tbody = document.getElementById(“lvl-table”);
-tbody.innerHTML = “”;
-var sorted = ANGLES.slice().sort(function(a,b) {
-return (levelHits[b].hi+levelHits[b].lo) - (levelHits[a].hi+levelHits[a].lo);
-});
-sorted.forEach(function(deg) {
-var lv = levelHits[deg];
-var total = lv.hi + lv.lo;
-var rate = lv.days > 0 ? (total/(lv.days*2)*100).toFixed(0)+”%” : “–”;
-var tr = document.createElement(“tr”);
-tr.innerHTML = “<td>”+(deg>0?“L+”:“L”)+deg+”</td>” +
-“<td class="”+(lv.hi>0?“hi”:“dim”)+”">”+lv.hi+”</td>” +
-“<td class="”+(lv.lo>0?“lo”:“dim”)+”">”+lv.lo+”</td>” +
-“<td>”+total+”</td>” +
-“<td class="”+(total>lv.days?“hi”:total>0?””:“dim”)+”">”+rate+”</td>”;
-tbody.appendChild(tr);
+var tb=document.getElementById(“ltbl”);tb.innerHTML=””;
+ANGLES.slice().sort(function(a,b){return(hits[b].hi+hits[b].lo)-(hits[a].hi+hits[a].lo);}).forEach(function(deg){
+var h=hits[deg],tot=h.hi+h.lo,rate=h.n>0?(tot/(h.n*2)*100).toFixed(0)+”%”:”–”;
+var tr=document.createElement(“tr”);
+tr.innerHTML=”<td>”+(deg>0?“L+”:“L”)+deg+”</td>”
++”<td class='"+(h.hi>0?"hi":"dim")+"'>”+h.hi+”</td>”
++”<td class='"+(h.lo>0?"lo":"dim")+"'>”+h.lo+”</td>”
++”<td>”+tot+”</td>”
++”<td class='"+(tot>h.n?"hi":tot>0?"":"dim")+"'>”+rate+”</td>”;
+tb.appendChild(tr);
 });
 
-var log = document.getElementById(“day-log”);
-log.innerHTML = “”;
-dayResults.slice().reverse().forEach(function(d) {
-var ht = d.highTime ? d.highTime.toUTCString().slice(17,22)+“UTC” : “–”;
-var lt = d.lowTime  ? d.lowTime.toUTCString().slice(17,22)+“UTC”  : “–”;
-var div = document.createElement(“div”);
-div.className = “day-row”;
-div.innerHTML =
-“<div class="day-date">”+d.dateStr+” – ANCHOR “+d.aT.toFixed(1)+“C</div>” +
-“<div class="day-detail">HIGH “+d.dayHigh.toFixed(1)+“C @ “+ht+” <span class="”+(d.highHit?“ok”:“no”)+”">”+(d.highHit?“HIT”:“MISS”)+” (L”+(d.bestHiDeg>0?”+”:””)+d.bestHiDeg+”: “+d.bestHiDist.toFixed(2)+“C)</span></div>” +
-“<div class="day-detail">LOW  “+d.dayLow.toFixed(1)+“C @ “+lt+” <span class="”+(d.lowHit?“ok”:“no”)+”">”+(d.lowHit?“HIT”:“MISS”)+” (L”+(d.bestLoDeg>0?”+”:””)+d.bestLoDeg+”: “+d.bestLoDist.toFixed(2)+“C)</span></div>”;
-log.appendChild(div);
+var dl=document.getElementById(“dlog”);dl.innerHTML=””;
+results.slice().reverse().forEach(function(r){
+var ht=r.hiT?r.hiT.toUTCString().slice(17,22)+“UTC”:”–”;
+var lt=r.loT?r.loT.toUTCString().slice(17,22)+“UTC”:”–”;
+var div=document.createElement(“div”);div.className=“drow”;
+div.innerHTML=”<div class='ddate'>”+r.ds+” – ANCHOR “+r.aT.toFixed(1)+“C</div>”
++”<div class='dline'>HIGH “+r.dHi.toFixed(1)+“C @ “+ht+” <span class='"+(r.hiHit?"ok":"no")+"'>”+(r.hiHit?“HIT”:“MISS”)+” (L”+(r.bHiDeg>0?”+”:””)+r.bHiDeg+”: “+r.bHiD.toFixed(2)+“C)</span></div>”
++”<div class='dline'>LOW  “+r.dLo.toFixed(1)+“C @ “+lt+” <span class='"+(r.loHit?"ok":"no")+"'>”+(r.loHit?“HIT”:“MISS”)+” (L”+(r.bLoDeg>0?”+”:””)+r.bLoDeg+”: “+r.bLoD.toFixed(2)+“C)</span></div>”;
+dl.appendChild(div);
 });
 
-document.getElementById(“results”).style.display = “block”;
-setStatus(“DONE – “ + n + “ days tested (Open-Meteo, 15min resolution)”);
+document.getElementById(“results”).style.display=“block”;
+msg(“DONE – “+n+” days (Open-Meteo 15min)”,”#00cc33”);
 }
 
-setInterval(function() {
-document.getElementById(“bar-time”).textContent = new Date().toUTCString().slice(5,22).toUpperCase()+” UTC”;
-}, 1000);
+setInterval(function(){document.getElementById(“btm”).textContent=new Date().toUTCString().slice(5,22).toUpperCase()+” UTC”;},1000);
 </script>
 
 </body>
