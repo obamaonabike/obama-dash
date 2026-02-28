@@ -102,17 +102,19 @@ function pct(h, t) { return t > 0 ? (h/t*100).toFixed(0) + “%” : “–”; 
 // Open-Meteo: fetch last N days of 15min + hourly data
 // Returns one call covering the whole range
 function fetchOpenMeteo(days) {
-var now = new Date();
-var start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()-days-1));
-var end   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-var startStr = start.toISOString().slice(0,10);
-var endStr   = end.toISOString().slice(0,10);
+// past_days works on forecast endpoint and returns minutely_15 for recent history
 var url = “https://api.open-meteo.com/v1/forecast?latitude=” + LAT + “&longitude=” + LON +
 “&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC” +
-“&start_date=” + startStr + “&end_date=” + endStr;
+“&past_days=” + (days + 1) + “&forecast_days=1”;
 return fetch(url).then(function(r) {
 if (!r.ok) throw new Error(“Open-Meteo “ + r.status);
 return r.json();
+}).then(function(d) {
+// Validate we got data
+if (!d.minutely_15 || !d.minutely_15.time || d.minutely_15.time.length === 0) {
+throw new Error(“Open-Meteo returned no minutely_15 data”);
+}
+return d;
 });
 }
 
@@ -137,7 +139,7 @@ var m15temps = d.minutely_15 && d.minutely_15.temperature_2m || [];
 var m15rows = [];
 for (var i = 0; i < m15times.length; i++) {
   if (m15temps[i] === null || m15temps[i] === undefined) continue;
-  m15rows.push({ time: new Date(m15times[i] + ":00Z"), temp: m15temps[i] });
+  m15rows.push({ time: new Date(m15times[i].length === 16 ? m15times[i] + ":00Z" : m15times[i] + "Z"), temp: m15temps[i] });
 }
 
 // Parse hourly data
@@ -146,7 +148,7 @@ var htemps = d.hourly && d.hourly.temperature_2m || [];
 var hrows = [];
 for (var i = 0; i < htimes.length; i++) {
   if (htemps[i] === null || htemps[i] === undefined) continue;
-  hrows.push({ time: new Date(htimes[i] + ":00Z"), temp: htemps[i] });
+  hrows.push({ time: new Date(htimes[i].length === 16 ? htimes[i] + ":00Z" : htimes[i] + "Z"), temp: htemps[i] });
 }
 
 setProgress(55); setStatus("Analysing days...");
@@ -225,7 +227,12 @@ renderResults(dayResults, levelHits);
 ```
 
 }).catch(function(e) {
-setStatus(“ERROR: “ + e.message);
+var msg = “ERROR: “ + e.message;
+setStatus(msg);
+// Also show big visible error
+var sl = document.getElementById(“status-line”);
+sl.style.color = “#ff4444”;
+sl.textContent = msg;
 console.error(e);
 document.getElementById(“run-btn”).disabled = false;
 });
