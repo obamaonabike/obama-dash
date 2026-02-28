@@ -12,25 +12,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { background:#050f05; height:100%; height:-webkit-fill-available; }
-body { width:100%; height:100%; height:-webkit-fill-available; min-height:100dvh; overflow:hidden; background:#050f05; color:#00cc33; font-family:"Share Tech Mono",monospace; font-size:11px; letter-spacing:0.5px; cursor:crosshair; -webkit-text-size-adjust:100%; }
-#app { display:flex; flex-direction:column; width:100%; height:100%; min-height:100dvh; background:#050f05; overflow:hidden; touch-action:none; }
-.bar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 10px; height:24px; background:#070d07; color:#006618; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
-.bar-top { border-bottom:1px solid #0f2a0f; padding-top:env(safe-area-inset-top); height:calc(24px + env(safe-area-inset-top)); }
-.bar-bottom { border-top:1px solid #0f2a0f; padding-top:5px; padding-bottom:calc(env(safe-area-inset-bottom)+5px); height:auto; min-height:24px; align-items:flex-start; }
-.bar-title { font-size:11px; letter-spacing:4px; color:#00cc33; white-space:nowrap; }
-.nav-link { color:#004a14; font-family:"Share Tech Mono",monospace; font-size:9px; letter-spacing:2px; text-decoration:none; margin-left:8px; }
-.price-display { color:#00cc33; font-size:11px; letter-spacing:1px; }
-.status-dot { width:5px; height:5px; border-radius:50%; background:#00cc33; flex-shrink:0; animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.2} }
-.chart-controls { flex-shrink:0; display:flex; align-items:stretch; height:22px; background:#070d07; border-bottom:1px solid #0f2a0f; }
-.tf-btn { background:#070d07; border:none; border-right:1px solid #0f2a0f; color:#003a10; font-family:"Share Tech Mono",monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:0 12px; cursor:pointer; }
-.tf-btn.active { color:#00cc33; background:#0a160a; border-bottom:1px solid #00cc33; }
-.chart-shell { flex:1; min-height:0; display:flex; flex-direction:column; background:#050f05; }
-.chart-body { flex:1; position:relative; min-height:0; overflow:hidden; background:#050f05; touch-action:none; }
-#chart-container { width:100%; height:100%; background:#050f05; }
-#err-box { display:none; position:absolute; top:10px; left:10px; right:10px; background:#1a0000; border:1px solid #cc0000; color:#ff4444; font-size:9px; padding:8px; letter-spacing:1px; z-index:99; word-break:break-all; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{background:#050f05;height:100%;height:-webkit-fill-available}
+body{width:100%;height:100%;height:-webkit-fill-available;min-height:100dvh;overflow:hidden;background:#050f05;color:#00cc33;font-family:"Share Tech Mono",monospace;font-size:11px;letter-spacing:.5px;cursor:crosshair;-webkit-text-size-adjust:100%}
+#app{display:flex;flex-direction:column;width:100%;height:100%;min-height:100dvh;background:#050f05;overflow:hidden;touch-action:none}
+.bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 10px;height:24px;background:#070d07;color:#006618;font-size:10px;letter-spacing:2px;text-transform:uppercase}
+.bar-top{border-bottom:1px solid #0f2a0f;padding-top:env(safe-area-inset-top);height:calc(24px + env(safe-area-inset-top))}
+.bar-bottom{border-top:1px solid #0f2a0f;padding-top:5px;padding-bottom:calc(env(safe-area-inset-bottom) + 5px);height:auto;min-height:24px;align-items:flex-start}
+.bar-title{font-size:11px;letter-spacing:4px;color:#00cc33;white-space:nowrap}
+.nav-link{color:#004a14;font-family:"Share Tech Mono",monospace;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px}
+.price-display{color:#00cc33;font-size:11px;letter-spacing:1px}
+.dot{width:5px;height:5px;border-radius:50%;background:#00cc33;flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.chart-controls{flex-shrink:0;display:flex;align-items:stretch;height:22px;background:#070d07;border-bottom:1px solid #0f2a0f}
+.tf-btn{background:#070d07;border:none;border-right:1px solid #0f2a0f;color:#003a10;font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:0 12px;cursor:pointer}
+.tf-btn.active{color:#00cc33;background:#0a160a;border-bottom:1px solid #00cc33}
+.chart-shell{flex:1;min-height:0;display:flex;flex-direction:column;background:#050f05}
+.chart-body{flex:1;position:relative;min-height:0;overflow:hidden;background:#050f05;touch-action:none}
+#chart-container{width:100%;height:100%;background:#050f05}
+#err{display:none;position:absolute;top:10px;left:10px;right:10px;background:#1a0000;border:1px solid #cc0000;color:#ff4444;font-size:9px;padding:8px;letter-spacing:1px;z-index:99;word-break:break-all}
 </style>
 </head>
 <body>
@@ -45,18 +45,18 @@ body { width:100%; height:100%; height:-webkit-fill-available; min-height:100dvh
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span class="price-display" id="hdr-temp">--</span>
-      <div class="status-dot"></div>
+      <div class="dot"></div>
     </div>
   </div>
   <div class="chart-controls">
     <button class="tf-btn active" id="btn-ltf-ratio" onclick="switchMode('LTF_RATIO')">M1 RATIO</button>
-    <button class="tf-btn"        id="btn-ltf-both"  onclick="switchMode('LTF_BOTH')">M1 BOTH</button>
-    <button class="tf-btn"        id="btn-htf"       onclick="switchMode('HTF')">HTF</button>
+    <button class="tf-btn" id="btn-ltf-both" onclick="switchMode('LTF_BOTH')">M1 BOTH</button>
+    <button class="tf-btn" id="btn-htf" onclick="switchMode('HTF')">HTF</button>
   </div>
   <div class="chart-shell">
     <div class="chart-body">
       <div id="chart-container"></div>
-      <div id="err-box"></div>
+      <div id="err"></div>
     </div>
   </div>
   <div class="bar bar-bottom">
@@ -67,285 +67,257 @@ body { width:100%; height:100%; height:-webkit-fill-available; min-height:100dvh
 <script>
 var TMR_KEY = "geHqAXyAgDTGlnyKJGK0wJX4RiBrpHeU";
 var LAT = 51.5048, LON = 0.0495;
-var CFG = { htfRatio: 60, refreshSec: 300 };
-var chartMode = "LTF_RATIO";
+var HTF_RATIO = 60;
+var REFRESH_SEC = 300;
+
+var chartMode = “LTF_RATIO”;
 var lwChart, candleSeries, chartLevels = {};
 var m1Candles = [], h1Candles = [];
 var htfAnchorTs, ltfAnchorTs, htfAnchorOpen, ltfAnchorOpen;
 
-function getMidnightUTC() {
+function getMidnight() {
 var n = new Date();
-return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 0, 0, 0));
+return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()));
 }
-function get0900UTC() {
+function get0900() {
 var n = new Date();
-var a = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 9, 0, 0));
+var a = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 9));
 if (a > n) a.setUTCDate(a.getUTCDate() - 1);
 return a;
 }
-function anglePrice(anchor, bars, deg, ratio) {
+function fanVal(anchor, bars, deg, ratio) {
 return anchor + bars * (ratio || 1) * Math.tan(deg * Math.PI / 180);
 }
-function getLevelDefs(type) {
-var isRatio = type === “HTF_R”, h = type === “HTF”;
-if (isRatio) return [
-{label:“EQ”,deg:0,color:”#ffffff”,width:1},
-{label:”+27”,deg:27,color:”#ffb300”,width:1},{label:”-27”,deg:-27,color:”#ff00ff”,width:1},
-{label:”+45”,deg:45,color:”#ffb300”,width:1},{label:”-45”,deg:-45,color:”#ff00ff”,width:1},
-{label:”+60”,deg:60,color:”#ffb300”,width:1},{label:”-60”,deg:-60,color:”#ff00ff”,width:1},
-{label:”+72”,deg:72,color:”#ffdd00”,width:1},{label:”-72”,deg:-72,color:”#ffdd00”,width:1},
-{label:”+78”,deg:78,color:”#ffdd00”,width:1},{label:”-78”,deg:-78,color:”#ffdd00”,width:1}
+function levelDefs(type) {
+var r = type === “HTF_R”, h = type === “HTF”;
+if (r) return [
+{l:“EQ”,d:0,c:”#ffffff”},{l:”+27”,d:27,c:”#ffb300”},{l:”-27”,d:-27,c:”#ff00ff”},
+{l:”+45”,d:45,c:”#ffb300”},{l:”-45”,d:-45,c:”#ff00ff”},{l:”+60”,d:60,c:”#ffb300”},
+{l:”-60”,d:-60,c:”#ff00ff”},{l:”+72”,d:72,c:”#ffdd00”},{l:”-72”,d:-72,c:”#ffdd00”},
+{l:”+78”,d:78,c:”#ffdd00”},{l:”-78”,d:-78,c:”#ffdd00”}
 ];
 return [
-{label:“EQ”,deg:0,color:h?”#ffffff”:”#aaaaaa”,width:1},
-{label:”+27”,deg:27,color:h?”#00ff41”:”#00cc33”,width:1},{label:”-27”,deg:-27,color:h?”#ff3131”:”#cc2222”,width:1},
-{label:”+45”,deg:45,color:h?”#00ff41”:”#00cc33”,width:1},{label:”-45”,deg:-45,color:h?”#ff3131”:”#cc2222”,width:1},
-{label:”+60”,deg:60,color:h?”#00ff41”:”#00cc33”,width:1},{label:”-60”,deg:-60,color:h?”#ff3131”:”#cc2222”,width:1},
-{label:”+72”,deg:72,color:h?”#ffb300”:”#dd9900”,width:1},{label:”-72”,deg:-72,color:h?”#ffb300”:”#dd9900”,width:1},
-{label:”+78”,deg:78,color:h?”#ffb300”:”#dd9900”,width:1},{label:”-78”,deg:-78,color:h?”#ffb300”:”#dd9900”,width:1}
+{l:“EQ”,d:0,c:h?”#ffffff”:”#aaaaaa”},{l:”+27”,d:27,c:h?”#00ff41”:”#00cc33”},
+{l:”-27”,d:-27,c:h?”#ff3131”:”#cc2222”},{l:”+45”,d:45,c:h?”#00ff41”:”#00cc33”},
+{l:”-45”,d:-45,c:h?”#ff3131”:”#cc2222”},{l:”+60”,d:60,c:h?”#00ff41”:”#00cc33”},
+{l:”-60”,d:-60,c:h?”#ff3131”:”#cc2222”},{l:”+72”,d:72,c:h?”#ffb300”:”#dd9900”},
+{l:”-72”,d:-72,c:h?”#ffb300”:”#dd9900”},{l:”+78”,d:78,c:h?”#ffb300”:”#dd9900”},
+{l:”-78”,d:-78,c:h?”#ffb300”:”#dd9900”}
 ];
 }
 function buildChart() {
-var container = document.getElementById(“chart-container”);
-var body = container.parentElement;
-function getH() { return body.getBoundingClientRect().height || window.innerHeight - 70; }
-lwChart = LightweightCharts.createChart(container, {
-width: container.clientWidth, height: getH(),
-layout: { background:{color:”#050f05”}, textColor:”#006618”, fontSize:10 },
-grid: { vertLines:{color:”#0c1a0c”,style:0}, horzLines:{color:”#0c1a0c”,style:0} },
-crosshair: { mode:LightweightCharts.CrosshairMode.Normal, vertLine:{color:”#00ff4166”,width:1,style:3,labelBackgroundColor:”#051405”}, horzLine:{color:”#00ff4166”,width:1,style:3,labelBackgroundColor:”#051405”} },
-rightPriceScale: { borderColor:”#0f2a0f”, textColor:”#006618”, scaleMargins:{top:0.08,bottom:0.08} },
-timeScale: { borderColor:”#0f2a0f”, timeVisible:true, secondsVisible:false },
-localization: { priceFormatter: function(p) { return p.toFixed(2) + “C”; } }
+var el = document.getElementById(“chart-container”);
+var par = el.parentElement;
+function gh() { return par.getBoundingClientRect().height || window.innerHeight - 70; }
+lwChart = LightweightCharts.createChart(el, {
+width: el.clientWidth, height: gh(),
+layout:{background:{color:”#050f05”},textColor:”#006618”,fontSize:10},
+grid:{vertLines:{color:”#0c1a0c”},horzLines:{color:”#0c1a0c”}},
+crosshair:{mode:LightweightCharts.CrosshairMode.Normal,
+vertLine:{color:”#00ff4166”,width:1,style:3,labelBackgroundColor:”#051405”},
+horzLine:{color:”#00ff4166”,width:1,style:3,labelBackgroundColor:”#051405”}},
+rightPriceScale:{borderColor:”#0f2a0f”,textColor:”#006618”,scaleMargins:{top:.08,bottom:.08}},
+timeScale:{borderColor:”#0f2a0f”,timeVisible:true,secondsVisible:false},
+localization:{priceFormatter:function(p){return p.toFixed(2)+“C”}}
 });
 candleSeries = lwChart.addCandlestickSeries({
-upColor:”#00ff41”, downColor:”#ff3131”,
-borderUpColor:”#00ff41”, borderDownColor:”#ff3131”,
-wickUpColor:”#00aa2a”, wickDownColor:”#aa1111”
+upColor:”#00ff41”,downColor:”#ff3131”,
+borderUpColor:”#00ff41”,borderDownColor:”#ff3131”,
+wickUpColor:”#00aa2a”,wickDownColor:”#aa1111”
 });
-var _rt;
-function resize() { clearTimeout(_rt); *rt = setTimeout(function() { lwChart.applyOptions({width:container.clientWidth,height:getH()}); }, 80); }
-window.addEventListener(“resize”, resize);
-if (window.visualViewport) window.visualViewport.addEventListener(“resize”, resize);
+var t;
+function rs(){clearTimeout(t);t=setTimeout(function(){lwChart.applyOptions({width:el.clientWidth,height:gh()});},80);}
+window.addEventListener(“resize”,rs);
+if(window.visualViewport)window.visualViewport.addEventListener(“resize”,rs);
 }
-function clearLevels() {
-Object.values(chartLevels).forEach(function(s) { try { lwChart.removeSeries(s); } catch(e){} });
-chartLevels = {};
+function clearLevels(){
+Object.values(chartLevels).forEach(function(s){try{lwChart.removeSeries(s);}catch(e){}});
+chartLevels={};
 }
-function drawLevelSet(candles, anchorTs, anchorOpen, type, ratio) {
-if (!anchorOpen || !candles.length) return;
-var defs = getLevelDefs(type);
-var anchorSec = anchorTs.getTime() / 1000;
-var secPerBar = (type === “HTF” || type === “HTF_R”) ? 3600 : 60;
-var filtered = candles.filter(function(c) { return c.time >= anchorSec; });
-if (filtered.length < 2) return;
-var last = filtered[filtered.length - 1];
+function drawSet(candles, aTs, aOpen, type, ratio) {
+if (!aOpen || !candles.length) return;
+var defs = levelDefs(type);
+var aSec = aTs.getTime() / 1000;
+var spb = (type===“HTF”||type===“HTF_R”) ? 3600 : 60;
+var filt = candles.filter(function(c){return c.time >= aSec;});
+if (filt.length < 2) return;
+var last = filt[filt.length-1];
 var n = new Date();
-var endSec = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 23, 59, 0)).getTime() / 1000;
-var future = [];
-for (var t = last.time + 60; t <= endSec; t += 60) future.push(t);
-defs.forEach(function(def) {
-var data = filtered.map(function(c) {
-return { time:c.time, value:anglePrice(anchorOpen, Math.floor((c.time-anchorSec)/secPerBar), def.deg, ratio||1) };
-});
-future.forEach(function(t) {
-data.push({ time:t, value:anglePrice(anchorOpen, Math.floor((t-anchorSec)/secPerBar), def.deg, ratio||1) });
-});
-var prefix = type===“HTF_R”?“R”:type===“HTF”?“H”:“L”;
-var s = lwChart.addLineSeries({ color:def.color, lineWidth:def.width, lineStyle:type===“LTF”?2:0, priceLineVisible:false, lastValueVisible:true, title:prefix+def.label, crosshairMarkerVisible:false });
+var endSec = new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate(),23,59)).getTime()/1000;
+var fut = [];
+for (var t = last.time+60; t <= endSec; t+=60) fut.push(t);
+defs.forEach(function(def){
+var data = filt.map(function(c){return{time:c.time,value:fanVal(aOpen,Math.floor((c.time-aSec)/spb),def.d,ratio||1)};});
+fut.forEach(function(t){data.push({time:t,value:fanVal(aOpen,Math.floor((t-aSec)/spb),def.d,ratio||1)});});
+var pfx = type===“HTF_R”?“R”:type===“HTF”?“H”:“L”;
+var s = lwChart.addLineSeries({color:def.c,lineWidth:1,lineStyle:type===“LTF”?2:0,priceLineVisible:false,lastValueVisible:true,title:pfx+def.l,crosshairMarkerVisible:false});
 s.setData(data);
-chartLevels[type+”*”+def.label] = s;
+chartLevels[type+”_”+def.l]=s;
 });
 }
-function reloadLevels() {
+function reloadLevels(){
 clearLevels();
-var c = chartMode === “HTF” ? h1Candles : m1Candles;
-if (chartMode === “HTF”) {
-drawLevelSet(c,htfAnchorTs,htfAnchorOpen,“HTF”,1);
-drawLevelSet(c,htfAnchorTs,htfAnchorOpen,“HTF_R”,CFG.htfRatio);
-drawLevelSet(c,ltfAnchorTs,ltfAnchorOpen,“LTF”);
-} else if (chartMode === “LTF_RATIO”) {
-drawLevelSet(c,htfAnchorTs,htfAnchorOpen,“HTF_R”,CFG.htfRatio);
-drawLevelSet(c,ltfAnchorTs,ltfAnchorOpen,“LTF”);
+var c = chartMode===“HTF” ? h1Candles : m1Candles;
+if (chartMode===“HTF”) {
+drawSet(c,htfAnchorTs,htfAnchorOpen,“HTF”,1);
+drawSet(c,htfAnchorTs,htfAnchorOpen,“HTF_R”,HTF_RATIO);
+drawSet(c,ltfAnchorTs,ltfAnchorOpen,“LTF”);
+} else if (chartMode===“LTF_RATIO”) {
+drawSet(c,htfAnchorTs,htfAnchorOpen,“HTF_R”,HTF_RATIO);
+drawSet(c,ltfAnchorTs,ltfAnchorOpen,“LTF”);
 } else {
-drawLevelSet(c,htfAnchorTs,htfAnchorOpen,“HTF”,1);
-drawLevelSet(c,htfAnchorTs,htfAnchorOpen,“HTF_R”,CFG.htfRatio);
-drawLevelSet(c,ltfAnchorTs,ltfAnchorOpen,“LTF”);
+drawSet(c,htfAnchorTs,htfAnchorOpen,“HTF”,1);
+drawSet(c,htfAnchorTs,htfAnchorOpen,“HTF_R”,HTF_RATIO);
+drawSet(c,ltfAnchorTs,ltfAnchorOpen,“LTF”);
 }
 }
 
-// Open-Meteo: free, no key, reliable
-// Returns 15min historical + hourly forecast
-function fetchOpenMeteo() {
-var today = new Date();
-var threeDaysAgo = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()-3));
-var tomorrow = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()+2));
-var startStr = threeDaysAgo.toISOString().slice(0,10);
-var endStr   = tomorrow.toISOString().slice(0,10);
-var url = “https://api.open-meteo.com/v1/forecast?latitude=” + LAT + “&longitude=” + LON +
-“&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC” +
-“&start_date=” + startStr + “&end_date=” + endStr;
-return fetch(url).then(function(r) {
-if (!r.ok) throw new Error(“Open-Meteo “ + r.status);
-return r.json();
-});
-}
-
-// Tomorrow.io forecast: minutely next hour (to supplement recent 15min gap)
-function fetchTmrForecast() {
-var url = “https://api.tomorrow.io/v4/weather/forecast?location=” + LAT + “,” + LON +
-“&fields=temperature&timesteps=1m,1h&units=metric&apikey=” + TMR_KEY;
-return fetch(url).then(function(r) {
-if (!r.ok) throw new Error(“TMR “ + r.status);
-return r.json();
-});
-}
-
-function om15ToM1(d) {
-var times = d.minutely_15 && d.minutely_15.time;
-var temps = d.minutely_15 && d.minutely_15.temperature_2m;
-if (!times || !temps) return [];
+function omToCandles15(d) {
+var times = d.minutely_15 && d.minutely_15.time || [];
+var temps = d.minutely_15 && d.minutely_15.temperature_2m || [];
 var rows = [];
-for (var i = 0; i < times.length; i++) {
-if (temps[i] === null || temps[i] === undefined) continue;
-rows.push({ ts: Math.floor(new Date(times[i] + “:00Z”).getTime()/1000), temp: temps[i] });
+for (var i=0; i<times.length; i++) {
+if (temps[i]==null) continue;
+// open-meteo format: “2026-02-21T00:00” - needs Z
+var ts = Math.floor(new Date(times[i]+“Z”).getTime()/1000);
+rows.push({ts:ts, temp:temps[i]});
 }
-// Expand each 15min row to 15 x 1min candles
 var out = [];
-for (var i = 0; i < rows.length; i++) {
-var o = i === 0 ? rows[i].temp : rows[i-1].temp;
+for (var i=0; i<rows.length; i++) {
+var o = i===0 ? rows[i].temp : rows[i-1].temp;
 var c = rows[i].temp;
-for (var m = 0; m < 15; m++) {
-var ts = rows[i].ts - (14-m)*60;
-out.push({ time:ts, open:o, high:Math.max(o,c), low:Math.min(o,c), close:c });
+// expand each 15min slot into 15 x 1min candles
+for (var m=0; m<15; m++) {
+out.push({time:rows[i].ts-(14-m)*60,open:o,high:Math.max(o,c),low:Math.min(o,c),close:c});
 }
 }
 return out;
 }
-
 function omToH1(d) {
-var times = d.hourly && d.hourly.time;
-var temps = d.hourly && d.hourly.temperature_2m;
-if (!times || !temps) return [];
+var times = d.hourly && d.hourly.time || [];
+var temps = d.hourly && d.hourly.temperature_2m || [];
 var rows = [];
-for (var i = 0; i < times.length; i++) {
-if (temps[i] === null || temps[i] === undefined) continue;
-rows.push({ ts: Math.floor(new Date(times[i] + “:00Z”).getTime()/1000), temp: temps[i] });
+for (var i=0; i<times.length; i++) {
+if (temps[i]==null) continue;
+rows.push({ts:Math.floor(new Date(times[i]+“Z”).getTime()/1000),temp:temps[i]});
 }
-return rows.map(function(r, i) {
-var o = i===0 ? r.temp : rows[i-1].temp;
-var c = r.temp;
-return { time:r.ts, open:o, high:Math.max(o,c), low:Math.min(o,c), close:c };
+return rows.map(function(r,i){
+var o=i===0?r.temp:rows[i-1].temp, c=r.temp;
+return{time:r.ts,open:o,high:Math.max(o,c),low:Math.min(o,c),close:c};
 });
 }
-
-function tmrToCandles(d, key) {
-var rows = (d.timelines && d.timelines[key]) || [];
-var mapped = rows.map(function(r) {
-return { ts: Math.floor(new Date(r.time).getTime()/1000), temp: r.values.temperature };
-});
-return mapped.map(function(r,i) {
-var o = i===0 ? r.temp : mapped[i-1].temp;
-var c = r.temp;
-return { time:r.ts, open:o, high:Math.max(o,c), low:Math.min(o,c), close:c };
+function tmrToCandles(rows) {
+return rows.map(function(r,i,a){
+var o=i===0?r.values.temperature:a[i-1].values.temperature;
+var c=r.values.temperature;
+return{time:Math.floor(new Date(r.time).getTime()/1000),open:o,high:Math.max(o,c),low:Math.min(o,c),close:c};
 });
 }
-
-function mergeCandles(a, b) {
-var map = {};
-a.forEach(function(c) { map[c.time] = c; });
-b.forEach(function(c) { if (!map[c.time]) map[c.time] = c; });
-return Object.values(map).sort(function(x,y) { return x.time-y.time; });
+function merge(a,b){
+var map={};
+a.forEach(function(c){map[c.time]=c;});
+b.forEach(function(c){if(!map[c.time])map[c.time]=c;});
+return Object.values(map).sort(function(x,y){return x.time-y.time;});
 }
-
-function findAnchorOpen(candles, anchorTs) {
-var sec = anchorTs.getTime() / 1000;
-var m = candles.find(function(c) { return Math.abs(c.time - sec) < 960; });
-return m ? m.open : (candles.length ? candles[0].open : null);
+function anchorOpen(candles, ts) {
+var sec=ts.getTime()/1000;
+for(var i=0;i<candles.length;i++){if(Math.abs(candles[i].time-sec)<960)return candles[i].open;}
+return candles.length?candles[0].open:null;
 }
-
-function showErr(msg) {
-var el = document.getElementById(“err-box”);
-el.textContent = msg;
-el.style.display = “block”;
-setTimeout(function() { el.style.display = “none”; }, 8000);
+function showErr(msg){
+var e=document.getElementById(“err”);
+e.textContent=msg; e.style.display=“block”;
+setTimeout(function(){e.style.display=“none”;},10000);
 }
 
 function loadAll() {
-setStatus(“FETCHING…”);
-htfAnchorTs = getMidnightUTC();
-ltfAnchorTs = get0900UTC();
+document.getElementById(“bar-status”).textContent=“FETCHING…”;
+htfAnchorTs=getMidnight();
+ltfAnchorTs=get0900();
 
-var p1 = fetchOpenMeteo();
-var p2 = fetchTmrForecast().catch(function(e) { showErr(“Forecast: “+e.message); return null; });
+// Open-Meteo: past_days for history + forecast_days for future – no auth
+var omUrl = “https://api.open-meteo.com/v1/forecast?latitude=”+LAT+”&longitude=”+LON
++”&minutely_15=temperature_2m&hourly=temperature_2m”
++”&temperature_unit=celsius&timezone=UTC&past_days=3&forecast_days=2”;
 
-Promise.all([p1, p2]).then(function(results) {
-var omData = results[0], tmrData = results[1];
+// Tomorrow.io: minutely forecast for next hour
+var tmrUrl = “https://api.tomorrow.io/v4/weather/forecast?location=”+LAT+”,”+LON
++”&fields=temperature&timesteps=1m,1h&units=metric&apikey=”+TMR_KEY;
+
+var p1 = fetch(omUrl).then(function(r){
+if(!r.ok) throw new Error(“OM “+r.status);
+return r.json();
+});
+var p2 = fetch(tmrUrl).then(function(r){
+if(!r.ok) throw new Error(“TMR “+r.status);
+return r.json();
+}).catch(function(e){showErr(“TMR forecast: “+e.message);return null;});
+
+Promise.all([p1,p2]).then(function(res){
+var om=res[0], tmr=res[1];
+var histM1=omToCandles15(om);
+var histH1=omToH1(om);
+var foreM1=tmr&&tmr.timelines&&tmr.timelines.minutely ? tmrToCandles(tmr.timelines.minutely) : [];
+var foreH1=tmr&&tmr.timelines&&tmr.timelines.hourly   ? tmrToCandles(tmr.timelines.hourly)   : [];
 
 ```
-var histM1 = om15ToM1(omData);
-var histH1 = omToH1(omData);
-var foreM1 = tmrData ? tmrToCandles(tmrData, "minutely") : [];
-var foreH1 = tmrData ? tmrToCandles(tmrData, "hourly")   : [];
+m1Candles=merge(histM1,foreM1);
+h1Candles=merge(histH1,foreH1);
 
-m1Candles = mergeCandles(histM1, foreM1);
-h1Candles = mergeCandles(histH1, foreH1);
+htfAnchorOpen=anchorOpen(h1Candles,htfAnchorTs);
+ltfAnchorOpen=anchorOpen(m1Candles,ltfAnchorTs);
 
-htfAnchorOpen = findAnchorOpen(h1Candles, htfAnchorTs);
-ltfAnchorOpen = findAnchorOpen(m1Candles, ltfAnchorTs);
-
-var now = Date.now()/1000;
-var cur = null;
-for (var i = m1Candles.length-1; i >= 0; i--) {
-  if (m1Candles[i].time <= now) { cur = m1Candles[i]; break; }
+var now=Date.now()/1000;
+for(var i=m1Candles.length-1;i>=0;i--){
+  if(m1Candles[i].time<=now){
+    document.getElementById("hdr-temp").textContent=m1Candles[i].close.toFixed(1)+"C";
+    break;
+  }
 }
-if (cur) document.getElementById("hdr-temp").textContent = cur.close.toFixed(1) + "C";
 
-var candles = chartMode === "HTF" ? h1Candles : m1Candles;
+var candles=chartMode==="HTF"?h1Candles:m1Candles;
 candleSeries.setData(candles);
 reloadLevels();
 
-var visible = candles.filter(function(c) { return c.time <= now; });
-if (visible.length) {
-  var last = visible[visible.length-1];
+var vis=candles.filter(function(c){return c.time<=now;});
+if(vis.length){
+  var last=vis[vis.length-1];
   lwChart.timeScale().setVisibleRange({
-    from: last.time - (chartMode==="HTF" ? 3600*12 : 60*120),
-    to:   last.time + (chartMode==="HTF" ? 3600*4  : 60*60)
+    from:last.time-(chartMode==="HTF"?3600*12:60*120),
+    to:last.time+(chartMode==="HTF"?3600*4:60*60)
   });
 }
-setStatus(tmrData ? "LIVE - OPEN-METEO + TMR" : "LIVE - OPEN-METEO");
+document.getElementById("bar-status").textContent=tmr?"LIVE - OM+TMR":"LIVE - OPEN-METEO";
 ```
 
-}).catch(function(e) {
-console.error(e);
-setStatus(“ERROR”);
+}).catch(function(e){
+document.getElementById(“bar-status”).textContent=“ERROR”;
 showErr(e.message);
+console.error(e);
 });
 }
 
-function switchMode(mode) {
-chartMode = mode;
-[“ltf-ratio”,“ltf-both”,“htf”].forEach(function(id) {
-var el = document.getElementById(“btn-”+id);
-if (el) el.classList.remove(“active”);
+function switchMode(m){
+chartMode=m;
+[“ltf-ratio”,“ltf-both”,“htf”].forEach(function(id){
+var el=document.getElementById(“btn-”+id);
+if(el)el.classList.remove(“active”);
 });
-var btnId = mode===“LTF_RATIO”?“ltf-ratio”:mode===“LTF_BOTH”?“ltf-both”:“htf”;
-var el = document.getElementById(“btn-”+btnId);
-if (el) el.classList.add(“active”);
-var candles = mode === “HTF” ? h1Candles : m1Candles;
-if (candles.length) { candleSeries.setData(candles); reloadLevels(); }
+var id=m===“LTF_RATIO”?“ltf-ratio”:m===“LTF_BOTH”?“ltf-both”:“htf”;
+var el=document.getElementById(“btn-”+id);
+if(el)el.classList.add(“active”);
+var c=m===“HTF”?h1Candles:m1Candles;
+if(c.length){candleSeries.setData(c);reloadLevels();}
 }
 
-function setStatus(s) { document.getElementById(“bar-status”).textContent = s; }
-
-window.addEventListener(“load”, function() {
+window.addEventListener(“load”,function(){
 buildChart();
-requestAnimationFrame(function() { setTimeout(function() { window.dispatchEvent(new Event(“resize”)); }, 150); });
-setInterval(function() {
-document.getElementById(“bar-time”).textContent = new Date().toUTCString().slice(5,22).toUpperCase()+” UTC”;
-}, 1000);
+requestAnimationFrame(function(){setTimeout(function(){window.dispatchEvent(new Event(“resize”));},150);});
+setInterval(function(){
+document.getElementById(“bar-time”).textContent=new Date().toUTCString().slice(5,22).toUpperCase()+” UTC”;
+},1000);
 loadAll();
-setInterval(loadAll, CFG.refreshSec * 1000);
+setInterval(loadAll,REFRESH_SEC*1000);
 });
 </script>
 
