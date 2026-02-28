@@ -2,12 +2,42 @@
 
 <html>
 <head><meta charset="UTF-8"><title>WX Test</title>
-<style>body{background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:14px}</style>
+<style>body{background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:13px}
+.err{color:#ff4444}.ok{color:#00ff41}.dim{color:#006618}</style>
 </head>
 <body>
-<div id="o">VERSION 4 - loading...</div>
+<div id="o"></div>
 <script type="text/javascript">
-document.getElementById("o").textContent = "VERSION 4 - JS OK";
+var o = document.getElementById("o");
+function log(s,c){var d=document.createElement("div");d.className=c||"";d.textContent=s;o.appendChild(d);}
+
+log(“Step 1: JS running OK”,“ok”);
+log(“Step 2: calling Open-Meteo…”);
+
+fetch(“https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC&past_days=2&forecast_days=1”)
+.then(function(r){
+log(“Step 3: HTTP “ + r.status, r.ok?“ok”:“err”);
+return r.json();
+})
+.then(function(d){
+log(“Step 4: JSON parsed, keys: “ + Object.keys(d).join(”, “));
+if(d.error){log(“API error: “+d.reason,“err”);return;}
+if(d.minutely_15){
+log(“minutely_15: “+d.minutely_15.time.length+” rows”,“ok”);
+log(“sample: “+d.minutely_15.time[0]+” = “+d.minutely_15.temperature_2m[0]+“C”,“ok”);
+} else {
+log(“NO minutely_15 in response”,“err”);
+}
+if(d.hourly){
+log(“hourly: “+d.hourly.time.length+” rows”,“ok”);
+}
+log(“Step 5: DONE - API WORKS”,“ok”);
+})
+.catch(function(e){
+log(“Step 3: FETCH FAILED - “+e.name+”: “+e.message,“err”);
+log(“This means CORS or network block”,“err”);
+});
 </script>
+
 </body>
 </html>
