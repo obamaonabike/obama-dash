@@ -1,48 +1,13 @@
 <!DOCTYPE html>
 
 <html>
-<head><meta charset="UTF-8"><title>WX Test</title></head>
-<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:13px">
-<pre id="o">JS not running yet...</pre>
-<script>
-try {
-  document.getElementById("o").textContent = "JS running...\n";
-
-var el = document.getElementById(“o”);
-function log(s) { el.textContent += s + “\n”; }
-
-log(“Calling fetch…”);
-
-fetch(“https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC&past_days=2&forecast_days=1”)
-.then(function(r) {
-log(“STATUS: “ + r.status);
-return r.json();
-})
-.then(function(d) {
-log(“KEYS: “ + Object.keys(d).join(”, “));
-if (d.error) {
-log(“API ERROR: “ + d.reason);
-}
-if (d.minutely_15) {
-log(“minutely_15 rows: “ + d.minutely_15.time.length);
-log(“first: “ + d.minutely_15.time[0] + “ = “ + d.minutely_15.temperature_2m[0] + “C”);
-log(“last:  “ + d.minutely_15.time[d.minutely_15.time.length-1] + “ = “ + d.minutely_15.temperature_2m[d.minutely_15.temperature_2m.length-1] + “C”);
-} else {
-log(“NO minutely_15 KEY”);
-}
-if (d.hourly) {
-log(“hourly rows: “ + d.hourly.time.length);
-}
-log(“DONE”);
-})
-.catch(function(e) {
-log(“FETCH FAILED: “ + e.name + “ - “ + e.message);
-});
-
-} catch(e) {
-document.getElementById(“o”).textContent = “CRASH: “ + e.name + “ - “ + e.message;
-}
+<head><meta charset="UTF-8"><title>WX Test</title>
+<style>body{background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:14px}</style>
+</head>
+<body>
+<div id="o">VERSION 4 - loading...</div>
+<script type="text/javascript">
+document.getElementById("o").textContent = "VERSION 4 - JS OK";
 </script>
-
 </body>
 </html>
