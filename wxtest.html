@@ -1,46 +1,69 @@
 <!DOCTYPE html>
 
 <html>
-<head><meta charset="UTF-8"><title>WX DEBUG</title></head>
-<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:13px">
-<div id="s1">1: waiting</div>
-<div id="s2">2: waiting</div>
-<div id="s3">3: waiting</div>
-<div id="s4">4: waiting</div>
-<div id="s5">5: waiting</div>
+<head><meta charset="UTF-8"><title>EGLC Source Test</title></head>
+<body style="background:#050f05;color:#00cc33;font-family:monospace;padding:20px;font-size:12px">
+<pre id="o">Testing data sources for EGLC actual observations...\n</pre>
 <script type="text/javascript">
-window.onerror = function(m,s,l){document.getElementById("s1").textContent="GLOBAL ERR: "+m+" line "+l;};
+var o = document.getElementById("o");
+function log(s){ o.textContent += s + "\n"; }
 
-document.getElementById(“s1”).textContent = “1: JS running”;
-
-var url = “https://api.open-meteo.com/v1/forecast?latitude=51.5048&longitude=0.0495&minutely_15=temperature_2m&hourly=temperature_2m&temperature_unit=celsius&timezone=UTC&past_days=3&forecast_days=2”;
-
-document.getElementById(“s2”).textContent = “2: fetching…”;
-
-fetch(url)
-.then(function(r) {
-document.getElementById(“s2”).textContent = “2: HTTP “ + r.status;
-return r.json();
-})
-.then(function(d) {
-document.getElementById(“s3”).textContent = “3: got keys: “ + Object.keys(d).join(”, “);
-
-```
-var m15 = d.minutely_15;
-if (!m15) {
-  document.getElementById("s4").textContent = "4: NO minutely_15 - only: " + Object.keys(d).join(", ");
-  return;
+// Test 1: NOAA NCEI - actual station obs, free, no key
+log(”=== TEST 1: NOAA NCEI ===”);
+fetch(“https://www.ncei.noaa.gov/access/services/data/v1?dataset=global-summary-of-the-day&stations=03772099999&startDate=2025-10-01&endDate=2025-10-03&format=json&dataTypes=TMAX”)
+.then(function(r){ log(“Status: “ + r.status); return r.json(); })
+.then(function(d){
+if(d.length){
+log(“Records: “ + d.length);
+log(“Sample DATE: “ + d[0].DATE + “ TMAX: “ + d[0].TMAX + “ = “ + (parseFloat(d[0].TMAX)/10).toFixed(1) + “C”);
+log(“NOAA: OK”);
+} else {
+log(“NOAA: empty response”);
 }
-document.getElementById("s4").textContent = "4: minutely_15 rows=" + m15.time.length + " first=" + m15.time[0] + " temp=" + m15.temperature_2m[0];
-
-var h = d.hourly;
-document.getElementById("s5").textContent = "5: hourly rows=" + h.time.length + " first=" + h.time[0] + " temp=" + h.temperature_2m[0];
-```
-
 })
-.catch(function(e) {
-document.getElementById(“s3”).textContent = “3: FETCH CATCH: “ + e.name + “ – “ + e.message;
-});
+.catch(function(e){ log(“NOAA FAILED: “ + e.message); });
+
+// Test 2: Wunderground EGLC history JSON endpoint
+// Wunderground loads data via an internal API - try the known endpoint
+log(”\n=== TEST 2: WUNDERGROUND API ===”);
+var d = new Date();
+var yr = d.getUTCFullYear();
+var mo = String(d.getUTCMonth()+1).padStart(2,“0”);
+var dy = String(d.getUTCDate()).padStart(2,“0”);
+var wuUrl = “https://api.weather.com/v1/location/EGLC:9:GB/observations/historical.json”
+
+- “?apiKey=6532d6454b8aa370768e63d6ba5a832e”
+- “&units=m&startDate=” + yr+mo+dy + “&endDate=” + yr+mo+dy;
+  log(“URL: “ + wuUrl.slice(0,80) + “…”);
+  fetch(wuUrl)
+  .then(function(r){ log(“WU status: “ + r.status); return r.text(); })
+  .then(function(t){ log(“WU response (first 200): “ + t.slice(0,200)); })
+  .catch(function(e){ log(“WU FAILED: “ + e.message); });
+
+// Test 3: Wunderground scrape via allorigins CORS proxy
+log(”\n=== TEST 3: WUNDERGROUND VIA PROXY ===”);
+var wuPage = “https://www.wunderground.com/history/daily/gb/london/EGLC/date/”+yr+”-”+mo+”-”+dy;
+var proxyUrl = “https://api.allorigins.win/raw?url=” + encodeURIComponent(wuPage);
+log(“Proxy: allorigins -> WU”);
+fetch(proxyUrl)
+.then(function(r){ log(“Proxy status: “ + r.status); return r.text(); })
+.then(function(t){
+log(“Response length: “ + t.length + “ chars”);
+// Look for temperature data in the HTML
+var maxIdx = t.indexOf(“Max Temp”);
+if(maxIdx > 0){
+log(“Found ‘Max Temp’ at char “ + maxIdx);
+log(“Context: “ + t.slice(maxIdx, maxIdx+200).replace(/\s+/g,” “));
+} else {
+log(”‘Max Temp’ not found in response”);
+// Check if it’s a bot block
+if(t.indexOf(“blocked”)>0||t.indexOf(“Access Denied”)>0||t.indexOf(“captcha”)>0){
+log(“BLOCKED by Wunderground”);
+}
+log(“First 300 chars: “ + t.slice(0,300).replace(/\s+/g,” “));
+}
+})
+.catch(function(e){ log(“PROXY FAILED: “ + e.message); });
 </script>
 
 </body>
