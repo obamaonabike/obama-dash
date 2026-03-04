@@ -278,6 +278,80 @@ display:none;
 
 <button class="run-btn" id="run-btn" onclick="runBacktest()">&#9654; RUN BACKTEST</button>
 
+<div style="margin-top:6px;">
+  <button class="run-btn" id="auto-btn" onclick="toggleAutoFind()" style="background:#0a0a1a;border-color:#4444ff;color:#4444ff;">&#9670; AUTO FIND BEST SETTINGS</button>
+</div>
+
+<div id="auto-panel" style="display:none;border:1px solid #1a1a4a;background:#05050f;padding:10px;margin-top:6px;">
+  <div class="config-title" style="color:#4444ff;border-color:#1a1a4a;">// GRID SEARCH</div>
+  <div class="config-row">
+    <span class="config-label">SORT BY</span>
+    <div style="display:flex;gap:6px;">
+      <button class="order-btn active" id="sort-calmar" onclick="selectSort('calmar')" style="border-color:#4444ff;color:#4444ff;">CALMAR</button>
+      <button class="order-btn" id="sort-winrate" onclick="selectSort('winrate')" style="color:#006618;">WIN%</button>
+      <button class="order-btn" id="sort-pnl" onclick="selectSort('pnl')" style="color:#006618;">PNL</button>
+    </div>
+  </div>
+  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// TOLERANCE RANGE (%)</div>
+  <div class="config-row">
+    <span class="config-label">MIN</span>
+    <input class="config-input" id="gs-tol-min" type="number" value="0.04" step="0.01" min="0.01">
+  </div>
+  <div class="config-row">
+    <span class="config-label">MAX</span>
+    <input class="config-input" id="gs-tol-max" type="number" value="0.15" step="0.01" min="0.01">
+  </div>
+  <div class="config-row">
+    <span class="config-label">STEPS</span>
+    <input class="config-input" id="gs-tol-steps" type="number" value="4" min="2" max="8">
+  </div>
+  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// STOP DISTANCE RANGE ($)</div>
+  <div class="config-row">
+    <span class="config-label">MIN</span>
+    <input class="config-input" id="gs-stop-min" type="number" value="100" min="10">
+  </div>
+  <div class="config-row">
+    <span class="config-label">MAX</span>
+    <input class="config-input" id="gs-stop-max" type="number" value="500" min="10">
+  </div>
+  <div class="config-row">
+    <span class="config-label">STEPS</span>
+    <input class="config-input" id="gs-stop-steps" type="number" value="4" min="2" max="8">
+  </div>
+  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// RR RANGE</div>
+  <div class="config-row">
+    <span class="config-label">MIN</span>
+    <input class="config-input" id="gs-rr-min" type="number" value="0.2" step="0.1" min="0.1">
+  </div>
+  <div class="config-row">
+    <span class="config-label">MAX</span>
+    <input class="config-input" id="gs-rr-max" type="number" value="0.5" step="0.1" min="0.1">
+  </div>
+  <div class="config-row">
+    <span class="config-label">STEPS</span>
+    <input class="config-input" id="gs-rr-steps" type="number" value="4" min="2" max="6">
+  </div>
+  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// MIN BAR RANGE</div>
+  <div class="config-row">
+    <span class="config-label">VALUES</span>
+    <input class="config-input" id="gs-minbar-vals" type="text" value="3,5,10" style="width:90px;">
+  </div>
+  <div id="gs-combo-count" style="color:#4444ff;font-size:9px;letter-spacing:1px;padding:6px 0;text-align:right;">-- COMBINATIONS</div>
+  <button class="run-btn" id="gs-run-btn" onclick="runGridSearch()" style="background:#0a0a1a;border-color:#4444ff;color:#4444ff;">&#9670; RUN GRID SEARCH</button>
+</div>
+
+<div id="gs-progress-wrap" style="display:none;margin-top:6px;">
+  <div id="gs-progress-label" style="color:#4444ff;font-size:10px;letter-spacing:1px;margin-bottom:4px;">SEARCHING...</div>
+  <div class="progress-bar-bg" style="border-color:#1a1a4a;background:#0a0a1a;">
+    <div class="progress-bar-fill" id="gs-progress-fill" style="background:#4444ff;width:0%;"></div>
+  </div>
+</div>
+
+<div id="gs-results" style="display:none;margin-top:6px;">
+  <div class="section-title" style="color:#4444ff;border-color:#1a1a4a;">// TOP SETTINGS</div>
+  <div id="gs-results-inner"></div>
+</div>
+
 <div id="progress-wrap">
   <div id="progress-label">FETCHING CANDLES...</div>
   <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
@@ -793,6 +867,269 @@ function statCard(label, value, cls, sub){
 function setProgress(pct, label){
   document.getElementById('progress-fill').style.width = pct+'%';
   document.getElementById('progress-label').textContent = label;
+}
+
+window.addEventListener('load', ()=>{ updateCacheStatus(); updateComboCount(); });
+
+// ── AUTO FIND ─────────────────────────────────────────
+let sortMetric = 'calmar';
+let autoOpen = false;
+
+function toggleAutoFind(){
+  autoOpen = !autoOpen;
+  document.getElementById('auto-panel').style.display = autoOpen ? 'block' : 'none';
+  document.getElementById('auto-btn').textContent = (autoOpen ? '\u25c6 HIDE' : '\u25c6 AUTO FIND BEST SETTINGS');
+}
+
+function selectSort(s){
+  sortMetric = s;
+  ['calmar','winrate','pnl'].forEach(k=>{
+    const el = document.getElementById('sort-'+k);
+    el.classList.toggle('active', k===s);
+    el.style.color = k===s ? '#4444ff' : '#006618';
+    el.style.borderColor = k===s ? '#4444ff' : '#0f2a0f';
+  });
+}
+
+function linspace(min, max, steps){
+  const arr = [];
+  for(let i=0; i<steps; i++){
+    arr.push(+(min + (max-min)*i/(steps-1)).toFixed(4));
+  }
+  return [...new Set(arr)];
+}
+
+function updateComboCount(){
+  try{
+    const tolSteps  = parseInt(document.getElementById('gs-tol-steps').value)||4;
+    const stopSteps = parseInt(document.getElementById('gs-stop-steps').value)||4;
+    const rrSteps   = parseInt(document.getElementById('gs-rr-steps').value)||4;
+    const mbVals    = document.getElementById('gs-minbar-vals').value.split(',').filter(Boolean);
+    const total     = tolSteps * stopSteps * rrSteps * mbVals.length;
+    document.getElementById('gs-combo-count').textContent = total + ' COMBINATIONS';
+  }catch(e){}
+}
+
+// Wire up combo count updates
+['gs-tol-steps','gs-stop-steps','gs-rr-steps','gs-minbar-vals'].forEach(id=>{
+  setTimeout(()=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', updateComboCount);
+  }, 100);
+});
+
+function quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stopDist, rrRatio, risk, minBar, feeRate){
+  const trades = [];
+  const debounce = {};
+  const tolPct = tol / 100;
+
+  for(let i=2; i<candles.length-10; i++){
+    const c    = candles[i];
+    const prev = candles[i-1];
+    const prevAnchor = getAnchor0900(prev.time*1000);
+    const cAnchor    = getAnchor0900(c.time*1000);
+    if(prevAnchor.getTime() !== cAnchor.getTime()) continue;
+    const anchorKey  = prevAnchor.toISOString().slice(0,10);
+    const anchorOpen = anchorOpens[anchorKey];
+    if(!anchorOpen) continue;
+    const anchorSec  = prevAnchor.getTime()/1000;
+    const barOffset  = Math.floor((prev.time - anchorSec)/60);
+    if(barOffset < minBar) continue;
+    const hour = new Date(c.time*1000).getUTCHours();
+    if(!activeHours.has(hour)) continue;
+    const bar    = Math.floor((prev.time - anchorSec)/60);
+    for(const deg of activeLevels){
+      const label = deg > 0 ? 'L+'+deg : 'L'+deg;
+      const price = anchorOpen + bar * Math.tan(deg * Math.PI / 180);
+      const tolAbs = price * tolPct;
+      const dk = anchorKey+'_'+label;
+      const touchedBelow = prev.low <= price+tolAbs && prev.low >= price-tolAbs;
+      const rejectedUp   = prev.close > price && prev.open > prev.close - tolAbs;
+      if(touchedBelow && rejectedUp && !debounce[dk]){
+        debounce[dk] = true;
+        const entry = c.open;
+        const result = simulateTrade(candles, i+1, 1, entry, stopDist, rrRatio, feeRate);
+        if(result !== 'TIMEOUT'){
+          const posSize = risk/stopDist;
+          const feeCost = posSize*entry*feeRate*2;
+          const grossPnl = result==='WIN' ? risk*rrRatio : -risk;
+          trades.push({netPnl: grossPnl-feeCost, result});
+        }
+      }
+      const touchedAbove = prev.high >= price-tolAbs && prev.high <= price+tolAbs;
+      const rejectedDown = prev.close < price && prev.open < prev.close+tolAbs;
+      if(touchedAbove && rejectedDown && !debounce[dk]){
+        debounce[dk] = true;
+        const entry = c.open;
+        const result = simulateTrade(candles, i+1, -1, entry, stopDist, rrRatio, feeRate);
+        if(result !== 'TIMEOUT'){
+          const posSize = risk/stopDist;
+          const feeCost = posSize*entry*feeRate*2;
+          const grossPnl = result==='WIN' ? risk*rrRatio : -risk;
+          trades.push({netPnl: grossPnl-feeCost, result});
+        }
+      }
+    }
+  }
+  return trades;
+}
+
+function scoreCombo(trades, days){
+  if(trades.length < 10) return null;
+  const wins    = trades.filter(t=>t.result==='WIN').length;
+  const total   = trades.length;
+  const winRate = wins/total*100;
+  const netPnl  = trades.reduce((s,t)=>s+t.netPnl,0);
+  let peak=0, running=0, maxDD=0;
+  for(const t of trades){
+    running += t.netPnl;
+    if(running>peak) peak=running;
+    const dd=peak-running;
+    if(dd>maxDD) maxDD=dd;
+  }
+  const ann = netPnl*(365/days);
+  const calmar = maxDD>0 ? ann/maxDD : 0;
+  return {total, winRate, netPnl, maxDD, calmar};
+}
+
+async function runGridSearch(){
+  const days       = parseInt(document.getElementById('cfg-days').value)||30;
+  const risk       = parseFloat(document.getElementById('cfg-risk').value)||100;
+  const feeRate    = (orderType==='maker'?MAKER_FEE:TAKER_FEE)/100;
+  const activeLevels = Array.from(document.querySelectorAll('.lvl-btn.active')).map(b=>parseInt(b.dataset.deg));
+  const activeHours  = new Set(Array.from(document.querySelectorAll('.hr-btn.active')).map(b=>parseInt(b.dataset.hr)));
+
+  if(!activeLevels.length){ alert('SELECT AT LEAST ONE FAN LEVEL'); return; }
+
+  // Build param grid
+  const tolMin   = parseFloat(document.getElementById('gs-tol-min').value);
+  const tolMax   = parseFloat(document.getElementById('gs-tol-max').value);
+  const tolSteps = parseInt(document.getElementById('gs-tol-steps').value)||4;
+  const stopMin  = parseFloat(document.getElementById('gs-stop-min').value);
+  const stopMax  = parseFloat(document.getElementById('gs-stop-max').value);
+  const stopSteps= parseInt(document.getElementById('gs-stop-steps').value)||4;
+  const rrMin    = parseFloat(document.getElementById('gs-rr-min').value);
+  const rrMax    = parseFloat(document.getElementById('gs-rr-max').value);
+  const rrSteps  = parseInt(document.getElementById('gs-rr-steps').value)||4;
+  const mbVals   = document.getElementById('gs-minbar-vals').value.split(',').map(Number).filter(n=>!isNaN(n));
+
+  const tols  = linspace(tolMin, tolMax, tolSteps);
+  const stops = linspace(stopMin, stopMax, stopSteps);
+  const rrs   = linspace(rrMin, rrMax, rrSteps);
+  const total = tols.length * stops.length * rrs.length * mbVals.length;
+
+  document.getElementById('gs-run-btn').disabled = true;
+  document.getElementById('gs-results').style.display = 'none';
+  document.getElementById('gs-progress-wrap').style.display = 'block';
+
+  // Get/fetch candles
+  let candles = loadCachedCandles(days);
+  if(!candles){
+    document.getElementById('gs-progress-label').textContent = 'FETCHING CANDLES...';
+    try{
+      candles = await fetchAllCandles(days, pct=>{
+        document.getElementById('gs-progress-fill').style.width = (pct*0.3)+'%';
+        document.getElementById('gs-progress-label').textContent = 'FETCHING... '+pct+'%';
+      });
+      saveCachedCandles(days, candles);
+    }catch(e){
+      document.getElementById('gs-progress-label').textContent = 'FETCH ERROR';
+      document.getElementById('gs-run-btn').disabled = false;
+      return;
+    }
+  }
+
+  // Build anchor opens
+  const anchorOpens = {};
+  for(const c of candles){
+    const anchor = getAnchor0900(c.time*1000);
+    const key    = anchor.toISOString().slice(0,10);
+    if(!anchorOpens[key]){
+      const anchorSec = anchor.getTime()/1000;
+      if(Math.abs(c.time-anchorSec)<180) anchorOpens[key] = c.open;
+    }
+  }
+
+  const results = [];
+  let done = 0;
+
+  for(const tol of tols){
+    for(const stop of stops){
+      for(const rr of rrs){
+        for(const mb of mbVals){
+          const trades = quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stop, rr, risk, mb, feeRate);
+          const score  = scoreCombo(trades, days);
+          if(score) results.push({tol, stop, rr, mb, ...score});
+          done++;
+          if(done % 4 === 0){
+            const pct = Math.round(done/total*100);
+            document.getElementById('gs-progress-fill').style.width = pct+'%';
+            document.getElementById('gs-progress-label').textContent = 'TESTING '+done+'/'+total+' COMBINATIONS...';
+            await new Promise(r=>setTimeout(r,0));
+          }
+        }
+      }
+    }
+  }
+
+  document.getElementById('gs-progress-label').textContent = 'DONE -- '+results.length+' VALID RESULTS';
+
+  // Sort
+  results.sort((a,b)=>{
+    if(sortMetric==='calmar')  return b.calmar-a.calmar;
+    if(sortMetric==='winrate') return b.winRate-a.winRate;
+    return b.netPnl-a.netPnl;
+  });
+
+  const top = results.slice(0,15);
+  const ri  = document.getElementById('gs-results-inner');
+  ri.innerHTML = '';
+
+  // Header
+  ri.innerHTML += '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;">'
+    +'<thead><tr>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">TOL%</th>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">STOP$</th>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">RR</th>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">MB</th>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">WIN%</th>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">PNL</th>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">CALMAR</th>'
+    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;"></th>'
+    +'</tr></thead><tbody id="gs-tbody"></tbody></table>';
+
+  const tbody = document.getElementById('gs-tbody');
+  top.forEach((r,idx)=>{
+    const wrCls = r.winRate>=85?'color:#00ff41':r.winRate>=50?'color:#ffb300':'color:#ff3131';
+    const pnlCls= r.netPnl>0?'color:#00ff41':'color:#ff3131';
+    const calCls= r.calmar>=3?'color:#00ff41':r.calmar>=1?'color:#ffb300':'color:#ff3131';
+    tbody.innerHTML += '<tr>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.tol+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.stop+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.rr+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.mb+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;'+wrCls+'">'+r.winRate.toFixed(1)+'%</td>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;'+pnlCls+'">$'+r.netPnl.toFixed(0)+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;'+calCls+'">'+r.calmar.toFixed(2)+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;">'
+      +'<button onclick="applySettings('+r.tol+','+r.stop+','+r.rr+','+r.mb+')" style="background:#0a0a1a;border:1px solid #4444ff;color:#4444ff;font-family:\'Share Tech Mono\',monospace;font-size:9px;padding:2px 6px;cursor:pointer;">USE</button>'
+      +'</td></tr>';
+  });
+
+  document.getElementById('gs-results').style.display = 'block';
+  document.getElementById('gs-progress-wrap').style.display = 'none';
+  document.getElementById('gs-run-btn').disabled = false;
+  document.getElementById('gs-results').scrollIntoView({behavior:'smooth'});
+}
+
+function applySettings(tol, stop, rr, mb){
+  document.getElementById('cfg-tol').value   = tol;
+  document.getElementById('cfg-stop').value  = stop;
+  document.getElementById('cfg-rr').value    = rr;
+  document.getElementById('cfg-minbar').value= mb;
+  // Scroll to top and highlight
+  document.querySelector('.config-panel').scrollIntoView({behavior:'smooth'});
+  document.getElementById('bar-status').textContent = 'SETTINGS APPLIED -- PRESS RUN';
 }
 
 window.addEventListener('load', updateCacheStatus);
