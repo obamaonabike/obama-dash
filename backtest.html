@@ -278,77 +278,92 @@ display:none;
 
 <button class="run-btn" id="run-btn" onclick="runBacktest()">&#9654; RUN BACKTEST</button>
 
+
 <div style="margin-top:6px;">
-  <button class="run-btn" id="auto-btn" onclick="toggleAutoFind()" style="background:#0a0a1a;border-color:#4444ff;color:#4444ff;">&#9670; AUTO FIND BEST SETTINGS</button>
+  <button class="run-btn" id="auto-btn" onclick="toggleAutoFind()" style="background:#003a10;border-color:#00cc33;color:#00cc33;">&#9670; AUTO FIND BEST SETTINGS</button>
 </div>
 
-<div id="auto-panel" style="display:none;border:1px solid #1a1a4a;background:#05050f;padding:10px;margin-top:6px;">
-  <div class="config-title" style="color:#4444ff;border-color:#1a1a4a;">// GRID SEARCH</div>
-  <div class="config-row">
-    <span class="config-label">SORT BY</span>
+<div id="auto-panel" style="display:none;border:1px solid #0f2a0f;background:#050f05;padding:10px;margin-top:6px;">
+  <div class="config-title">// GRID SEARCH CONFIG</div>
+  <div style="font-size:9px;color:#004a14;letter-spacing:1px;padding-bottom:8px;">BLANK = USE CURRENT CONFIG VALUE</div>
+
+  <div class="config-row"><span class="config-label">SORT BY</span>
     <div style="display:flex;gap:6px;">
-      <button class="order-btn active" id="sort-calmar" onclick="selectSort('calmar')" style="border-color:#4444ff;color:#4444ff;">CALMAR</button>
-      <button class="order-btn" id="sort-winrate" onclick="selectSort('winrate')" style="color:#006618;">WIN%</button>
-      <button class="order-btn" id="sort-pnl" onclick="selectSort('pnl')" style="color:#006618;">PNL</button>
+      <button class="order-btn active" id="sort-calmar" onclick="selectSort('calmar')">CALMAR</button>
+      <button class="order-btn" id="sort-winrate" onclick="selectSort('winrate')">WIN%</button>
+      <button class="order-btn" id="sort-pnl" onclick="selectSort('pnl')">PNL</button>
     </div>
   </div>
-  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// TOLERANCE RANGE (%)</div>
-  <div class="config-row">
-    <span class="config-label">MIN</span>
-    <input class="config-input" id="gs-tol-min" type="number" value="0.04" step="0.01" min="0.01">
+
+  <div class="config-title" style="margin-top:10px;">// RISK PER TRADE ($)</div>
+  <div class="config-row"><span class="config-label">VALUES (comma sep)</span>
+    <input class="config-input" id="gs-risk-vals" type="text" placeholder="50,100,200">
   </div>
-  <div class="config-row">
-    <span class="config-label">MAX</span>
-    <input class="config-input" id="gs-tol-max" type="number" value="0.15" step="0.01" min="0.01">
+
+  <div class="config-title" style="margin-top:10px;">// REWARD RATIO</div>
+  <div class="config-row"><span class="config-label">MIN</span>
+    <input class="config-input" id="gs-rr-min" type="number" value="0.2" step="0.05" min="0.1">
   </div>
-  <div class="config-row">
-    <span class="config-label">STEPS</span>
-    <input class="config-input" id="gs-tol-steps" type="number" value="4" min="2" max="8">
+  <div class="config-row"><span class="config-label">MAX</span>
+    <input class="config-input" id="gs-rr-max" type="number" value="0.5" step="0.05" min="0.1">
   </div>
-  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// STOP DISTANCE RANGE ($)</div>
-  <div class="config-row">
-    <span class="config-label">MIN</span>
+  <div class="config-row"><span class="config-label">STEPS</span>
+    <input class="config-input" id="gs-rr-steps" type="number" value="4" min="2" max="8">
+  </div>
+
+  <div class="config-title" style="margin-top:10px;">// STOP DISTANCE ($)</div>
+  <div class="config-row"><span class="config-label">MIN</span>
     <input class="config-input" id="gs-stop-min" type="number" value="100" min="10">
   </div>
-  <div class="config-row">
-    <span class="config-label">MAX</span>
+  <div class="config-row"><span class="config-label">MAX</span>
     <input class="config-input" id="gs-stop-max" type="number" value="500" min="10">
   </div>
-  <div class="config-row">
-    <span class="config-label">STEPS</span>
+  <div class="config-row"><span class="config-label">STEPS</span>
     <input class="config-input" id="gs-stop-steps" type="number" value="4" min="2" max="8">
   </div>
-  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// RR RANGE</div>
-  <div class="config-row">
-    <span class="config-label">MIN</span>
-    <input class="config-input" id="gs-rr-min" type="number" value="0.2" step="0.1" min="0.1">
+
+  <div class="config-title" style="margin-top:10px;">// ORDER TYPE</div>
+  <div class="config-row"><span class="config-label">TEST</span>
+    <div style="display:flex;gap:6px;">
+      <button class="order-btn active" id="gs-maker-btn" onclick="toggleGsOrder('maker')">MAKER</button>
+      <button class="order-btn active" id="gs-taker-btn" onclick="toggleGsOrder('taker')">TAKER</button>
+    </div>
   </div>
-  <div class="config-row">
-    <span class="config-label">MAX</span>
-    <input class="config-input" id="gs-rr-max" type="number" value="0.5" step="0.1" min="0.1">
+
+  <div class="config-title" style="margin-top:10px;">// TOUCH TOLERANCE (%)</div>
+  <div class="config-row"><span class="config-label">MIN</span>
+    <input class="config-input" id="gs-tol-min" type="number" value="0.04" step="0.01" min="0.01">
   </div>
-  <div class="config-row">
-    <span class="config-label">STEPS</span>
-    <input class="config-input" id="gs-rr-steps" type="number" value="4" min="2" max="6">
+  <div class="config-row"><span class="config-label">MAX</span>
+    <input class="config-input" id="gs-tol-max" type="number" value="0.15" step="0.01" min="0.01">
   </div>
-  <div class="config-title" style="margin-top:8px;color:#4444ff;border-color:#1a1a4a;">// MIN BAR RANGE</div>
-  <div class="config-row">
-    <span class="config-label">VALUES</span>
-    <input class="config-input" id="gs-minbar-vals" type="text" value="3,5,10" style="width:90px;">
+  <div class="config-row"><span class="config-label">STEPS</span>
+    <input class="config-input" id="gs-tol-steps" type="number" value="4" min="2" max="8">
   </div>
-  <div id="gs-combo-count" style="color:#4444ff;font-size:9px;letter-spacing:1px;padding:6px 0;text-align:right;">-- COMBINATIONS</div>
-  <button class="run-btn" id="gs-run-btn" onclick="runGridSearch()" style="background:#0a0a1a;border-color:#4444ff;color:#4444ff;">&#9670; RUN GRID SEARCH</button>
+
+  <div class="config-title" style="margin-top:10px;">// MIN BAR OFFSET</div>
+  <div class="config-row"><span class="config-label">VALUES (comma sep)</span>
+    <input class="config-input" id="gs-minbar-vals" type="text" value="3,5,10">
+  </div>
+
+  <div class="config-title" style="margin-top:10px;">// DAYS</div>
+  <div class="config-row"><span class="config-label">VALUES (comma sep)</span>
+    <input class="config-input" id="gs-days-vals" type="text" placeholder="14,30,60">
+  </div>
+
+  <div id="gs-combo-count" style="color:#00cc33;font-size:9px;letter-spacing:1px;padding:6px 0;text-align:right;">-- COMBINATIONS</div>
+  <button class="run-btn" id="gs-run-btn" onclick="runGridSearch()">&#9670; RUN GRID SEARCH</button>
 </div>
 
 <div id="gs-progress-wrap" style="display:none;margin-top:6px;">
-  <div id="gs-progress-label" style="color:#4444ff;font-size:10px;letter-spacing:1px;margin-bottom:4px;">SEARCHING...</div>
-  <div class="progress-bar-bg" style="border-color:#1a1a4a;background:#0a0a1a;">
-    <div class="progress-bar-fill" id="gs-progress-fill" style="background:#4444ff;width:0%;"></div>
+  <div id="gs-progress-label" style="color:#006618;font-size:10px;letter-spacing:1px;margin-bottom:4px;">SEARCHING...</div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="gs-progress-fill" style="width:0%;"></div>
   </div>
 </div>
 
 <div id="gs-results" style="display:none;margin-top:6px;">
-  <div class="section-title" style="color:#4444ff;border-color:#1a1a4a;">// TOP SETTINGS</div>
+  <div class="section-title">// TOP SETTINGS</div>
   <div id="gs-results-inner"></div>
 </div>
 
@@ -805,7 +820,7 @@ function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate, days, ac
     statCard('DAILY EDGE', '$'+(totalNet/days).toFixed(2)+'/day', totalNet>0?'green':'red',
       'TRADES/DAY: '+(totalTrades/days).toFixed(1)+' &nbsp;|&nbsp; '+days+'d SPAN') +
     statCard('MAX DRAWDOWN', '$'+maxDD.toFixed(2), 'red',
-      (peak>0?(maxDD/peak*100).toFixed(1):0)+'% OF PEAK &nbsp;|&nbsp; AVG DEPTH: $'+avgDDDepth.toFixed(0)) +
+      (peak>0?(maxDD/peak*100).toFixed(1):0)+'% OF PEAK &nbsp;|&nbsp; '+(maxDD/accountSize*100).toFixed(1)+'% OF ACCT') +
     statCard('DD RECOVERY', ddRecovery!==null?ddRecovery+' TRADES ('+ddRecoveryDays+'d)':'NOT RECOVERED',
       ddRecovery!==null&&ddRecovery<20?'green':ddRecovery!==null?'amber':'red',
       'AVG RECOVERY: '+(avgDDRecovery!==null?avgDDRecovery.toFixed(0)+' TRADES':'--')+' &nbsp;|&nbsp; PERIODS: '+numDDPeriods) +
@@ -869,16 +884,17 @@ function setProgress(pct, label){
   document.getElementById('progress-label').textContent = label;
 }
 
-window.addEventListener('load', ()=>{ updateCacheStatus(); updateComboCount(); });
+window.addEventListener('load', updateCacheStatus);
 
 // ── AUTO FIND ─────────────────────────────────────────
 let sortMetric = 'calmar';
 let autoOpen = false;
+let gsOrderTypes = new Set(['maker','taker']);
 
 function toggleAutoFind(){
   autoOpen = !autoOpen;
   document.getElementById('auto-panel').style.display = autoOpen ? 'block' : 'none';
-  document.getElementById('auto-btn').textContent = (autoOpen ? '\u25c6 HIDE' : '\u25c6 AUTO FIND BEST SETTINGS');
+  document.getElementById('auto-btn').innerHTML = (autoOpen ? '&#9660; HIDE AUTO FIND' : '&#9670; AUTO FIND BEST SETTINGS');
 }
 
 function selectSort(s){
@@ -886,37 +902,47 @@ function selectSort(s){
   ['calmar','winrate','pnl'].forEach(k=>{
     const el = document.getElementById('sort-'+k);
     el.classList.toggle('active', k===s);
-    el.style.color = k===s ? '#4444ff' : '#006618';
-    el.style.borderColor = k===s ? '#4444ff' : '#0f2a0f';
   });
+}
+
+function toggleGsOrder(type){
+  if(gsOrderTypes.has(type)) gsOrderTypes.delete(type);
+  else gsOrderTypes.add(type);
+  if(!gsOrderTypes.size) gsOrderTypes.add(type); // keep at least one
+  document.getElementById('gs-maker-btn').classList.toggle('active', gsOrderTypes.has('maker'));
+  document.getElementById('gs-taker-btn').classList.toggle('active', gsOrderTypes.has('taker'));
+  updateComboCount();
 }
 
 function linspace(min, max, steps){
   const arr = [];
-  for(let i=0; i<steps; i++){
-    arr.push(+(min + (max-min)*i/(steps-1)).toFixed(4));
-  }
+  for(let i=0; i<steps; i++) arr.push(+(min + (max-min)*i/(steps-1)).toFixed(4));
   return [...new Set(arr)];
 }
 
 function updateComboCount(){
   try{
-    const tolSteps  = parseInt(document.getElementById('gs-tol-steps').value)||4;
-    const stopSteps = parseInt(document.getElementById('gs-stop-steps').value)||4;
+    const riskVals  = document.getElementById('gs-risk-vals').value.trim();
+    const risks     = riskVals ? riskVals.split(',').filter(Boolean) : [1];
     const rrSteps   = parseInt(document.getElementById('gs-rr-steps').value)||4;
+    const stopSteps = parseInt(document.getElementById('gs-stop-steps').value)||4;
+    const orders    = gsOrderTypes.size;
+    const tolSteps  = parseInt(document.getElementById('gs-tol-steps').value)||4;
     const mbVals    = document.getElementById('gs-minbar-vals').value.split(',').filter(Boolean);
-    const total     = tolSteps * stopSteps * rrSteps * mbVals.length;
+    const daysVals  = document.getElementById('gs-days-vals').value.trim();
+    const days      = daysVals ? daysVals.split(',').filter(Boolean) : [1];
+    const total     = risks.length * rrSteps * stopSteps * orders * tolSteps * mbVals.length * days.length;
     document.getElementById('gs-combo-count').textContent = total + ' COMBINATIONS';
   }catch(e){}
 }
 
-// Wire up combo count updates
-['gs-tol-steps','gs-stop-steps','gs-rr-steps','gs-minbar-vals'].forEach(id=>{
-  setTimeout(()=>{
+setTimeout(()=>{
+  ['gs-risk-vals','gs-rr-steps','gs-stop-steps','gs-tol-steps','gs-minbar-vals','gs-days-vals'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', updateComboCount);
-  }, 100);
-});
+  });
+  updateComboCount();
+}, 200);
 
 function quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stopDist, rrRatio, risk, minBar, feeRate){
   const trades = [];
@@ -993,79 +1019,86 @@ function scoreCombo(trades, days){
 }
 
 async function runGridSearch(){
-  const days       = parseInt(document.getElementById('cfg-days').value)||30;
-  const risk       = parseFloat(document.getElementById('cfg-risk').value)||100;
-  const feeRate    = (orderType==='maker'?MAKER_FEE:TAKER_FEE)/100;
   const activeLevels = Array.from(document.querySelectorAll('.lvl-btn.active')).map(b=>parseInt(b.dataset.deg));
   const activeHours  = new Set(Array.from(document.querySelectorAll('.hr-btn.active')).map(b=>parseInt(b.dataset.hr)));
-
   if(!activeLevels.length){ alert('SELECT AT LEAST ONE FAN LEVEL'); return; }
 
-  // Build param grid
-  const tolMin   = parseFloat(document.getElementById('gs-tol-min').value);
-  const tolMax   = parseFloat(document.getElementById('gs-tol-max').value);
-  const tolSteps = parseInt(document.getElementById('gs-tol-steps').value)||4;
-  const stopMin  = parseFloat(document.getElementById('gs-stop-min').value);
-  const stopMax  = parseFloat(document.getElementById('gs-stop-max').value);
-  const stopSteps= parseInt(document.getElementById('gs-stop-steps').value)||4;
-  const rrMin    = parseFloat(document.getElementById('gs-rr-min').value);
-  const rrMax    = parseFloat(document.getElementById('gs-rr-max').value);
-  const rrSteps  = parseInt(document.getElementById('gs-rr-steps').value)||4;
-  const mbVals   = document.getElementById('gs-minbar-vals').value.split(',').map(Number).filter(n=>!isNaN(n));
+  // Build param grids — blank = use current config value
+  const curRisk  = parseFloat(document.getElementById('cfg-risk').value)||100;
+  const curDays  = parseInt(document.getElementById('cfg-days').value)||30;
 
-  const tols  = linspace(tolMin, tolMax, tolSteps);
-  const stops = linspace(stopMin, stopMax, stopSteps);
-  const rrs   = linspace(rrMin, rrMax, rrSteps);
-  const total = tols.length * stops.length * rrs.length * mbVals.length;
+  const riskRaw  = document.getElementById('gs-risk-vals').value.trim();
+  const risks    = riskRaw ? riskRaw.split(',').map(Number).filter(n=>!isNaN(n)&&n>0) : [curRisk];
+
+  const daysRaw  = document.getElementById('gs-days-vals').value.trim();
+  const daysArr  = daysRaw ? daysRaw.split(',').map(Number).filter(n=>!isNaN(n)&&n>0) : [curDays];
+
+  const tols  = linspace(parseFloat(document.getElementById('gs-tol-min').value), parseFloat(document.getElementById('gs-tol-max').value), parseInt(document.getElementById('gs-tol-steps').value)||4);
+  const stops = linspace(parseFloat(document.getElementById('gs-stop-min').value), parseFloat(document.getElementById('gs-stop-max').value), parseInt(document.getElementById('gs-stop-steps').value)||4);
+  const rrs   = linspace(parseFloat(document.getElementById('gs-rr-min').value), parseFloat(document.getElementById('gs-rr-max').value), parseInt(document.getElementById('gs-rr-steps').value)||4);
+  const mbs   = document.getElementById('gs-minbar-vals').value.split(',').map(Number).filter(n=>!isNaN(n));
+  const orders= [...gsOrderTypes];
+
+  const totalCombos = risks.length * rrs.length * stops.length * orders.length * tols.length * mbs.length * daysArr.length;
 
   document.getElementById('gs-run-btn').disabled = true;
   document.getElementById('gs-results').style.display = 'none';
   document.getElementById('gs-progress-wrap').style.display = 'block';
 
-  // Get/fetch candles
-  let candles = loadCachedCandles(days);
-  if(!candles){
-    document.getElementById('gs-progress-label').textContent = 'FETCHING CANDLES...';
-    try{
-      candles = await fetchAllCandles(days, pct=>{
-        document.getElementById('gs-progress-fill').style.width = (pct*0.3)+'%';
-        document.getElementById('gs-progress-label').textContent = 'FETCHING... '+pct+'%';
-      });
-      saveCachedCandles(days, candles);
-    }catch(e){
-      document.getElementById('gs-progress-label').textContent = 'FETCH ERROR';
-      document.getElementById('gs-run-btn').disabled = false;
-      return;
+  // Pre-fetch all needed candle sets
+  const candleCache = {};
+  for(const d of daysArr){
+    let candles = loadCachedCandles(d);
+    if(!candles){
+      document.getElementById('gs-progress-label').textContent = 'FETCHING '+d+'d CANDLES...';
+      try{
+        candles = await fetchAllCandles(d, pct=>{
+          document.getElementById('gs-progress-fill').style.width = (pct*0.3)+'%';
+        });
+        saveCachedCandles(d, candles);
+      }catch(e){
+        document.getElementById('gs-progress-label').textContent = 'FETCH ERROR';
+        document.getElementById('gs-run-btn').disabled = false;
+        return;
+      }
     }
-  }
-
-  // Build anchor opens
-  const anchorOpens = {};
-  for(const c of candles){
-    const anchor = getAnchor0900(c.time*1000);
-    const key    = anchor.toISOString().slice(0,10);
-    if(!anchorOpens[key]){
-      const anchorSec = anchor.getTime()/1000;
-      if(Math.abs(c.time-anchorSec)<180) anchorOpens[key] = c.open;
+    // Build anchor opens for this candle set
+    const anchorOpens = {};
+    for(const c of candles){
+      const anchor = getAnchor0900(c.time*1000);
+      const key    = anchor.toISOString().slice(0,10);
+      if(!anchorOpens[key]){
+        const anchorSec = anchor.getTime()/1000;
+        if(Math.abs(c.time-anchorSec)<180) anchorOpens[key] = c.open;
+      }
     }
+    candleCache[d] = {candles, anchorOpens};
   }
 
   const results = [];
   let done = 0;
 
-  for(const tol of tols){
-    for(const stop of stops){
+  for(const days of daysArr){
+    const {candles, anchorOpens} = candleCache[days];
+    for(const risk of risks){
       for(const rr of rrs){
-        for(const mb of mbVals){
-          const trades = quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stop, rr, risk, mb, feeRate);
-          const score  = scoreCombo(trades, days);
-          if(score) results.push({tol, stop, rr, mb, ...score});
-          done++;
-          if(done % 4 === 0){
-            const pct = Math.round(done/total*100);
-            document.getElementById('gs-progress-fill').style.width = pct+'%';
-            document.getElementById('gs-progress-label').textContent = 'TESTING '+done+'/'+total+' COMBINATIONS...';
-            await new Promise(r=>setTimeout(r,0));
+        for(const stop of stops){
+          for(const order of orders){
+            const feeRate = (order==='maker'?MAKER_FEE:TAKER_FEE)/100;
+            for(const tol of tols){
+              for(const mb of mbs){
+                const trades = quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stop, rr, risk, mb, feeRate);
+                const score  = scoreCombo(trades, days);
+                if(score) results.push({days, risk, rr, stop, order, tol, mb, ...score});
+                done++;
+                if(done % 8 === 0){
+                  const pct = Math.round(done/totalCombos*100);
+                  document.getElementById('gs-progress-fill').style.width = pct+'%';
+                  document.getElementById('gs-progress-label').textContent = 'TESTING '+done+'/'+totalCombos+'...';
+                  await new Promise(r=>setTimeout(r,0));
+                }
+              }
+            }
           }
         }
       }
@@ -1074,46 +1107,49 @@ async function runGridSearch(){
 
   document.getElementById('gs-progress-label').textContent = 'DONE -- '+results.length+' VALID RESULTS';
 
-  // Sort
   results.sort((a,b)=>{
     if(sortMetric==='calmar')  return b.calmar-a.calmar;
     if(sortMetric==='winrate') return b.winRate-a.winRate;
     return b.netPnl-a.netPnl;
   });
 
-  const top = results.slice(0,15);
+  const top = results.slice(0,20);
   const ri  = document.getElementById('gs-results-inner');
-  ri.innerHTML = '';
+  const th  = 'style="color:#006618;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 5px;border-bottom:1px solid #0f2a0f;font-weight:normal;"';
+  const showDays  = daysArr.length > 1;
+  const showRisk  = risks.length > 1;
+  const showOrder = orders.length > 1;
 
-  // Header
-  ri.innerHTML += '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;">'
-    +'<thead><tr>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">TOL%</th>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">STOP$</th>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">RR</th>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">MB</th>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">WIN%</th>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">PNL</th>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;">CALMAR</th>'
-    +'<th style="color:#4444ff;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #1a1a4a;font-weight:normal;"></th>'
-    +'</tr></thead><tbody id="gs-tbody"></tbody></table>';
+  let header = '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;"><thead><tr>';
+  if(showDays)  header += '<th '+th+'>DAYS</th>';
+  if(showRisk)  header += '<th '+th+'>RISK</th>';
+  header += '<th '+th+'>RR</th><th '+th+'>STOP</th>';
+  if(showOrder) header += '<th '+th+'>ORDER</th>';
+  header += '<th '+th+'>TOL%</th><th '+th+'>MB</th><th '+th+'>WIN%</th><th '+th+'>PNL</th><th '+th+'>CALMAR</th><th '+th+'></th>';
+  header += '</tr></thead><tbody id="gs-tbody"></tbody></table>';
+  ri.innerHTML = header;
 
   const tbody = document.getElementById('gs-tbody');
-  top.forEach((r,idx)=>{
-    const wrCls = r.winRate>=85?'color:#00ff41':r.winRate>=50?'color:#ffb300':'color:#ff3131';
-    const pnlCls= r.netPnl>0?'color:#00ff41':'color:#ff3131';
-    const calCls= r.calmar>=3?'color:#00ff41':r.calmar>=1?'color:#ffb300':'color:#ff3131';
-    tbody.innerHTML += '<tr>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.tol+'</td>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.stop+'</td>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.rr+'</td>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;color:#00aa28;">'+r.mb+'</td>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;'+wrCls+'">'+r.winRate.toFixed(1)+'%</td>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;'+pnlCls+'">$'+r.netPnl.toFixed(0)+'</td>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;'+calCls+'">'+r.calmar.toFixed(2)+'</td>'
-      +'<td style="padding:5px 6px;font-size:10px;border-bottom:1px solid #0a0a1a;">'
-      +'<button onclick="applySettings('+r.tol+','+r.stop+','+r.rr+','+r.mb+')" style="background:#0a0a1a;border:1px solid #4444ff;color:#4444ff;font-family:\'Share Tech Mono\',monospace;font-size:9px;padding:2px 6px;cursor:pointer;">USE</button>'
+  const td = 'style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;color:#00aa28;"';
+  top.forEach(r=>{
+    const wrCls  = r.winRate>=85?'color:#00ff41':r.winRate>=50?'color:#ffb300':'color:#ff3131';
+    const pnlCls = r.netPnl>0?'color:#00ff41':'color:#ff3131';
+    const calCls = r.calmar>=3?'color:#00ff41':r.calmar>=1?'color:#ffb300':'color:#ff3131';
+    let row = '<tr>';
+    if(showDays)  row += '<td '+td+'>'+r.days+'</td>';
+    if(showRisk)  row += '<td '+td+'>$'+r.risk+'</td>';
+    row += '<td '+td+'>'+r.rr+'</td>';
+    row += '<td '+td+'>$'+r.stop+'</td>';
+    if(showOrder) row += '<td '+td+'>'+r.order.toUpperCase()+'</td>';
+    row += '<td '+td+'>'+r.tol+'</td>';
+    row += '<td '+td+'>'+r.mb+'</td>';
+    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+wrCls+'">'+r.winRate.toFixed(1)+'%</td>';
+    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+pnlCls+'">$'+r.netPnl.toFixed(0)+'</td>';
+    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+calCls+'">'+r.calmar.toFixed(2)+'</td>';
+    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;">'
+      +'<button onclick="applySettings('+r.tol+','+r.stop+','+r.rr+','+r.mb+','+r.risk+','+r.days+',\''+r.order+'\')" style="background:#003a10;border:1px solid #00cc33;color:#00cc33;font-family:\'Share Tech Mono\',monospace;font-size:9px;padding:2px 6px;cursor:pointer;">USE</button>'
       +'</td></tr>';
+    tbody.innerHTML += row;
   });
 
   document.getElementById('gs-results').style.display = 'block';
@@ -1122,17 +1158,17 @@ async function runGridSearch(){
   document.getElementById('gs-results').scrollIntoView({behavior:'smooth'});
 }
 
-function applySettings(tol, stop, rr, mb){
-  document.getElementById('cfg-tol').value   = tol;
-  document.getElementById('cfg-stop').value  = stop;
-  document.getElementById('cfg-rr').value    = rr;
-  document.getElementById('cfg-minbar').value= mb;
-  // Scroll to top and highlight
+function applySettings(tol, stop, rr, mb, risk, days, order){
+  document.getElementById('cfg-tol').value    = tol;
+  document.getElementById('cfg-stop').value   = stop;
+  document.getElementById('cfg-rr').value     = rr;
+  document.getElementById('cfg-minbar').value = mb;
+  if(risk) document.getElementById('cfg-risk').value = risk;
+  if(days) document.getElementById('cfg-days').value = days;
+  if(order) selectOrder(order);
   document.querySelector('.config-panel').scrollIntoView({behavior:'smooth'});
   document.getElementById('bar-status').textContent = 'SETTINGS APPLIED -- PRESS RUN';
 }
-
-window.addEventListener('load', updateCacheStatus);
 </script>
 
 </body>
