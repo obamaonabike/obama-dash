@@ -10,6 +10,7 @@
 <title>ObamaDash — Backtest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{
@@ -392,6 +393,19 @@ display:none;
   </table>
   <div class="section-title">// TRADE LOG <span style="color:#004a14;font-size:9px">(LAST 100)</span></div>
   <div class="trade-log-wrap" id="trade-log"></div>
+
+  <div style="margin-top:12px;">
+    <button class="run-btn" onclick="generateReport()" style="border-color:#00ffaa;color:#00ffaa;background:#00110a;">&#9632; GENERATE QUANTSTATS REPORT</button>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div id="report-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#030803;z-index:999;overflow-y:auto;padding:12px 10px;padding-top:env(safe-area-inset-top);">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #0f2a0f;padding-bottom:8px;">
+    <span style="color:#00ffaa;font-size:11px;letter-spacing:4px;">QUANTSTATS REPORT</span>
+    <button onclick="document.getElementById('report-modal').style.display='none'" style="background:#030803;border:1px solid #0f2a0f;color:#006618;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;">CLOSE</button>
+  </div>
+  <div id="report-content"></div>
 </div>
 ```
 
@@ -699,6 +713,8 @@ function recordResult(lv, hr, result, netPnl){
 }
 
 function renderResults(trades, byLevel, byHour, risk, rrRatio, feeRate, days, accountSize){
+  // Store for report generation
+  _lastTrades = trades; _lastRisk = risk; _lastRR = rrRatio; _lastDays = days; _lastAccountSize = accountSize||10000;
   const totalTrades = trades.length;
   if(!totalTrades){
     document.getElementById('stat-grid').innerHTML =
@@ -882,6 +898,183 @@ function statCard(label, value, cls, sub){
 function setProgress(pct, label){
   document.getElementById('progress-fill').style.width = pct+'%';
   document.getElementById('progress-label').textContent = label;
+}
+
+// ── QUANTSTATS REPORT ─────────────────────────────────
+let _lastTrades = [], _lastRisk = 100, _lastRR = 0.3, _lastDays = 30, _lastAccountSize = 10000;
+
+function generateReport(){
+  if(!_lastTrades.length){ alert('RUN BACKTEST FIRST'); return; }
+  const modal = document.getElementById('report-modal');
+  modal.style.display = 'block';
+  buildReport(_lastTrades, _lastRisk, _lastRR, _lastDays, _lastAccountSize);
+}
+
+function buildReport(trades, risk, rrRatio, days, accountSize){
+  const rc = document.getElementById('report-content');
+  rc.innerHTML = '<div style="color:#006618;font-size:10px;letter-spacing:2px;padding:20px;text-align:center;">BUILDING REPORT...</div>';
+
+  setTimeout(()=>{
+    const wins      = trades.filter(t=>t.result==='WIN').length;
+    const losses    = trades.filter(t=>t.result==='LOSS').length;
+    const total     = trades.length;
+    const winRate   = wins/total*100;
+    const breakEven = 1/(1+rrRatio)*100;
+    const netPnl    = trades.reduce((s,t)=>s+t.netPnl,0);
+    const grossPnl  = trades.reduce((s,t)=>s+t.grossPnl,0);
+    const fees      = trades.reduce((s,t)=>s+t.feeCost,0);
+    const avgR      = netPnl/(total*risk);
+    const grossWins = trades.filter(t=>t.result==='WIN').reduce((s,t)=>s+t.grossPnl,0);
+    const grossLoss = Math.abs(trades.filter(t=>t.result==='LOSS').reduce((s,t)=>s+t.grossPnl,0));
+    const pf        = grossLoss ? grossWins/grossLoss : Infinity;
+
+    // Equity curve & drawdown
+    let peak=0, running=0, maxDD=0, maxDDPct=0;
+    const equity=[], ddCurve=[], labels=[];
+    let consecLoss=0, maxConsecLoss=0, consecWin=0, maxConsecWin=0;
+    let tradesInDD=0;
+    for(const t of trades){
+      running += t.netPnl;
+      equity.push(running);
+      if(running>peak) peak=running;
+      const dd = peak-running;
+      if(dd>maxDD){ maxDD=dd; maxDDPct=peak>0?dd/peak*100:0; }
+      ddCurve.push(-dd);
+      if(dd>0) tradesInDD++;
+      labels.push(new Date(t.time*1000).toISOString().slice(0,10));
+      if(t.result==='LOSS'){consecLoss++;consecWin=0;}
+      else{consecWin++;consecLoss=0;}
+      if(consecLoss>maxConsecLoss) maxConsecLoss=consecLoss;
+      if(consecWin>maxConsecWin)   maxConsecWin=consecWin;
+    }
+    const pctTimeInDD = (tradesInDD/total*100).toFixed(1);
+    const annReturn   = netPnl*(365/days);
+    const calmar      = maxDD>0?(annReturn/maxDD).toFixed(2):'inf';
+    const avgWin      = grossWins/wins;
+    const avgLoss     = losses>0?grossLoss/losses:0;
+    const expectancy  = (winRate/100*avgWin) - ((1-winRate/100)*avgLoss);
+    const riskOfRuin  = (Math.pow((1-winRate/100)/(winRate/100||0.5), accountSize/risk)*100).toFixed(3);
+    const sharpe      = (() => {
+      const returns = trades.map(t=>t.netPnl/risk);
+      const mean    = returns.reduce((s,r)=>s+r,0)/returns.length;
+      const std     = Math.sqrt(returns.reduce((s,r)=>s+(r-mean)**2,0)/returns.length);
+      return std>0 ? ((mean/std)*Math.sqrt(252)).toFixed(2) : '0';
+    })();
+
+    // Monthly returns
+    const monthly = {};
+    for(const t of trades){
+      const d  = new Date(t.time*1000);
+      const key= d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+      monthly[key] = (monthly[key]||0) + t.netPnl;
+    }
+    const monthKeys = Object.keys(monthly).sort();
+    const years  = [...new Set(monthKeys.map(k=>k.slice(0,4)))];
+    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+    // Rolling win rate (20-trade window)
+    const rollWin = [];
+    const rollLabels = [];
+    for(let i=19;i<trades.length;i++){
+      const slice = trades.slice(i-19,i+1);
+      rollWin.push(slice.filter(t=>t.result==='WIN').length/20*100);
+      rollLabels.push(new Date(trades[i].time*1000).toISOString().slice(0,10));
+    }
+
+    // Build HTML
+    let html = '';
+
+    // ── KEY METRICS ──
+    html += '<div class="section-title" style="color:#00ffaa;border-color:#00ffaa33;">// PERFORMANCE SUMMARY</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;">';
+    const m = (label,val,sub,cls='')=> `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value ${cls}" style="font-size:14px;">${val}</div>${sub?`<div class="stat-sub">${sub}</div>`:''}</div>`;
+    html += m('NET PNL','$'+netPnl.toFixed(2),'GROSS: $'+grossPnl.toFixed(2),netPnl>0?'green':'red');
+    html += m('WIN RATE',winRate.toFixed(1)+'%','B/E: '+breakEven.toFixed(1)+'% | TARGET: 85%',winRate>=85?'green':winRate>=breakEven?'amber':'red');
+    html += m('SHARPE RATIO',sharpe,'>1 = GOOD | >2 = GREAT',parseFloat(sharpe)>=2?'green':parseFloat(sharpe)>=1?'amber':'red');
+    html += m('CALMAR RATIO',calmar,'ANN RETURN / MAX DD',parseFloat(calmar)>=3?'green':parseFloat(calmar)>=1?'amber':'red');
+    html += m('PROFIT FACTOR',pf.toFixed(2),'GROSS WINS / GROSS LOSSES',pf>=2?'green':pf>=1.5?'amber':'red');
+    html += m('EXPECTANCY','$'+expectancy.toFixed(2),'/TRADE AVG EXPECTED PNL',expectancy>0?'green':'red');
+    html += m('MAX DRAWDOWN','$'+maxDD.toFixed(2),maxDDPct.toFixed(1)+'% OF PEAK | '+(maxDD/accountSize*100).toFixed(1)+'% OF ACCOUNT','red');
+    html += m('TIME IN DD',pctTimeInDD+'%','% OF TRADES BELOW EQUITY HIGH',parseFloat(pctTimeInDD)<30?'green':parseFloat(pctTimeInDD)<50?'amber':'red');
+    html += m('RISK OF RUIN',riskOfRuin+'%','AT $'+risk+' RISK ON $'+accountSize.toLocaleString(),parseFloat(riskOfRuin)<0.1?'green':parseFloat(riskOfRuin)<1?'amber':'red');
+    html += m('MAX CONSEC LOSS',maxConsecLoss,'MAX WIN STREAK: '+maxConsecWin,maxConsecLoss<=3?'green':maxConsecLoss<=6?'amber':'red');
+    html += m('AVG WIN','$'+avgWin.toFixed(2),'PER WINNING TRADE','green');
+    html += m('AVG LOSS','$'+avgLoss.toFixed(2),'PER LOSING TRADE','red');
+    html += m('TOTAL FEES','$'+fees.toFixed(2),(fees/Math.abs(grossPnl||1)*100).toFixed(0)+'% OF GROSS PNL','amber');
+    html += m('TOTAL TRADES',total,wins+'W / '+losses+'L');
+    html += '</div>';
+
+    // ── CHARTS ──
+    html += '<div class="section-title" style="color:#00ffaa;border-color:#00ffaa33;">// EQUITY CURVE</div>';
+    html += '<canvas id="equity-chart" style="width:100%;height:180px;margin-bottom:12px;"></canvas>';
+
+    html += '<div class="section-title" style="color:#00ffaa;border-color:#00ffaa33;">// DRAWDOWN</div>';
+    html += '<canvas id="dd-chart" style="width:100%;height:120px;margin-bottom:12px;"></canvas>';
+
+    html += '<div class="section-title" style="color:#00ffaa;border-color:#00ffaa33;">// ROLLING WIN RATE (20 TRADES)</div>';
+    html += '<canvas id="roll-chart" style="width:100%;height:120px;margin-bottom:12px;"></canvas>';
+
+    // ── MONTHLY RETURNS ──
+    html += '<div class="section-title" style="color:#00ffaa;border-color:#00ffaa33;">// MONTHLY RETURNS</div>';
+    html += '<div style="overflow-x:auto;margin-bottom:14px;"><table style="width:100%;border-collapse:collapse;">';
+    html += '<thead><tr><th style="color:#006618;font-size:9px;padding:4px 5px;text-align:left;border-bottom:1px solid #0f2a0f;font-weight:normal;">YEAR</th>';
+    months.forEach(mn=>{ html += '<th style="color:#006618;font-size:9px;padding:4px 4px;text-align:right;border-bottom:1px solid #0f2a0f;font-weight:normal;">'+mn+'</th>'; });
+    html += '<th style="color:#006618;font-size:9px;padding:4px 5px;text-align:right;border-bottom:1px solid #0f2a0f;font-weight:normal;">TOTAL</th></tr></thead><tbody>';
+    for(const yr of years){
+      let ytd = 0;
+      html += '<tr><td style="padding:4px 5px;font-size:9px;color:#ffb300;border-bottom:1px solid #091409;">'+yr+'</td>';
+      for(let m=1;m<=12;m++){
+        const key = yr+'-'+String(m).padStart(2,'0');
+        const val = monthly[key];
+        ytd += val||0;
+        if(val===undefined){
+          html += '<td style="padding:4px 4px;font-size:9px;color:#004a14;text-align:right;border-bottom:1px solid #091409;">--</td>';
+        } else {
+          const cls = val>0?'#00ff41':val<0?'#ff3131':'#006618';
+          html += '<td style="padding:4px 4px;font-size:9px;color:'+cls+';text-align:right;border-bottom:1px solid #091409;">'+(val>0?'+':'')+val.toFixed(0)+'</td>';
+        }
+      }
+      const ytdCls = ytd>0?'#00ff41':ytd<0?'#ff3131':'#006618';
+      html += '<td style="padding:4px 5px;font-size:9px;color:'+ytdCls+';text-align:right;border-bottom:1px solid #091409;font-weight:bold;">'+(ytd>0?'+':'')+ytd.toFixed(0)+'</td></tr>';
+    }
+    html += '</tbody></table></div>';
+
+    rc.innerHTML = html;
+
+    // ── RENDER CHARTS ──
+    const chartDefaults = {
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:0},
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#004a14',font:{size:8},maxTicksLimit:8},grid:{color:'#091409'},border:{color:'#0f2a0f'}},
+        y:{ticks:{color:'#004a14',font:{size:8}},grid:{color:'#091409'},border:{color:'#0f2a0f'}}
+      }
+    };
+
+    new Chart(document.getElementById('equity-chart'),{
+      type:'line',
+      data:{labels,datasets:[{data:equity,borderColor:'#00ff41',borderWidth:1.5,pointRadius:0,fill:{target:'origin',above:'rgba(0,255,65,0.05)',below:'rgba(255,49,49,0.05)'}}]},
+      options:{...chartDefaults, scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,ticks:{...chartDefaults.scales.y.ticks,callback:v=>'$'+v.toFixed(0)}}}}
+    });
+
+    new Chart(document.getElementById('dd-chart'),{
+      type:'line',
+      data:{labels,datasets:[{data:ddCurve,borderColor:'#ff3131',borderWidth:1,pointRadius:0,fill:{target:'origin',below:'rgba(255,49,49,0.1)'}}]},
+      options:{...chartDefaults, scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,ticks:{...chartDefaults.scales.y.ticks,callback:v=>'$'+v.toFixed(0)}}}}
+    });
+
+    new Chart(document.getElementById('roll-chart'),{
+      type:'line',
+      data:{labels:rollLabels,datasets:[
+        {data:rollWin,borderColor:'#00cc33',borderWidth:1.5,pointRadius:0,fill:false},
+        {data:Array(rollLabels.length).fill(breakEven),borderColor:'#ff3131',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
+        {data:Array(rollLabels.length).fill(85),borderColor:'#00ff41',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
+      ]},
+      options:{...chartDefaults, scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,min:0,max:100,ticks:{...chartDefaults.scales.y.ticks,callback:v=>v+'%'}}}}
+    });
+
+  }, 50);
 }
 
 window.addEventListener('load', updateCacheStatus);
