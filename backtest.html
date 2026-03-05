@@ -736,6 +736,9 @@ async function _runBacktest(){
   btn.disabled = false;
 }
 
+</script>
+
+<script>
 function recordResult(lv, hr, result, netPnl){
   const win = result === 'WIN';
   lv.trades++; hr.trades++;
@@ -946,30 +949,31 @@ function generateReport(){
 
 <script>
 function buildAndDownloadReport(trades, risk, rrRatio, days, accountSize){
-  const wins      = trades.filter(t=>t.result==='WIN').length;
-  const losses    = trades.filter(t=>t.result==='LOSS').length;
-  const total     = trades.length;
-  const winRate   = wins/total*100;
-  const breakEven = 1/(1+rrRatio)*100;
-  const netPnl    = trades.reduce((s,t)=>s+t.netPnl,0);
-  const grossPnl  = trades.reduce((s,t)=>s+t.grossPnl,0);
-  const fees      = trades.reduce((s,t)=>s+t.feeCost,0);
-  const grossWins = trades.filter(t=>t.result==='WIN').reduce((s,t)=>s+t.grossPnl,0);
-  const grossLoss = Math.abs(trades.filter(t=>t.result==='LOSS').reduce((s,t)=>s+t.grossPnl,0));
-  const pf        = grossLoss ? grossWins/grossLoss : Infinity;
-  const avgWin    = wins>0?grossWins/wins:0;
-  const avgLoss   = losses>0?grossLoss/losses:0;
-  const expectancy= (winRate/100*avgWin) - ((1-winRate/100)*avgLoss);
+  var wins      = trades.filter(function(t){return t.result==='WIN';}).length;
+  var losses    = trades.filter(function(t){return t.result==='LOSS';}).length;
+  var total     = trades.length;
+  var winRate   = wins/total*100;
+  var breakEven = 1/(1+rrRatio)*100;
+  var netPnl    = trades.reduce(function(s,t){return s+t.netPnl;},0);
+  var grossPnl  = trades.reduce(function(s,t){return s+t.grossPnl;},0);
+  var fees      = trades.reduce(function(s,t){return s+t.feeCost;},0);
+  var grossWins = trades.filter(function(t){return t.result==='WIN';}).reduce(function(s,t){return s+t.grossPnl;},0);
+  var grossLoss = Math.abs(trades.filter(function(t){return t.result==='LOSS';}).reduce(function(s,t){return s+t.grossPnl;},0));
+  var pf        = grossLoss ? grossWins/grossLoss : Infinity;
+  var avgWin    = wins>0?grossWins/wins:0;
+  var avgLoss   = losses>0?grossLoss/losses:0;
+  var expectancy= (winRate/100*avgWin) - ((1-winRate/100)*avgLoss);
 
-  let peak=0, running=0, maxDD=0, maxDDPct=0;
-  const equity=[], ddCurve=[], labels=[];
-  let consecLoss=0, maxConsecLoss=0, consecWin=0, maxConsecWin=0, tradesInDD=0;
-  for(const t of trades){
+  var peak=0, running=0, maxDD=0;
+  var equity=[], ddCurve=[], labels=[];
+  var consecLoss=0, maxConsecLoss=0, consecWin=0, maxConsecWin=0, tradesInDD=0;
+  for(var i=0;i<trades.length;i++){
+    var t=trades[i];
     running += t.netPnl;
     equity.push(+running.toFixed(2));
     if(running>peak) peak=running;
-    const dd=peak-running;
-    if(dd>maxDD){maxDD=dd;maxDDPct=peak>0?dd/peak*100:0;}
+    var dd=peak-running;
+    if(dd>maxDD) maxDD=dd;
     ddCurve.push(+(-dd).toFixed(2));
     if(dd>0) tradesInDD++;
     labels.push(new Date(t.time*1000).toISOString().slice(0,10));
@@ -977,500 +981,490 @@ function buildAndDownloadReport(trades, risk, rrRatio, days, accountSize){
     if(consecLoss>maxConsecLoss) maxConsecLoss=consecLoss;
     if(consecWin>maxConsecWin)   maxConsecWin=consecWin;
   }
-  const pctTimeInDD = (tradesInDD/total*100).toFixed(1);
-  const annReturn   = netPnl*(365/days);
-  const calmar      = maxDD>0?(annReturn/maxDD).toFixed(2):'inf';
-  const riskOfRuin  = (Math.pow((1-winRate/100)/(winRate/100||0.5), accountSize/risk)*100).toFixed(3);
-  const sharpe      = (()=>{
-    const rets = trades.map(t=>t.netPnl/risk);
-    const mean = rets.reduce((s,r)=>s+r,0)/rets.length;
-    const std  = Math.sqrt(rets.reduce((s,r)=>s+(r-mean)**2,0)/rets.length);
-    return std>0?((mean/std)*Math.sqrt(252)).toFixed(2):'0';
-  })();
+  var pctTimeInDD = (tradesInDD/total*100).toFixed(1);
+  var annReturn   = netPnl*(365/days);
+  var calmar      = maxDD>0?(annReturn/maxDD).toFixed(2):'inf';
+  var riskOfRuin  = (Math.pow((1-winRate/100)/(winRate/100||0.5), accountSize/risk)*100).toFixed(3);
+  var rets = trades.map(function(t){return t.netPnl/risk;});
+  var mean = rets.reduce(function(s,r){return s+r;},0)/rets.length;
+  var std  = Math.sqrt(rets.reduce(function(s,r){return s+(r-mean)*(r-mean);},0)/rets.length);
+  var sharpe = std>0?((mean/std)*Math.sqrt(252)).toFixed(2):'0';
 
-  const monthly={};
-  for(const t of trades){
-    const d=new Date(t.time*1000);
-    const key=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
-    monthly[key]=(monthly[key]||0)+t.netPnl;
+  var monthly={};
+  for(var i=0;i<trades.length;i++){
+    var d=new Date(trades[i].time*1000);
+    var key=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+    monthly[key]=(monthly[key]||0)+trades[i].netPnl;
   }
-  const monthKeys=Object.keys(monthly).sort();
-  const years=[...new Set(monthKeys.map(k=>k.slice(0,4)))];
-  const MONTHS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var monthKeys=Object.keys(monthly).sort();
+  var years=[...new Set(monthKeys.map(function(k){return k.slice(0,4);}))];
+  var MONTHS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
-  const rollWin=[], rollLabels=[];
-  for(let i=19;i<trades.length;i++){
-    rollWin.push(trades.slice(i-19,i+1).filter(t=>t.result==='WIN').length/20*100);
+  var rollWin=[], rollLabels=[];
+  for(var i=19;i<trades.length;i++){
+    rollWin.push(trades.slice(i-19,i+1).filter(function(t){return t.result==='WIN';}).length/20*100);
     rollLabels.push(new Date(trades[i].time*1000).toISOString().slice(0,10));
   }
 
-  const winByLevel={}, winByHour={};
-  for(const t of trades){
+  var winByLevel={}, winByHour={};
+  for(var i=0;i<trades.length;i++){
+    var t=trades[i];
     if(!winByLevel[t.level]) winByLevel[t.level]={w:0,l:0,pnl:0};
     winByLevel[t.level][t.result==='WIN'?'w':'l']++;
     winByLevel[t.level].pnl+=t.netPnl;
-    const hr=new Date(t.time*1000).getUTCHours();
+    var hr=new Date(t.time*1000).getUTCHours();
     if(!winByHour[hr]) winByHour[hr]={w:0,l:0,pnl:0};
     winByHour[hr][t.result==='WIN'?'w':'l']++;
     winByHour[hr].pnl+=t.netPnl;
   }
 
-  const generated = new Date().toUTCString().slice(5,22).toUpperCase()+' UTC';
+  var generated = new Date().toUTCString().slice(5,22).toUpperCase()+' UTC';
 
-  const sc=(g,v,r)=>{
-    const col=r==='green'?'#00ff41':r==='amber'?'#ffb300':r==='red'?'#ff3131':'#00cc33';
-    return `<div class="sc"><div class="sl">${g}</div><div class="sv" style="color:${col}">${v}</div></div>`;
-  };
+  function sc(g,v,r){
+    var col = r==='green'?'#00ff41':r==='amber'?'#ffb300':r==='red'?'#ff3131':'#00cc33';
+    return '<div class="sc"><div class="sl">'+g+'</div><div class="sv" style="color:'+col+'">'+v+'</div></div>';
+  }
 
-  let monthlyTable='<table class="mt"><thead><tr><th>YEAR</th>';
-  MONTHS.forEach(m=>monthlyTable+=`<th>${m}</th>`);
+  var monthlyTable='<table class="mt"><thead><tr><th>YEAR</th>';
+  for(var m=0;m<MONTHS.length;m++) monthlyTable+='<th>'+MONTHS[m]+'</th>';
   monthlyTable+='<th>TOTAL</th></tr></thead><tbody>';
-  for(const yr of years){
-    let ytd=0;
-    monthlyTable+=`<tr><td class="yr">${yr}</td>`;
-    for(let m=1;m<=12;m++){
-      const key=yr+'-'+String(m).padStart(2,'0');
-      const val=monthly[key];
+  for(var yi=0;yi<years.length;yi++){
+    var yr=years[yi]; var ytd=0;
+    monthlyTable+='<tr><td class="yr">'+yr+'</td>';
+    for(var m=1;m<=12;m++){
+      var key=yr+'-'+String(m).padStart(2,'0');
+      var val=monthly[key];
       ytd+=val||0;
       if(val===undefined){ monthlyTable+='<td class="mc">--</td>'; }
       else{
-        const col=val>0?'#00ff41':val<0?'#ff3131':'#666';
-        monthlyTable+=`<td class="mc" style="color:${col}">${val>0?'+':''}${val.toFixed(0)}</td>`;
+        var col=val>0?'#00ff41':val<0?'#ff3131':'#666';
+        monthlyTable+='<td class="mc" style="color:'+col+'">'+(val>0?'+':'')+val.toFixed(0)+'</td>';
       }
     }
-    const ytdCol=ytd>0?'#00ff41':ytd<0?'#ff3131':'#666';
-    monthlyTable+=`<td class="mc mct" style="color:${ytdCol}">${ytd>0?'+':''}${ytd.toFixed(0)}</td></tr>`;
+    var ytdCol=ytd>0?'#00ff41':ytd<0?'#ff3131':'#666';
+    monthlyTable+='<td class="mc mct" style="color:'+ytdCol+'">'+(ytd>0?'+':'')+ytd.toFixed(0)+'</td></tr>';
   }
   monthlyTable+='</tbody></table>';
 
-  let levelRows='';
-  Object.entries(winByLevel).sort((a,b)=>b[1].pnl-a[1].pnl).forEach(([lv,d])=>{
-    const t2=d.w+d.l; const wr2=t2?(d.w/t2*100).toFixed(1):0;
-    const wc=parseFloat(wr2)>=85?'#00ff41':parseFloat(wr2)>=breakEven?'#ffb300':'#ff3131';
-    const pc=d.pnl>0?'#00ff41':'#ff3131';
-    levelRows+=`<tr><td style="color:#ffb300">${lv}</td><td>${t2}</td><td style="color:${wc}">${wr2}%</td><td style="color:${pc}">$${d.pnl.toFixed(0)}</td></tr>`;
-  });
+  var levelRows='';
+  var lvEntries=Object.entries(winByLevel).sort(function(a,b){return b[1].pnl-a[1].pnl;});
+  for(var li=0;li<lvEntries.length;li++){
+    var lv=lvEntries[li][0]; var d=lvEntries[li][1];
+    var t2=d.w+d.l; var wr2=t2?(d.w/t2*100).toFixed(1):0;
+    var wc=parseFloat(wr2)>=85?'#00ff41':parseFloat(wr2)>=breakEven?'#ffb300':'#ff3131';
+    var pc=d.pnl>0?'#00ff41':'#ff3131';
+    levelRows+='<tr><td style="color:#ffb300">'+lv+'</td><td>'+t2+'</td><td style="color:'+wc+'">'+wr2+'%</td><td style="color:'+pc+'">$'+d.pnl.toFixed(0)+'</td></tr>';
+  }
 
-  let hourRows='';
-  Object.entries(winByHour).sort((a,b)=>b[1].pnl-a[1].pnl).forEach(([hr,d])=>{
-    const t2=d.w+d.l; const wr2=t2?(d.w/t2*100).toFixed(1):0;
-    const wc=parseFloat(wr2)>=85?'#00ff41':parseFloat(wr2)>=breakEven?'#ffb300':'#ff3131';
-    const pc=d.pnl>0?'#00ff41':'#ff3131';
-    hourRows+=`<tr><td style="color:#ffb300">${String(hr).padStart(2,'0')}:00 UTC</td><td>${t2}</td><td style="color:${wc}">${wr2}%</td><td style="color:${pc}">$${d.pnl.toFixed(0)}</td></tr>`;
-  });
+  var hourRows='';
+  var hrEntries=Object.entries(winByHour).sort(function(a,b){return b[1].pnl-a[1].pnl;});
+  for(var hi=0;hi<hrEntries.length;hi++){
+    var hr=hrEntries[hi][0]; var d=hrEntries[hi][1];
+    var t2=d.w+d.l; var wr2=t2?(d.w/t2*100).toFixed(1):0;
+    var wc=parseFloat(wr2)>=85?'#00ff41':parseFloat(wr2)>=breakEven?'#ffb300':'#ff3131';
+    var pc=d.pnl>0?'#00ff41':'#ff3131';
+    hourRows+='<tr><td style="color:#ffb300">'+String(hr).padStart(2,'0')+':00 UTC</td><td>'+t2+'</td><td style="color:'+wc+'">'+wr2+'%</td><td style="color:'+pc+'">$'+d.pnl.toFixed(0)+'</td></tr>';
+  }
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OBAMADASH // QUANTSTATS REPORT</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#020902;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:11px;padding:12px;max-width:900px;margin:0 auto}
-h1{font-size:13px;letter-spacing:6px;color:#00ff41;border-bottom:1px solid #0f2a0f;padding-bottom:8px;margin-bottom:4px}
-.sub{color:#004a14;font-size:9px;letter-spacing:2px;margin-bottom:16px}
-.st{font-size:9px;letter-spacing:3px;color:#006618;border-bottom:1px solid #0f2a0f;padding-bottom:4px;margin:14px 0 8px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-bottom:14px}
-.sc{border:1px solid #0f2a0f;padding:8px 10px;background:#030e03}
-.sl{font-size:8px;letter-spacing:2px;color:#004a14;margin-bottom:4px}
-.sv{font-size:15px;letter-spacing:1px}
-.ss{font-size:8px;color:#004a14;margin-top:3px;letter-spacing:1px}
-canvas{width:100%;background:#020902;margin-bottom:14px;display:block}
-table{width:100%;border-collapse:collapse;margin-bottom:14px}
-th{font-size:9px;color:#006618;letter-spacing:1px;padding:4px 6px;border-bottom:1px solid #0f2a0f;text-align:left;font-weight:normal}
-td{font-size:10px;padding:5px 6px;border-bottom:1px solid #091409;color:#00aa28}
-.mt th,.mt td{font-size:8px;padding:3px 4px;text-align:right}
-.mt th:first-child,.mt td:first-child{text-align:left}
-.yr{color:#ffb300 !important}
-.mc{color:#004a14}
-.mct{font-weight:bold}
-.warn{background:#1a0500;border:1px solid #ff3131;color:#ff3131;font-size:9px;letter-spacing:1px;padding:6px 10px;margin-bottom:10px}
-</style>
+  var css = [
+    '*{box-sizing:border-box;margin:0;padding:0}',
+    'body{background:#020902;color:#00cc33;font-family:monospace;font-size:11px;padding:12px;max-width:900px;margin:0 auto}',
+    'h1{font-size:13px;letter-spacing:6px;color:#00ff41;border-bottom:1px solid #0f2a0f;padding-bottom:8px;margin-bottom:4px}',
+    '.sub{color:#004a14;font-size:9px;letter-spacing:2px;margin-bottom:16px}',
+    '.st{font-size:9px;letter-spacing:3px;color:#006618;border-bottom:1px solid #0f2a0f;padding-bottom:4px;margin:14px 0 8px}',
+    '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-bottom:14px}',
+    '.sc{border:1px solid #0f2a0f;padding:8px 10px;background:#030e03}',
+    '.sl{font-size:8px;letter-spacing:2px;color:#004a14;margin-bottom:4px}',
+    '.sv{font-size:15px;letter-spacing:1px}',
+    'canvas{width:100%;background:#020902;margin-bottom:14px;display:block}',
+    'table{width:100%;border-collapse:collapse;margin-bottom:14px}',
+    'th{font-size:9px;color:#006618;letter-spacing:1px;padding:4px 6px;border-bottom:1px solid #0f2a0f;text-align:left;font-weight:normal}',
+    'td{font-size:10px;padding:5px 6px;border-bottom:1px solid #091409;color:#00aa28}',
+    '.mt th,.mt td{font-size:8px;padding:3px 4px;text-align:right}',
+    '.mt th:first-child,.mt td:first-child{text-align:left}',
+    '.yr{color:#ffb300 !important}',
+    '.mc{color:#004a14}',
+    '.mct{font-weight:bold}',
+    '.warn{background:#1a0500;border:1px solid #ff3131;color:#ff3131;font-size:9px;letter-spacing:1px;padding:6px 10px;margin-bottom:10px}'
+  ].join('\n');
 
-</head>
-<body>
-<h1>OBAMADASH // QUANTSTATS REPORT</h1>
-<div class="sub">BTC/USDT &nbsp;.&nbsp; LTF FAN REJECTION &nbsp;.&nbsp; ${days}D &nbsp;.&nbsp; GENERATED ${generated}</div>
-<div class="sub" style="margin-top:-10px">RISK $${risk} &nbsp;.&nbsp; RR ${rrRatio} &nbsp;.&nbsp; ACCOUNT $${accountSize.toLocaleString()}</div>
+  var feeWarn = fees/Math.abs(grossPnl||1)>0.3
+    ? '<div class="warn">WARNING: FEES ($'+fees.toFixed(0)+') = '+(fees/Math.abs(grossPnl)*100).toFixed(0)+'% OF GROSS PNL</div>'
+    : '';
 
-${fees/Math.abs(grossPnl||1)>0.3?`<div class="warn">&#9888; FEES ($${fees.toFixed(0)}) = ${(fees/Math.abs(grossPnl)*100).toFixed(0)}% OF GROSS PNL</div>`:’’}
+  var perfCards = [
+    sc('NET PNL','$'+netPnl.toFixed(2),netPnl>0?'green':'red'),
+    sc('WIN RATE',winRate.toFixed(1)+'%',winRate>=85?'green':winRate>=breakEven?'amber':'red'),
+    sc('SHARPE RATIO',sharpe,parseFloat(sharpe)>=2?'green':parseFloat(sharpe)>=1?'amber':'red'),
+    sc('CALMAR RATIO',calmar,parseFloat(calmar)>=3?'green':parseFloat(calmar)>=1?'amber':'red'),
+    sc('PROFIT FACTOR',pf===Infinity?'inf':pf.toFixed(2),pf>=2?'green':pf>=1.5?'amber':'red'),
+    sc('EXPECTANCY','$'+expectancy.toFixed(2),expectancy>0?'green':'red'),
+    sc('MAX DRAWDOWN','$'+maxDD.toFixed(2),'red'),
+    sc('DD % OF ACCT',(maxDD/accountSize*100).toFixed(1)+'%',maxDD/accountSize<0.2?'green':maxDD/accountSize<0.5?'amber':'red'),
+    sc('TIME IN DD',pctTimeInDD+'%',parseFloat(pctTimeInDD)<30?'green':parseFloat(pctTimeInDD)<50?'amber':'red'),
+    sc('RISK OF RUIN',riskOfRuin+'%',parseFloat(riskOfRuin)<0.1?'green':parseFloat(riskOfRuin)<1?'amber':'red'),
+    sc('MAX CONSEC LOSS',maxConsecLoss+'',maxConsecLoss<=3?'green':maxConsecLoss<=6?'amber':'red'),
+    sc('MAX CONSEC WIN',maxConsecWin+'','green'),
+    sc('AVG WIN','$'+avgWin.toFixed(2),'green'),
+    sc('AVG LOSS','$'+avgLoss.toFixed(2),'red'),
+    sc('BREAK-EVEN WR',breakEven.toFixed(1)+'%',''),
+    sc('TOTAL TRADES',total+'',''),
+    sc('TOTAL FEES','$'+fees.toFixed(2),'amber'),
+    sc('GROSS PNL','$'+grossPnl.toFixed(2),grossPnl>0?'green':'red')
+  ].join('');
 
-<div class="st">// PERFORMANCE SUMMARY</div>
-<div class="grid">
-${sc('NET PNL','$'+netPnl.toFixed(2),netPnl>0?'green':'red')}
-${sc('WIN RATE',winRate.toFixed(1)+'%',winRate>=85?'green':winRate>=breakEven?'amber':'red')}
-${sc('SHARPE RATIO',sharpe,parseFloat(sharpe)>=2?'green':parseFloat(sharpe)>=1?'amber':'red')}
-${sc('CALMAR RATIO',calmar,parseFloat(calmar)>=3?'green':parseFloat(calmar)>=1?'amber':'red')}
-${sc('PROFIT FACTOR',pf===Infinity?'inf':pf.toFixed(2),pf>=2?'green':pf>=1.5?'amber':'red')}
-${sc('EXPECTANCY','$'+expectancy.toFixed(2),expectancy>0?'green':'red')}
-${sc('MAX DRAWDOWN','$'+maxDD.toFixed(2),'red')}
-${sc('DD % OF ACCT',(maxDD/accountSize*100).toFixed(1)+'%',maxDD/accountSize<0.2?'green':maxDD/accountSize<0.5?'amber':'red')}
-${sc('TIME IN DD',pctTimeInDD+'%',parseFloat(pctTimeInDD)<30?'green':parseFloat(pctTimeInDD)<50?'amber':'red')}
-${sc('RISK OF RUIN',riskOfRuin+'%',parseFloat(riskOfRuin)<0.1?'green':parseFloat(riskOfRuin)<1?'amber':'red')}
-${sc('MAX CONSEC LOSS',maxConsecLoss+'',maxConsecLoss<=3?'green':maxConsecLoss<=6?'amber':'red')}
-${sc('MAX CONSEC WIN',maxConsecWin+'','green')}
-${sc('AVG WIN','$'+avgWin.toFixed(2),'green')}
-${sc('AVG LOSS','$'+avgLoss.toFixed(2),'red')}
-${sc('BREAK-EVEN WR',breakEven.toFixed(1)+'%','')}
-${sc('TOTAL TRADES',total+'','')}
-${sc('TOTAL FEES','$'+fees.toFixed(2),'amber')}
-${sc('GROSS PNL','$'+grossPnl.toFixed(2),grossPnl>0?'green':'red')}
-</div>
+  var chartScript = [
+    'var labels='+JSON.stringify(labels)+';',
+    'var equity='+JSON.stringify(equity)+';',
+    'var ddCurve='+JSON.stringify(ddCurve)+';',
+    'var rollWin='+JSON.stringify(rollWin)+';',
+    'var rollLabels='+JSON.stringify(rollLabels)+';',
+    'var breakEven='+breakEven+';',
+    'var cd={responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:false}},',
+    '  scales:{x:{ticks:{color:"#004a14",font:{size:8},maxTicksLimit:10},grid:{color:"#091409"},border:{color:"#0f2a0f"}},',
+    '  y:{ticks:{color:"#004a14",font:{size:8}},grid:{color:"#091409"},border:{color:"#0f2a0f"}}}};',
+    'new Chart(document.getElementById("eq"),{type:"line",',
+    '  data:{labels:labels,datasets:[{data:equity,borderColor:"#00ff41",borderWidth:1.5,pointRadius:0,',
+    '    fill:{target:"origin",above:"rgba(0,255,65,0.06)",below:"rgba(255,49,49,0.06)"}}]},',
+    '  options:Object.assign({},cd,{scales:Object.assign({},cd.scales,{y:Object.assign({},cd.scales.y,{ticks:Object.assign({},cd.scales.y.ticks,{callback:function(v){return "$"+v.toFixed(0);}})})})})});',
+    'new Chart(document.getElementById("dd"),{type:"line",',
+    '  data:{labels:labels,datasets:[{data:ddCurve,borderColor:"#ff3131",borderWidth:1,pointRadius:0,',
+    '    fill:{target:"origin",below:"rgba(255,49,49,0.12)"}}]},',
+    '  options:Object.assign({},cd,{scales:Object.assign({},cd.scales,{y:Object.assign({},cd.scales.y,{ticks:Object.assign({},cd.scales.y.ticks,{callback:function(v){return "$"+v.toFixed(0);}})})})})});',
+    'new Chart(document.getElementById("rw"),{type:"line",',
+    '  data:{labels:rollLabels,datasets:[',
+    '    {data:rollWin,borderColor:"#00cc33",borderWidth:1.5,pointRadius:0,fill:false},',
+    '    {data:Array(rollLabels.length).fill(breakEven),borderColor:"#ff3131",borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},',
+    '    {data:Array(rollLabels.length).fill(85),borderColor:"#00ff41",borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}',
+    '  ]},',
+    '  options:Object.assign({},cd,{scales:Object.assign({},cd.scales,{y:Object.assign({},cd.scales.y,{min:0,max:100,ticks:Object.assign({},cd.scales.y.ticks,{callback:function(v){return v+"%";}})})})})});'
+  ].join('\n');
 
-<div class="st">// EQUITY CURVE</div>
-<canvas id="eq" height="160"></canvas>
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>OBAMADASH // QUANTSTATS REPORT</title>'
+    + '<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><' + '/script>'
+    + '<style>'+css+'</style></head><body>'
 
-<div class="st">// DRAWDOWN</div>
-<canvas id="dd" height="100"></canvas>
+```
++ '<h1>OBAMADASH // QUANTSTATS REPORT</h1>'
++ '<div class="sub">BTC/USDT . LTF FAN REJECTION . '+days+'D . GENERATED '+generated+'</div>'
++ '<div class="sub" style="margin-top:-10px">RISK $'+risk+' . RR '+rrRatio+' . ACCOUNT $'+accountSize.toLocaleString()+'</div>'
++ feeWarn
++ '<div class="st">// PERFORMANCE SUMMARY</div>'
++ '<div class="grid">'+perfCards+'</div>'
++ '<div class="st">// EQUITY CURVE</div>'
++ '<canvas id="eq" height="160"></canvas>'
++ '<div class="st">// DRAWDOWN</div>'
++ '<canvas id="dd" height="100"></canvas>'
++ '<div class="st">// ROLLING WIN RATE (20 TRADES)</div>'
++ '<canvas id="rw" height="100"></canvas>'
++ '<div class="st">// MONTHLY RETURNS ($)</div>'
++ monthlyTable
++ '<div class="st">// BY LEVEL</div>'
++ '<table><thead><tr><th>LEVEL</th><th>TRADES</th><th>WIN%</th><th>NET PNL</th></tr></thead>'
++ '<tbody>'+levelRows+'</tbody></table>'
++ '<div class="st">// BY HOUR (UTC)</div>'
++ '<table><thead><tr><th>HOUR</th><th>TRADES</th><th>WIN%</th><th>NET PNL</th></tr></thead>'
++ '<tbody>'+hourRows+'</tbody></table>'
++ '<script>'+chartScript+'<' + '/script>'
++ '</body></html>';
+```
 
-<div class="st">// ROLLING WIN RATE (20 TRADES)</div>
-<canvas id="rw" height="100"></canvas>
-
-<div class="st">// MONTHLY RETURNS ($)</div>
-${monthlyTable}
-
-<div class="st">// BY LEVEL</div>
-<table><thead><tr><th>LEVEL</th><th>TRADES</th><th>WIN%</th><th>NET PNL</th></tr></thead>
-<tbody>${levelRows}</tbody></table>
-
-<div class="st">// BY HOUR (UTC)</div>
-<table><thead><tr><th>HOUR</th><th>TRADES</th><th>WIN%</th><th>NET PNL</th></tr></thead>
-<tbody>${hourRows}</tbody></table>
-
-<script>
-const labels=${JSON.stringify(labels)};
-const equity=${JSON.stringify(equity)};
-const ddCurve=${JSON.stringify(ddCurve)};
-const rollWin=${JSON.stringify(rollWin)};
-const rollLabels=${JSON.stringify(rollLabels)};
-const breakEven=${breakEven};
-
-const cd={responsive:true,maintainAspectRatio:false,animation:{duration:0},
-  plugins:{legend:{display:false}},
-  scales:{
-    x:{ticks:{color:'#004a14',font:{size:8},maxTicksLimit:10},grid:{color:'#091409'},border:{color:'#0f2a0f'}},
-    y:{ticks:{color:'#004a14',font:{size:8}},grid:{color:'#091409'},border:{color:'#0f2a0f'}}
-  }};
-
-new Chart(document.getElementById('eq'),{type:'line',
-  data:{labels,datasets:[{data:equity,borderColor:'#00ff41',borderWidth:1.5,pointRadius:0,
-    fill:{target:'origin',above:'rgba(0,255,65,0.06)',below:'rgba(255,49,49,0.06)'}}]},
-  options:{...cd,scales:{...cd.scales,y:{...cd.scales.y,ticks:{...cd.scales.y.ticks,callback:v=>'$'+v.toFixed(0)}}}}});
-
-new Chart(document.getElementById('dd'),{type:'line',
-  data:{labels,datasets:[{data:ddCurve,borderColor:'#ff3131',borderWidth:1,pointRadius:0,
-    fill:{target:'origin',below:'rgba(255,49,49,0.12)'}}]},
-  options:{...cd,scales:{...cd.scales,y:{...cd.scales.y,ticks:{...cd.scales.y.ticks,callback:v=>'$'+v.toFixed(0)}}}}});
-
-new Chart(document.getElementById('rw'),{type:'line',
-  data:{labels:rollLabels,datasets:[
-    {data:rollWin,borderColor:'#00cc33',borderWidth:1.5,pointRadius:0,fill:false},
-    {data:Array(rollLabels.length).fill(breakEven),borderColor:'#ff3131',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
-    {data:Array(rollLabels.length).fill(85),borderColor:'#00ff41',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
-  ]},
-  options:{...cd,scales:{...cd.scales,y:{...cd.scales.y,min:0,max:100,ticks:{...cd.scales.y.ticks,callback:v=>v+'%'}}}}});
-<\/script>
-</body>
-</html>`;
-
-  const blob = new Blob([html], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'obamadash_report_'+new Date().toISOString().slice(0,10)+'.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
+var blob = new Blob([html], {type:‘text/html’});
+var a = document.createElement(‘a’);
+a.href = URL.createObjectURL(blob);
+a.download = ‘obamadash_report_’+new Date().toISOString().slice(0,10)+’.html’;
+a.click();
+URL.revokeObjectURL(a.href);
 }
 
 </script>
-
 <script>
 window.addEventListener('load', updateCacheStatus);
 
-// -- AUTO FIND -----------------------------------------
-let sortMetric = 'calmar';
+// – AUTO FIND —————————————–
+let sortMetric = ‘calmar’;
 let autoOpen = false;
-let gsOrderTypes = new Set(['maker','taker']);
+let gsOrderTypes = new Set([‘maker’,‘taker’]);
 
 function toggleAutoFind(){
-  autoOpen = !autoOpen;
-  document.getElementById('auto-panel').style.display = autoOpen ? 'block' : 'none';
-  document.getElementById('auto-btn').innerHTML = (autoOpen ? '&#9660; HIDE AUTO FIND' : '&#9670; AUTO FIND BEST SETTINGS');
+autoOpen = !autoOpen;
+document.getElementById(‘auto-panel’).style.display = autoOpen ? ‘block’ : ‘none’;
+document.getElementById(‘auto-btn’).innerHTML = (autoOpen ? ‘▼ HIDE AUTO FIND’ : ‘◆ AUTO FIND BEST SETTINGS’);
 }
 
 function selectSort(s){
-  sortMetric = s;
-  ['calmar','winrate','pnl'].forEach(k=>{
-    const el = document.getElementById('sort-'+k);
-    el.classList.toggle('active', k===s);
-  });
+sortMetric = s;
+[‘calmar’,‘winrate’,‘pnl’].forEach(k=>{
+const el = document.getElementById(‘sort-’+k);
+el.classList.toggle(‘active’, k===s);
+});
 }
 
 function toggleGsOrder(type){
-  if(gsOrderTypes.has(type)) gsOrderTypes.delete(type);
-  else gsOrderTypes.add(type);
-  if(!gsOrderTypes.size) gsOrderTypes.add(type); // keep at least one
-  document.getElementById('gs-maker-btn').classList.toggle('active', gsOrderTypes.has('maker'));
-  document.getElementById('gs-taker-btn').classList.toggle('active', gsOrderTypes.has('taker'));
-  updateComboCount();
+if(gsOrderTypes.has(type)) gsOrderTypes.delete(type);
+else gsOrderTypes.add(type);
+if(!gsOrderTypes.size) gsOrderTypes.add(type); // keep at least one
+document.getElementById(‘gs-maker-btn’).classList.toggle(‘active’, gsOrderTypes.has(‘maker’));
+document.getElementById(‘gs-taker-btn’).classList.toggle(‘active’, gsOrderTypes.has(‘taker’));
+updateComboCount();
 }
 
 function linspace(min, max, steps){
-  const arr = [];
-  for(let i=0; i<steps; i++) arr.push(+(min + (max-min)*i/(steps-1)).toFixed(4));
-  return [...new Set(arr)];
+const arr = [];
+for(let i=0; i<steps; i++) arr.push(+(min + (max-min)*i/(steps-1)).toFixed(4));
+return […new Set(arr)];
 }
 
 function updateComboCount(){
-  try{
-    const riskVals  = document.getElementById('gs-risk-vals').value.trim();
-    const risks     = riskVals ? riskVals.split(',').filter(Boolean) : [1];
-    const rrSteps   = parseInt(document.getElementById('gs-rr-steps').value)||4;
-    const stopSteps = parseInt(document.getElementById('gs-stop-steps').value)||4;
-    const orders    = gsOrderTypes.size;
-    const tolSteps  = parseInt(document.getElementById('gs-tol-steps').value)||4;
-    const mbVals    = document.getElementById('gs-minbar-vals').value.split(',').filter(Boolean);
-    const daysVals  = document.getElementById('gs-days-vals').value.trim();
-    const days      = daysVals ? daysVals.split(',').filter(Boolean) : [1];
-    const total     = risks.length * rrSteps * stopSteps * orders * tolSteps * mbVals.length * days.length;
-    document.getElementById('gs-combo-count').textContent = total + ' COMBINATIONS';
-  }catch(e){}
+try{
+const riskVals  = document.getElementById(‘gs-risk-vals’).value.trim();
+const risks     = riskVals ? riskVals.split(’,’).filter(Boolean) : [1];
+const rrSteps   = parseInt(document.getElementById(‘gs-rr-steps’).value)||4;
+const stopSteps = parseInt(document.getElementById(‘gs-stop-steps’).value)||4;
+const orders    = gsOrderTypes.size;
+const tolSteps  = parseInt(document.getElementById(‘gs-tol-steps’).value)||4;
+const mbVals    = document.getElementById(‘gs-minbar-vals’).value.split(’,’).filter(Boolean);
+const daysVals  = document.getElementById(‘gs-days-vals’).value.trim();
+const days      = daysVals ? daysVals.split(’,’).filter(Boolean) : [1];
+const total     = risks.length * rrSteps * stopSteps * orders * tolSteps * mbVals.length * days.length;
+document.getElementById(‘gs-combo-count’).textContent = total + ’ COMBINATIONS’;
+}catch(e){}
 }
 
 setTimeout(()=>{
-  ['gs-risk-vals','gs-rr-steps','gs-stop-steps','gs-tol-steps','gs-minbar-vals','gs-days-vals'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('input', updateComboCount);
-  });
-  updateComboCount();
+[‘gs-risk-vals’,‘gs-rr-steps’,‘gs-stop-steps’,‘gs-tol-steps’,‘gs-minbar-vals’,‘gs-days-vals’].forEach(id=>{
+const el = document.getElementById(id);
+if(el) el.addEventListener(‘input’, updateComboCount);
+});
+updateComboCount();
 }, 200);
 
 function quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stopDist, rrRatio, risk, minBar, feeRate){
-  const trades = [];
-  const debounce = {};
-  const tolPct = tol / 100;
+const trades = [];
+const debounce = {};
+const tolPct = tol / 100;
 
-  for(let i=2; i<candles.length-10; i++){
-    const c    = candles[i];
-    const prev = candles[i-1];
-    const prevAnchor = getAnchor0900(prev.time*1000);
-    const cAnchor    = getAnchor0900(c.time*1000);
-    if(prevAnchor.getTime() !== cAnchor.getTime()) continue;
-    const anchorKey  = prevAnchor.toISOString().slice(0,10);
-    const anchorOpen = anchorOpens[anchorKey];
-    if(!anchorOpen) continue;
-    const anchorSec  = prevAnchor.getTime()/1000;
-    const barOffset  = Math.floor((prev.time - anchorSec)/60);
-    if(barOffset < minBar) continue;
-    const hour = new Date(c.time*1000).getUTCHours();
-    if(!activeHours.has(hour)) continue;
-    const bar    = Math.floor((prev.time - anchorSec)/60);
-    for(const deg of activeLevels){
-      const label = deg > 0 ? 'L+'+deg : 'L'+deg;
-      const price = anchorOpen + bar * Math.tan(deg * Math.PI / 180);
-      const tolAbs = price * tolPct;
-      const dk = anchorKey+'_'+label;
-      const touchedBelow = prev.low <= price+tolAbs && prev.low >= price-tolAbs;
-      const rejectedUp   = prev.close > price && prev.open > prev.close - tolAbs;
-      if(touchedBelow && rejectedUp && !debounce[dk]){
-        debounce[dk] = true;
-        const entry = c.open;
-        const result = simulateTrade(candles, i+1, 1, entry, stopDist, rrRatio, feeRate);
-        if(result !== 'TIMEOUT'){
-          const posSize = risk/stopDist;
-          const feeCost = posSize*entry*feeRate*2;
-          const grossPnl = result==='WIN' ? risk*rrRatio : -risk;
-          trades.push({netPnl: grossPnl-feeCost, result});
-        }
-      }
-      const touchedAbove = prev.high >= price-tolAbs && prev.high <= price+tolAbs;
-      const rejectedDown = prev.close < price && prev.open < prev.close+tolAbs;
-      if(touchedAbove && rejectedDown && !debounce[dk]){
-        debounce[dk] = true;
-        const entry = c.open;
-        const result = simulateTrade(candles, i+1, -1, entry, stopDist, rrRatio, feeRate);
-        if(result !== 'TIMEOUT'){
-          const posSize = risk/stopDist;
-          const feeCost = posSize*entry*feeRate*2;
-          const grossPnl = result==='WIN' ? risk*rrRatio : -risk;
-          trades.push({netPnl: grossPnl-feeCost, result});
-        }
-      }
-    }
-  }
-  return trades;
+for(let i=2; i<candles.length-10; i++){
+const c    = candles[i];
+const prev = candles[i-1];
+const prevAnchor = getAnchor0900(prev.time*1000);
+const cAnchor    = getAnchor0900(c.time*1000);
+if(prevAnchor.getTime() !== cAnchor.getTime()) continue;
+const anchorKey  = prevAnchor.toISOString().slice(0,10);
+const anchorOpen = anchorOpens[anchorKey];
+if(!anchorOpen) continue;
+const anchorSec  = prevAnchor.getTime()/1000;
+const barOffset  = Math.floor((prev.time - anchorSec)/60);
+if(barOffset < minBar) continue;
+const hour = new Date(c.time*1000).getUTCHours();
+if(!activeHours.has(hour)) continue;
+const bar    = Math.floor((prev.time - anchorSec)/60);
+for(const deg of activeLevels){
+const label = deg > 0 ? ‘L+’+deg : ‘L’+deg;
+const price = anchorOpen + bar * Math.tan(deg * Math.PI / 180);
+const tolAbs = price * tolPct;
+const dk = anchorKey+’_’+label;
+const touchedBelow = prev.low <= price+tolAbs && prev.low >= price-tolAbs;
+const rejectedUp   = prev.close > price && prev.open > prev.close - tolAbs;
+if(touchedBelow && rejectedUp && !debounce[dk]){
+debounce[dk] = true;
+const entry = c.open;
+const result = simulateTrade(candles, i+1, 1, entry, stopDist, rrRatio, feeRate);
+if(result !== ‘TIMEOUT’){
+const posSize = risk/stopDist;
+const feeCost = posSize*entry*feeRate*2;
+const grossPnl = result===‘WIN’ ? risk*rrRatio : -risk;
+trades.push({netPnl: grossPnl-feeCost, result});
+}
+}
+const touchedAbove = prev.high >= price-tolAbs && prev.high <= price+tolAbs;
+const rejectedDown = prev.close < price && prev.open < prev.close+tolAbs;
+if(touchedAbove && rejectedDown && !debounce[dk]){
+debounce[dk] = true;
+const entry = c.open;
+const result = simulateTrade(candles, i+1, -1, entry, stopDist, rrRatio, feeRate);
+if(result !== ‘TIMEOUT’){
+const posSize = risk/stopDist;
+const feeCost = posSize*entry*feeRate*2;
+const grossPnl = result===‘WIN’ ? risk*rrRatio : -risk;
+trades.push({netPnl: grossPnl-feeCost, result});
+}
+}
+}
+}
+return trades;
 }
 
 function scoreCombo(trades, days){
-  if(trades.length < 10) return null;
-  const wins    = trades.filter(t=>t.result==='WIN').length;
-  const total   = trades.length;
-  const winRate = wins/total*100;
-  const netPnl  = trades.reduce((s,t)=>s+t.netPnl,0);
-  let peak=0, running=0, maxDD=0;
-  for(const t of trades){
-    running += t.netPnl;
-    if(running>peak) peak=running;
-    const dd=peak-running;
-    if(dd>maxDD) maxDD=dd;
-  }
-  const ann = netPnl*(365/days);
-  const calmar = maxDD>0 ? ann/maxDD : 0;
-  return {total, winRate, netPnl, maxDD, calmar};
+if(trades.length < 10) return null;
+const wins    = trades.filter(t=>t.result===‘WIN’).length;
+const total   = trades.length;
+const winRate = wins/total*100;
+const netPnl  = trades.reduce((s,t)=>s+t.netPnl,0);
+let peak=0, running=0, maxDD=0;
+for(const t of trades){
+running += t.netPnl;
+if(running>peak) peak=running;
+const dd=peak-running;
+if(dd>maxDD) maxDD=dd;
+}
+const ann = netPnl*(365/days);
+const calmar = maxDD>0 ? ann/maxDD : 0;
+return {total, winRate, netPnl, maxDD, calmar};
 }
 
 async function runGridSearch(){
-  const activeLevels = Array.from(document.querySelectorAll('.lvl-btn.active')).map(b=>parseInt(b.dataset.deg));
-  const activeHours  = new Set(Array.from(document.querySelectorAll('.hr-btn.active')).map(b=>parseInt(b.dataset.hr)));
-  if(!activeLevels.length){ alert('SELECT AT LEAST ONE FAN LEVEL'); return; }
+const activeLevels = Array.from(document.querySelectorAll(’.lvl-btn.active’)).map(b=>parseInt(b.dataset.deg));
+const activeHours  = new Set(Array.from(document.querySelectorAll(’.hr-btn.active’)).map(b=>parseInt(b.dataset.hr)));
+if(!activeLevels.length){ alert(‘SELECT AT LEAST ONE FAN LEVEL’); return; }
 
-  // Build param grids - blank = use current config value
-  const curRisk  = parseFloat(document.getElementById('cfg-risk').value)||100;
-  const curDays  = parseInt(document.getElementById('cfg-days').value)||30;
+// Build param grids - blank = use current config value
+const curRisk  = parseFloat(document.getElementById(‘cfg-risk’).value)||100;
+const curDays  = parseInt(document.getElementById(‘cfg-days’).value)||30;
 
-  const riskRaw  = document.getElementById('gs-risk-vals').value.trim();
-  const risks    = riskRaw ? riskRaw.split(',').map(Number).filter(n=>!isNaN(n)&&n>0) : [curRisk];
+const riskRaw  = document.getElementById(‘gs-risk-vals’).value.trim();
+const risks    = riskRaw ? riskRaw.split(’,’).map(Number).filter(n=>!isNaN(n)&&n>0) : [curRisk];
 
-  const daysRaw  = document.getElementById('gs-days-vals').value.trim();
-  const daysArr  = daysRaw ? daysRaw.split(',').map(Number).filter(n=>!isNaN(n)&&n>0) : [curDays];
+const daysRaw  = document.getElementById(‘gs-days-vals’).value.trim();
+const daysArr  = daysRaw ? daysRaw.split(’,’).map(Number).filter(n=>!isNaN(n)&&n>0) : [curDays];
 
-  const tols  = linspace(parseFloat(document.getElementById('gs-tol-min').value), parseFloat(document.getElementById('gs-tol-max').value), parseInt(document.getElementById('gs-tol-steps').value)||4);
-  const stops = linspace(parseFloat(document.getElementById('gs-stop-min').value), parseFloat(document.getElementById('gs-stop-max').value), parseInt(document.getElementById('gs-stop-steps').value)||4);
-  const rrs   = linspace(parseFloat(document.getElementById('gs-rr-min').value), parseFloat(document.getElementById('gs-rr-max').value), parseInt(document.getElementById('gs-rr-steps').value)||4);
-  const mbs   = document.getElementById('gs-minbar-vals').value.split(',').map(Number).filter(n=>!isNaN(n));
-  const orders= [...gsOrderTypes];
+const tols  = linspace(parseFloat(document.getElementById(‘gs-tol-min’).value), parseFloat(document.getElementById(‘gs-tol-max’).value), parseInt(document.getElementById(‘gs-tol-steps’).value)||4);
+const stops = linspace(parseFloat(document.getElementById(‘gs-stop-min’).value), parseFloat(document.getElementById(‘gs-stop-max’).value), parseInt(document.getElementById(‘gs-stop-steps’).value)||4);
+const rrs   = linspace(parseFloat(document.getElementById(‘gs-rr-min’).value), parseFloat(document.getElementById(‘gs-rr-max’).value), parseInt(document.getElementById(‘gs-rr-steps’).value)||4);
+const mbs   = document.getElementById(‘gs-minbar-vals’).value.split(’,’).map(Number).filter(n=>!isNaN(n));
+const orders= […gsOrderTypes];
 
-  const totalCombos = risks.length * rrs.length * stops.length * orders.length * tols.length * mbs.length * daysArr.length;
+const totalCombos = risks.length * rrs.length * stops.length * orders.length * tols.length * mbs.length * daysArr.length;
 
-  document.getElementById('gs-run-btn').disabled = true;
-  document.getElementById('gs-results').style.display = 'none';
-  document.getElementById('gs-progress-wrap').style.display = 'block';
+document.getElementById(‘gs-run-btn’).disabled = true;
+document.getElementById(‘gs-results’).style.display = ‘none’;
+document.getElementById(‘gs-progress-wrap’).style.display = ‘block’;
 
-  // Pre-fetch all needed candle sets
-  const candleCache = {};
-  for(const d of daysArr){
-    let candles = loadCachedCandles(d);
-    if(!candles){
-      document.getElementById('gs-progress-label').textContent = 'FETCHING '+d+'d CANDLES...';
-      try{
-        candles = await fetchAllCandles(d, pct=>{
-          document.getElementById('gs-progress-fill').style.width = (pct*0.3)+'%';
-        });
-        saveCachedCandles(d, candles);
-      }catch(e){
-        document.getElementById('gs-progress-label').textContent = 'FETCH ERROR';
-        document.getElementById('gs-run-btn').disabled = false;
-        return;
-      }
-    }
-    // Build anchor opens for this candle set
-    const anchorOpens = {};
-    for(const c of candles){
-      const anchor = getAnchor0900(c.time*1000);
-      const key    = anchor.toISOString().slice(0,10);
-      if(!anchorOpens[key]){
-        const anchorSec = anchor.getTime()/1000;
-        if(Math.abs(c.time-anchorSec)<180) anchorOpens[key] = c.open;
-      }
-    }
-    candleCache[d] = {candles, anchorOpens};
-  }
+// Pre-fetch all needed candle sets
+const candleCache = {};
+for(const d of daysArr){
+let candles = loadCachedCandles(d);
+if(!candles){
+document.getElementById(‘gs-progress-label’).textContent = ‘FETCHING ‘+d+‘d CANDLES…’;
+try{
+candles = await fetchAllCandles(d, pct=>{
+document.getElementById(‘gs-progress-fill’).style.width = (pct*0.3)+’%’;
+});
+saveCachedCandles(d, candles);
+}catch(e){
+document.getElementById(‘gs-progress-label’).textContent = ‘FETCH ERROR’;
+document.getElementById(‘gs-run-btn’).disabled = false;
+return;
+}
+}
+// Build anchor opens for this candle set
+const anchorOpens = {};
+for(const c of candles){
+const anchor = getAnchor0900(c.time*1000);
+const key    = anchor.toISOString().slice(0,10);
+if(!anchorOpens[key]){
+const anchorSec = anchor.getTime()/1000;
+if(Math.abs(c.time-anchorSec)<180) anchorOpens[key] = c.open;
+}
+}
+candleCache[d] = {candles, anchorOpens};
+}
 
-  const results = [];
-  let done = 0;
+const results = [];
+let done = 0;
 
-  for(const days of daysArr){
-    const {candles, anchorOpens} = candleCache[days];
-    for(const risk of risks){
-      for(const rr of rrs){
-        for(const stop of stops){
-          for(const order of orders){
-            const feeRate = (order==='maker'?MAKER_FEE:TAKER_FEE)/100;
-            for(const tol of tols){
-              for(const mb of mbs){
-                const trades = quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stop, rr, risk, mb, feeRate);
-                const score  = scoreCombo(trades, days);
-                if(score) results.push({days, risk, rr, stop, order, tol, mb, ...score});
-                done++;
-                if(done % 8 === 0){
-                  const pct = Math.round(done/totalCombos*100);
-                  document.getElementById('gs-progress-fill').style.width = pct+'%';
-                  document.getElementById('gs-progress-label').textContent = 'TESTING '+done+'/'+totalCombos+'...';
-                  await new Promise(r=>setTimeout(r,0));
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+for(const days of daysArr){
+const {candles, anchorOpens} = candleCache[days];
+for(const risk of risks){
+for(const rr of rrs){
+for(const stop of stops){
+for(const order of orders){
+const feeRate = (order===‘maker’?MAKER_FEE:TAKER_FEE)/100;
+for(const tol of tols){
+for(const mb of mbs){
+const trades = quickSim(candles, anchorOpens, activeLevels, activeHours, tol, stop, rr, risk, mb, feeRate);
+const score  = scoreCombo(trades, days);
+if(score) results.push({days, risk, rr, stop, order, tol, mb, …score});
+done++;
+if(done % 8 === 0){
+const pct = Math.round(done/totalCombos*100);
+document.getElementById(‘gs-progress-fill’).style.width = pct+’%’;
+document.getElementById(‘gs-progress-label’).textContent = ‘TESTING ‘+done+’/’+totalCombos+’…’;
+await new Promise(r=>setTimeout(r,0));
+}
+}
+}
+}
+}
+}
+}
+}
 
-  document.getElementById('gs-progress-label').textContent = 'DONE -- '+results.length+' VALID RESULTS';
+document.getElementById(‘gs-progress-label’).textContent = ‘DONE – ‘+results.length+’ VALID RESULTS’;
 
-  results.sort((a,b)=>{
-    if(sortMetric==='calmar')  return b.calmar-a.calmar;
-    if(sortMetric==='winrate') return b.winRate-a.winRate;
-    return b.netPnl-a.netPnl;
-  });
+results.sort((a,b)=>{
+if(sortMetric===‘calmar’)  return b.calmar-a.calmar;
+if(sortMetric===‘winrate’) return b.winRate-a.winRate;
+return b.netPnl-a.netPnl;
+});
 
-  const top = results.slice(0,20);
-  const ri  = document.getElementById('gs-results-inner');
-  const th  = 'style="color:#006618;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 5px;border-bottom:1px solid #0f2a0f;font-weight:normal;"';
-  const showDays  = daysArr.length > 1;
-  const showRisk  = risks.length > 1;
-  const showOrder = orders.length > 1;
+const top = results.slice(0,20);
+const ri  = document.getElementById(‘gs-results-inner’);
+const th  = ‘style=“color:#006618;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 5px;border-bottom:1px solid #0f2a0f;font-weight:normal;”’;
+const showDays  = daysArr.length > 1;
+const showRisk  = risks.length > 1;
+const showOrder = orders.length > 1;
 
-  let header = '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;"><thead><tr>';
-  if(showDays)  header += '<th '+th+'>DAYS</th>';
-  if(showRisk)  header += '<th '+th+'>RISK</th>';
-  header += '<th '+th+'>RR</th><th '+th+'>STOP</th>';
-  if(showOrder) header += '<th '+th+'>ORDER</th>';
-  header += '<th '+th+'>TOL%</th><th '+th+'>MB</th><th '+th+'>WIN%</th><th '+th+'>PNL</th><th '+th+'>CALMAR</th><th '+th+'></th>';
-  header += '</tr></thead><tbody id="gs-tbody"></tbody></table>';
-  ri.innerHTML = header;
+let header = ‘<table style="width:100%;border-collapse:collapse;margin-bottom:14px;"><thead><tr>’;
+if(showDays)  header += ‘<th ‘+th+’>DAYS</th>’;
+if(showRisk)  header += ‘<th ‘+th+’>RISK</th>’;
+header += ‘<th ‘+th+’>RR</th><th ‘+th+’>STOP</th>’;
+if(showOrder) header += ‘<th ‘+th+’>ORDER</th>’;
+header += ‘<th ‘+th+’>TOL%</th><th ‘+th+’>MB</th><th ‘+th+’>WIN%</th><th ‘+th+’>PNL</th><th ‘+th+’>CALMAR</th><th ‘+th+’></th>’;
+header += ‘</tr></thead><tbody id="gs-tbody"></tbody></table>’;
+ri.innerHTML = header;
 
-  const tbody = document.getElementById('gs-tbody');
-  const td = 'style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;color:#00aa28;"';
-  top.forEach(r=>{
-    const wrCls  = r.winRate>=85?'color:#00ff41':r.winRate>=50?'color:#ffb300':'color:#ff3131';
-    const pnlCls = r.netPnl>0?'color:#00ff41':'color:#ff3131';
-    const calCls = r.calmar>=3?'color:#00ff41':r.calmar>=1?'color:#ffb300':'color:#ff3131';
-    let row = '<tr>';
-    if(showDays)  row += '<td '+td+'>'+r.days+'</td>';
-    if(showRisk)  row += '<td '+td+'>$'+r.risk+'</td>';
-    row += '<td '+td+'>'+r.rr+'</td>';
-    row += '<td '+td+'>$'+r.stop+'</td>';
-    if(showOrder) row += '<td '+td+'>'+r.order.toUpperCase()+'</td>';
-    row += '<td '+td+'>'+r.tol+'</td>';
-    row += '<td '+td+'>'+r.mb+'</td>';
-    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+wrCls+'">'+r.winRate.toFixed(1)+'%</td>';
-    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+pnlCls+'">$'+r.netPnl.toFixed(0)+'</td>';
-    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+calCls+'">'+r.calmar.toFixed(2)+'</td>';
-    row += '<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;">'
-      +'<button onclick="applySettings('+r.tol+','+r.stop+','+r.rr+','+r.mb+','+r.risk+','+r.days+',\''+r.order+'\')" style="background:#003a10;border:1px solid #00cc33;color:#00cc33;font-family:\'Share Tech Mono\',monospace;font-size:9px;padding:2px 6px;cursor:pointer;">USE</button>'
-      +'</td></tr>';
-    tbody.innerHTML += row;
-  });
+const tbody = document.getElementById(‘gs-tbody’);
+const td = ‘style=“padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;color:#00aa28;”’;
+top.forEach(r=>{
+const wrCls  = r.winRate>=85?‘color:#00ff41’:r.winRate>=50?‘color:#ffb300’:‘color:#ff3131’;
+const pnlCls = r.netPnl>0?‘color:#00ff41’:‘color:#ff3131’;
+const calCls = r.calmar>=3?‘color:#00ff41’:r.calmar>=1?‘color:#ffb300’:‘color:#ff3131’;
+let row = ‘<tr>’;
+if(showDays)  row += ‘<td ‘+td+’>’+r.days+’</td>’;
+if(showRisk)  row += ‘<td ‘+td+’>$’+r.risk+’</td>’;
+row += ‘<td ‘+td+’>’+r.rr+’</td>’;
+row += ‘<td ‘+td+’>$’+r.stop+’</td>’;
+if(showOrder) row += ‘<td ‘+td+’>’+r.order.toUpperCase()+’</td>’;
+row += ‘<td ‘+td+’>’+r.tol+’</td>’;
+row += ‘<td ‘+td+’>’+r.mb+’</td>’;
+row += ‘<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+wrCls+'">’+r.winRate.toFixed(1)+’%</td>’;
+row += ‘<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+pnlCls+'">$’+r.netPnl.toFixed(0)+’</td>’;
+row += ‘<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;'+calCls+'">’+r.calmar.toFixed(2)+’</td>’;
+row += ‘<td style="padding:5px 5px;font-size:10px;border-bottom:1px solid #091409;">’
++’<button onclick="applySettings('+r.tol+','+r.stop+','+r.rr+','+r.mb+','+r.risk+','+r.days+',\''+r.order+'\')" style="background:#003a10;border:1px solid #00cc33;color:#00cc33;font-family:\'Share Tech Mono\',monospace;font-size:9px;padding:2px 6px;cursor:pointer;">USE</button>’
++’</td></tr>’;
+tbody.innerHTML += row;
+});
 
-  document.getElementById('gs-results').style.display = 'block';
-  document.getElementById('gs-progress-wrap').style.display = 'none';
-  document.getElementById('gs-run-btn').disabled = false;
-  document.getElementById('gs-results').scrollIntoView({behavior:'smooth'});
+document.getElementById(‘gs-results’).style.display = ‘block’;
+document.getElementById(‘gs-progress-wrap’).style.display = ‘none’;
+document.getElementById(‘gs-run-btn’).disabled = false;
+document.getElementById(‘gs-results’).scrollIntoView({behavior:‘smooth’});
 }
 
 function applySettings(tol, stop, rr, mb, risk, days, order){
-  document.getElementById('cfg-tol').value    = tol;
-  document.getElementById('cfg-stop').value   = stop;
-  document.getElementById('cfg-rr').value     = rr;
-  document.getElementById('cfg-minbar').value = mb;
-  if(risk) document.getElementById('cfg-risk').value = risk;
-  if(days) document.getElementById('cfg-days').value = days;
-  if(order) selectOrder(order);
-  document.querySelector('.config-panel').scrollIntoView({behavior:'smooth'});
-  document.getElementById('bar-status').textContent = 'SETTINGS APPLIED -- PRESS RUN';
+document.getElementById(‘cfg-tol’).value    = tol;
+document.getElementById(‘cfg-stop’).value   = stop;
+document.getElementById(‘cfg-rr’).value     = rr;
+document.getElementById(‘cfg-minbar’).value = mb;
+if(risk) document.getElementById(‘cfg-risk’).value = risk;
+if(days) document.getElementById(‘cfg-days’).value = days;
+if(order) selectOrder(order);
+document.querySelector(’.config-panel’).scrollIntoView({behavior:‘smooth’});
+document.getElementById(‘bar-status’).textContent = ‘SETTINGS APPLIED – PRESS RUN’;
 }
 </script>
 
