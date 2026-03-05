@@ -279,6 +279,8 @@ display:none;
 
 <button class="run-btn" id="run-btn" onclick="runBacktest()">&#9654; RUN BACKTEST</button>
 <div id="debug-msg" style="display:none;color:#ff3131;font-size:9px;letter-spacing:1px;padding:6px 0;word-break:break-all;"></div>
+<div id="js-alive" style="color:#004a14;font-size:8px;letter-spacing:1px;padding:2px 0;">JS: LOADING...</div>
+<script>document.getElementById('js-alive').textContent='JS: OK - TAP BUTTON';</script>
 
 
 <div style="margin-top:6px;">
@@ -418,9 +420,15 @@ window.onerror = function(msg, src, line, col, err){
   _showDebug('LINE '+line+': '+msg);
   return false;
 };
-window.onunhandledrejection = function(e){
-  _showDebug('PROMISE: '+(e.reason && e.reason.message ? e.reason.message : e.reason));
-};
+window.addEventListener('DOMContentLoaded', function(){
+  const btn = document.getElementById('run-btn');
+  const alive = document.getElementById('js-alive');
+  if(alive) alive.textContent = 'JS: LOADED OK - TAP BUTTON';
+  if(btn){
+    btn.addEventListener('click', function(){ runBacktest(); });
+    btn.addEventListener('touchend', function(e){ e.preventDefault(); runBacktest(); });
+  }
+});
 let orderType = 'maker';
 const MAKER_FEE = 0.02;
 const TAKER_FEE = 0.05;
