@@ -277,7 +277,8 @@ display:none;
   </div>
 </div>
 
-<button class="run-btn" id="run-btn" onclick="console.log('BTN CLICKED'); runBacktest()">&#9654; RUN BACKTEST</button>
+<button class="run-btn" id="run-btn" onclick="runBacktest()">&#9654; RUN BACKTEST</button>
+<div id="debug-msg" style="display:none;color:#ff3131;font-size:9px;letter-spacing:1px;padding:6px 0;word-break:break-all;"></div>
 
 
 <div style="margin-top:6px;">
@@ -409,9 +410,16 @@ display:none;
 </div>
 
 <script>
+function _showDebug(msg){
+  const d = document.getElementById('debug-msg');
+  if(d){ d.style.display='block'; d.textContent='ERR: '+msg; }
+}
 window.onerror = function(msg, src, line, col, err){
-  alert('JS ERROR (line '+line+'): ' + msg);
+  _showDebug('LINE '+line+': '+msg);
   return false;
+};
+window.onunhandledrejection = function(e){
+  _showDebug('PROMISE: '+(e.reason && e.reason.message ? e.reason.message : e.reason));
 };
 let orderType = 'maker';
 const MAKER_FEE = 0.02;
@@ -562,14 +570,16 @@ function simulateTrade(candles, entryIdx, dir, entryPrice, stopDist, rrRatio, fe
 
 async function runBacktest(){
   try { await _runBacktest(); } catch(e) {
-    console.error('RUNBACKTEST ERROR:', e);
-    alert('BACKTEST ERROR: ' + e.message + '\n\nCheck console (F12) for details.');
+    _showDebug(e.message || String(e));
     const btn = document.getElementById('run-btn');
     if(btn) btn.disabled = false;
     document.getElementById('progress-wrap').style.display = 'none';
   }
 }
 async function _runBacktest(){
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('progress-label').textContent = 'STARTING...';
+  await new Promise(r=>setTimeout(r,50));
   const risk       = parseFloat(document.getElementById('cfg-risk').value);
   const rrRatio    = parseFloat(document.getElementById('cfg-rr').value);
   const stopDist   = parseFloat(document.getElementById('cfg-stop').value);
