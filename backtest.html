@@ -413,6 +413,16 @@ display:none;
 </div>
 
 <script>
+window.onerror = function(msg,src,line,col,err){
+  var d=document.getElementById('debug-msg');
+  if(d){d.style.display='block';d.textContent='ERR line '+line+': '+msg;}
+  var a=document.getElementById('js-alive');
+  if(a) a.textContent='CRASH AT LINE '+line;
+  return false;
+};
+</script>
+
+<script>
 function _showDebug(msg){
   const d = document.getElementById('debug-msg');
   if(d){ d.style.display='block'; d.textContent='ERR: '+msg; }
