@@ -277,7 +277,7 @@ display:none;
   </div>
 </div>
 
-<button class="run-btn" id="run-btn" onclick="runBacktest()">&#9654; RUN BACKTEST</button>
+<button class="run-btn" id="run-btn" onclick="console.log('BTN CLICKED'); runBacktest()">&#9654; RUN BACKTEST</button>
 
 
 <div style="margin-top:6px;">
@@ -409,6 +409,10 @@ display:none;
 </div>
 
 <script>
+window.onerror = function(msg, src, line, col, err){
+  alert('JS ERROR (line '+line+'): ' + msg);
+  return false;
+};
 let orderType = 'maker';
 const MAKER_FEE = 0.02;
 const TAKER_FEE = 0.05;
