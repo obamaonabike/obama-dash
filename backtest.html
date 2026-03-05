@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#070d07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>ObamaDash — Backtest</title>
+<title>ObamaDash - Backtest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -933,14 +933,18 @@ function setProgress(pct, label){
   document.getElementById('progress-label').textContent = label;
 }
 
-// ── QUANTSTATS REPORT ─────────────────────────────────
+// -- QUANTSTATS REPORT ---------------------------------
 let _lastTrades = [], _lastRisk = 100, _lastRR = 0.3, _lastDays = 30, _lastAccountSize = 10000;
 
 function generateReport(){
   if(!_lastTrades.length){ alert('RUN BACKTEST FIRST'); return; }
+  if(typeof buildAndDownloadReport === 'undefined'){ alert('REPORT GENERATOR FAILED TO LOAD'); return; }
   buildAndDownloadReport(_lastTrades, _lastRisk, _lastRR, _lastDays, _lastAccountSize);
 }
 
+</script>
+
+<script>
 function buildAndDownloadReport(trades, risk, rrRatio, days, accountSize){
   const wins      = trades.filter(t=>t.result==='WIN').length;
   const losses    = trades.filter(t=>t.result==='LOSS').length;
@@ -1089,8 +1093,8 @@ td{font-size:10px;padding:5px 6px;border-bottom:1px solid #091409;color:#00aa28}
 </head>
 <body>
 <h1>OBAMADASH // QUANTSTATS REPORT</h1>
-<div class="sub">BTC/USDT &nbsp;·&nbsp; LTF FAN REJECTION &nbsp;·&nbsp; ${days}D &nbsp;·&nbsp; GENERATED ${generated}</div>
-<div class="sub" style="margin-top:-10px">RISK $${risk} &nbsp;·&nbsp; RR ${rrRatio} &nbsp;·&nbsp; ACCOUNT $${accountSize.toLocaleString()}</div>
+<div class="sub">BTC/USDT &nbsp;.&nbsp; LTF FAN REJECTION &nbsp;.&nbsp; ${days}D &nbsp;.&nbsp; GENERATED ${generated}</div>
+<div class="sub" style="margin-top:-10px">RISK $${risk} &nbsp;.&nbsp; RR ${rrRatio} &nbsp;.&nbsp; ACCOUNT $${accountSize.toLocaleString()}</div>
 
 ${fees/Math.abs(grossPnl||1)>0.3?`<div class="warn">&#9888; FEES ($${fees.toFixed(0)}) = ${(fees/Math.abs(grossPnl)*100).toFixed(0)}% OF GROSS PNL</div>`:’’}
 
@@ -1180,9 +1184,12 @@ new Chart(document.getElementById('rw'),{type:'line',
   URL.revokeObjectURL(a.href);
 }
 
+</script>
+
+<script>
 window.addEventListener('load', updateCacheStatus);
 
-// ── AUTO FIND ─────────────────────────────────────────
+// -- AUTO FIND -----------------------------------------
 let sortMetric = 'calmar';
 let autoOpen = false;
 let gsOrderTypes = new Set(['maker','taker']);
@@ -1319,7 +1326,7 @@ async function runGridSearch(){
   const activeHours  = new Set(Array.from(document.querySelectorAll('.hr-btn.active')).map(b=>parseInt(b.dataset.hr)));
   if(!activeLevels.length){ alert('SELECT AT LEAST ONE FAN LEVEL'); return; }
 
-  // Build param grids — blank = use current config value
+  // Build param grids - blank = use current config value
   const curRisk  = parseFloat(document.getElementById('cfg-risk').value)||100;
   const curDays  = parseInt(document.getElementById('cfg-days').value)||30;
 
