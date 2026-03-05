@@ -557,6 +557,15 @@ function simulateTrade(candles, entryIdx, dir, entryPrice, stopDist, rrRatio, fe
 }
 
 async function runBacktest(){
+  try { await _runBacktest(); } catch(e) {
+    console.error('RUNBACKTEST ERROR:', e);
+    alert('BACKTEST ERROR: ' + e.message + '\n\nCheck console (F12) for details.');
+    const btn = document.getElementById('run-btn');
+    if(btn) btn.disabled = false;
+    document.getElementById('progress-wrap').style.display = 'none';
+  }
+}
+async function _runBacktest(){
   const risk       = parseFloat(document.getElementById('cfg-risk').value);
   const rrRatio    = parseFloat(document.getElementById('cfg-rr').value);
   const stopDist   = parseFloat(document.getElementById('cfg-stop').value);
