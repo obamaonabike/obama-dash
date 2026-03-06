@@ -492,9 +492,10 @@ async function runBacktest(){
   //   Resolution = bar close (not low/high)
   //   No hour filter
 
-  const trades   = [];
-  const byLevel  = {};
-  const debounce = {};
+  const trades      = [];
+  const byLevel     = {};
+  const debounce    = {};
+  let   totalSignals = 0;  // every signal touch, including timeouts
 
   for(let i = 2; i < candles.length - 10; i++){
     const c = candles[i];
@@ -528,7 +529,8 @@ async function runBacktest(){
          && c.close > price
          && !debounce[dk]){
         debounce[dk] = true;
-        const entry   = c.close;   // FT: entry = signal bar close
+        totalSignals++;
+        const entry   = c.close;
         const result  = simulateTradeByClose(candles, i + 1, 1, entry, stopDist, rrRatio);
         if(result !== 'TIMEOUT'){
           const posSize  = risk / stopDist;
@@ -542,7 +544,7 @@ async function runBacktest(){
           if(result === 'WIN') byLevel[label].wins++; else byLevel[label].losses++;
           byLevel[label].netPnl += netPnl;
         }
-        continue; // if/elif — don't check short on same bar+level
+        continue;
       }
 
       // ── SHORT — FT logic: touch + close below, NO open check ──
@@ -550,7 +552,8 @@ async function runBacktest(){
          && c.close < price
          && !debounce[dk]){
         debounce[dk] = true;
-        const entry   = c.close;   // FT: entry = signal bar close
+        totalSignals++;
+        const entry   = c.close;
         const result  = simulateTradeByClose(candles, i + 1, -1, entry, stopDist, rrRatio);
         if(result !== 'TIMEOUT'){
           const posSize  = risk / stopDist;
@@ -568,19 +571,25 @@ async function runBacktest(){
     }
   }
 
-  setProgress(100, 'DONE -- ' + trades.length + ' TRADES FROM ' + candles.length.toLocaleString() + ' CANDLES');
+  setProgress(100, 'DONE -- ' + trades.length + ' RESOLVED / ' + totalSignals + ' TOTAL SIGNALS');
   await new Promise(r=>setTimeout(r, 400));
   document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
 
-  renderResults(trades, byLevel, risk, rrRatio, feeRate, days, accountSize);
+  renderResults(trades, byLevel, risk, rrRatio, feeRate, days, accountSize, totalSignals);
   btn.disabled = false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RENDER RESULTS
 // ─────────────────────────────────────────────────────────────────────────────
-function renderResults(trades, byLevel, risk, rrRatio, feeRate, days, accountSize){
+function renderResults(trades, byLevel, risk, rrRatio, feeRate, days, accountSize, totalSignals){
   const totalTrades = trades.length;
+  const timeouts    = totalSignals - totalTrades;
+  const timeoutRate = totalSignals > 0 ? (timeouts / totalSignals * 100) : 0;
+  const resolveRate = totalSignals > 0 ? (totalTrades / totalSignals * 100) : 0;
+  const trueSignalsPerDay = (totalSignals / days).toFixed(1);
+  const resolvedPerDay    = (totalTrades  / days).toFixed(1);
   if(!totalTrades){
     document.getElementById('stat-grid').innerHTML =
       '<div class="stat-card full"><div class="stat-label">RESULT</div>'
@@ -651,7 +660,13 @@ function renderResults(trades, byLevel, risk, rrRatio, feeRate, days, accountSiz
     statCard('AVG R/TRADE', avgR.toFixed(3)+'R', avgR>0?'green':'red',
       'RISK: $'+risk+' &nbsp;|&nbsp; RR: '+rrRatio+':1') +
     statCard('DAILY EDGE', '$'+(totalNet/days).toFixed(2)+'/day', totalNet>0?'green':'red',
-      'TRADES/DAY: '+(totalTrades/days).toFixed(1)+' &nbsp;|&nbsp; '+days+'d SPAN') +
+      'RESOLVED/DAY: '+resolvedPerDay+' &nbsp;|&nbsp; SIGNALS/DAY: '+trueSignalsPerDay) +
+    statCard('TIMEOUT RATE', timeoutRate.toFixed(1)+'%',
+      timeoutRate>=50?'red':timeoutRate>=25?'amber':'green',
+      'TIMEOUTS: '+timeouts+' / '+totalSignals+' SIGNALS &nbsp;|&nbsp; RESOLVE: '+resolveRate.toFixed(1)+'%') +
+    statCard('TRUE SIGNAL RATE', trueSignalsPerDay+'/day',
+      'blue',
+      'WHAT FT FIRES &nbsp;|&nbsp; RESOLVED: '+resolvedPerDay+'/day') +
     statCard('MAX DRAWDOWN', '$'+maxDD.toFixed(2), 'red',
       (peak>0?(maxDD/peak*100).toFixed(1):0)+'% OF PEAK &nbsp;|&nbsp; '+(maxDD/accountSize*100).toFixed(1)+'% OF ACCT') +
     statCard('CALMAR RATIO', calmar, parseFloat(calmar)>=3?'green':parseFloat(calmar)>=1?'amber':'red',
