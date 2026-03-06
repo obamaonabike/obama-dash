@@ -418,11 +418,12 @@ function backtestCandles(candles, config) {
 
   const trades       = [];
   const debounce     = {};
-  const openExitBars  = []; // all open positions — sorted ascending
-  const openLongBars  = []; // open LONG positions
-  const openShortBars = []; // open SHORT positions
-  const clusterMap    = {}; // candle_time → count of trades fired that bar
+  const openExitBars  = [];
+  const openLongBars  = [];
+  const openShortBars = [];
+  const clusterMap    = {};
   const isBT1        = config.mode === 'BT1';
+  let   totalSignals  = 0; // every debounced signal touch including timeouts
 
   for (let i = 2; i < candles.length - 10; i++) {
     const c    = candles[i];
@@ -495,12 +496,10 @@ function backtestCandles(candles, config) {
       if (openExitBars.length >= config.maxPositions) continue;
 
       debounce[dk] = true;
+      totalSignals++;
 
       const dir      = signalDir === 'LONG' ? 1 : -1;
-      // BT1 entry = next bar (c) open; BT2 entry = signal bar (c) close
       const rawEntry = isBT1 ? c.open : signalBar.close;
-      // BT1 simulation starts at bar i (entry bar IS bar i);
-      // BT2 simulation starts at i+1 (entry bar is after signal bar)
       const entryIdx = isBT1 ? i : i + 1;
 
       const sim = simulateTrade(
@@ -547,7 +546,7 @@ function backtestCandles(candles, config) {
     }
   }
 
-  return { trades, anchorDays: Object.keys(anchorOpens).length, clusterMap };
+  return { trades, anchorDays: Object.keys(anchorOpens).length, clusterMap, totalSignals };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -807,7 +806,7 @@ async function runBacktest() {
   // ── MAIN BACKTEST ──
   setProgress(62, `SCANNING ${candles.length.toLocaleString()} CANDLES (${currentMode} LOGIC)...`);
   await new Promise(r => setTimeout(r, 30));
-  const { trades, clusterMap } = backtestCandles(candles, config);
+  const { trades, clusterMap, totalSignals } = backtestCandles(candles, config);
 
   if (!trades.length) {
     setProgress(0, 'NO TRADES FOUND — TRY WIDER TOLERANCE OR MORE DAYS');
@@ -832,15 +831,20 @@ async function runBacktest() {
   await new Promise(r => setTimeout(r, 400));
   document.getElementById('progress-wrap').style.display = 'none';
 
-  renderResults(trades, mcResult, concResult, wfResult, config, accountSize, days, slipPct, spreadPct, numMCSims);
+  renderResults(trades, mcResult, concResult, wfResult, config, accountSize, days, slipPct, spreadPct, numMCSims, totalSignals);
   btn.disabled = false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════════════════════════════════
-function renderResults(trades, mc, conc, wf, config, accountSize, days, slipPct, spreadPct, numMCSims) {
-  const total      = trades.length;
+function renderResults(trades, mc, conc, wf, config, accountSize, days, slipPct, spreadPct, numMCSims, totalSignals) {
+  const total         = trades.length;
+  const timeouts      = totalSignals - total;
+  const timeoutRate   = totalSignals > 0 ? (timeouts / totalSignals * 100) : 0;
+  const resolveRate   = totalSignals > 0 ? (total / totalSignals * 100) : 0;
+  const signalsPerDay = (totalSignals / days).toFixed(1);
+  const resolvedPerDay= (total / days).toFixed(1);
   const wins       = trades.filter(t => t.result === 'WIN').length;
   const losses     = total - wins;
   const winRate    = wins / total * 100;
@@ -900,7 +904,12 @@ function renderResults(trades, mc, conc, wf, config, accountSize, days, slipPct,
     sc('AVG R/TRADE', avgR.toFixed(3)+'R', avgR>0?'green':'red',
        `RISK: $${config.risk}  |  RR: ${config.rrRatio}:1`) +
     sc('DAILY EDGE', '$'+(netPnl/days).toFixed(2)+'/day', netPnl>0?'green':'red',
-       `TRADES/DAY: ${(total/days).toFixed(1)}  |  ${days}d`) +
+       `RESOLVED/DAY: ${resolvedPerDay}  |  SIGNALS/DAY: ${signalsPerDay}`) +
+    sc('TIMEOUT RATE', timeoutRate.toFixed(1)+'%',
+       timeoutRate>=50?'red':timeoutRate>=25?'amber':'green',
+       `TIMEOUTS: ${timeouts} / ${totalSignals} SIGNALS  |  RESOLVE: ${resolveRate.toFixed(1)}%`) +
+    sc('TRUE SIGNAL RATE', signalsPerDay+'/day', 'blue',
+       `WHAT FT FIRES  |  RESOLVED: ${resolvedPerDay}/day`) +
     sc('MAX DRAWDOWN', '$'+maxDD.toFixed(2), 'red',
        `${peak>0?(maxDD/peak*100).toFixed(1):0}% OF PEAK  |  ${(maxDD/accountSize*100).toFixed(1)}% OF ACCT`) +
     sc('CALMAR RATIO', calmar, parseFloat(calmar)>=3?'green':parseFloat(calmar)>=1?'amber':'red',
