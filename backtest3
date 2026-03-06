@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070d07">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ObamaDash — Backtest v3 / Stress Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;background:#030803;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:11px;overflow-x:hidden;}
+#app{display:flex;flex-direction:column;width:100%;min-height:100dvh;}
+.bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#070d07;color:#006618;font-size:10px;letter-spacing:2px;text-transform:uppercase;}
+.bar-top{border-bottom:1px solid #0f2a0f;padding-top:env(safe-area-inset-top);min-height:calc(32px + env(safe-area-inset-top));align-items:flex-end;padding-bottom:6px;}
+.bar-bottom{border-top:1px solid #0f2a0f;padding-top:5px;padding-bottom:calc(env(safe-area-inset-bottom)+5px);min-height:24px;height:auto;align-items:flex-start;}
+.bar-title{font-size:11px;letter-spacing:4px;color:#00cc33;}
+.nav-link{color:#004a14;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px;}
+.content{flex:1;overflow-y:auto;padding:12px 10px;}
+/* ── CONFIG ── */
+.panel{border:1px solid #0f2a0f;padding:10px;margin-bottom:12px;background:#050f05;}
+.panel-title{color:#00cc33;letter-spacing:3px;font-size:10px;margin-bottom:10px;border-bottom:1px solid #0f2a0f;padding-bottom:6px;}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cfg-label{color:#006618;font-size:10px;letter-spacing:1px;}
+.cfg-input{background:#030803;border:1px solid #0f2a0f;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 6px;width:90px;text-align:right;outline:none;}
+.cfg-input:focus{border-color:#00cc33;}
+.mode-btn{background:#030803;border:1px solid #0f2a0f;color:#006618;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:5px 14px;cursor:pointer;}
+.mode-btn.active{border-color:#00cc33;color:#00cc33;background:#001a06;}
+.lvl-btn{background:#030803;border:1px solid #0f2a0f;color:#006618;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:4px 8px;cursor:pointer;}
+.lvl-btn.active{border-color:#ffb300;color:#ffb300;background:#1a0f00;}
+.run-btn{width:100%;padding:10px;background:#003a10;border:1px solid #00cc33;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;transition:background 0.15s;margin-top:4px;}
+.run-btn:active{background:#00cc33;color:#030803;}
+.run-btn:disabled{opacity:0.4;cursor:not-allowed;}
+/* ── PROGRESS ── */
+#progress-wrap{display:none;margin-top:10px;margin-bottom:12px;}
+.prog-bg{width:100%;height:6px;background:#0f2a0f;margin-top:6px;}
+.prog-fill{height:100%;background:#00cc33;width:0%;transition:width 0.1s;}
+#prog-label{color:#006618;font-size:10px;letter-spacing:1px;margin-bottom:4px;}
+/* ── RESULTS ── */
+#results{display:none;}
+.section-title{color:#00cc33;letter-spacing:3px;font-size:10px;margin-bottom:8px;margin-top:14px;border-bottom:1px solid #0f2a0f;padding-bottom:6px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.stat-card{border:1px solid #0f2a0f;background:#050f05;padding:8px 10px;}
+.stat-card.full{grid-column:1/-1;}
+.stat-card.hi{border-color:#00aaff;}
+.stat-label{color:#006618;font-size:9px;letter-spacing:2px;margin-bottom:4px;}
+.stat-value{font-size:16px;letter-spacing:1px;color:#00cc33;}
+.stat-value.green{color:#00ff41;}.stat-value.red{color:#ff3131;}.stat-value.amber{color:#ffb300;}.stat-value.blue{color:#00aaff;}.stat-value.white{color:#ffffff;}
+.stat-sub{color:#004a14;font-size:9px;margin-top:2px;}
+table{width:100%;border-collapse:collapse;margin-bottom:14px;}
+th{color:#006618;font-size:9px;letter-spacing:1px;text-align:left;padding:4px 6px;border-bottom:1px solid #0f2a0f;font-weight:normal;}
+td{padding:5px 6px;font-size:10px;border-bottom:1px solid #091409;color:#00aa28;}
+td.g{color:#00ff41;}td.r{color:#ff3131;}td.a{color:#ffb300;}td.b{color:#00aaff;}td.w{color:#ffffff;}
+.wf-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;}
+.wf-card{border:1px solid #0f2a0f;background:#050f05;padding:8px 10px;}
+.wf-card.is{border-color:#004a14;}.wf-card.oos{border-color:#00aaff;}
+.wf-title{font-size:9px;letter-spacing:2px;margin-bottom:6px;}
+.wf-title.is{color:#006618;}.wf-title.oos{color:#00aaff;}
+.wf-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;}
+.wf-key{color:#004a14;}.wf-val{color:#00cc33;}
+.trade-log-wrap{max-height:300px;overflow-y:auto;border:1px solid #0f2a0f;}
+.trade-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-bottom:1px solid #091409;font-size:9px;}
+.trade-row.win{border-left:2px solid #00ff41;}.trade-row.loss{border-left:2px solid #ff3131;}
+.mc-chart-wrap{border:1px solid #0f2a0f;background:#050f05;padding:8px;margin-bottom:12px;position:relative;height:140px;}
+.degrad{font-size:9px;letter-spacing:1px;margin-bottom:6px;}
+.badge{display:inline-block;border:1px solid #00aaff;background:#001a2a;color:#00aaff;font-size:9px;letter-spacing:1px;padding:6px 10px;margin-bottom:12px;line-height:1.7;}
+.badge b{color:#00ddff;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bar bar-top">
+    <span class="bar-title">BACKTEST v3</span>
+    <a href="index.html"     class="nav-link">BTC</a>
+    <a href="backtest.html"  class="nav-link">BT1</a>
+    <a href="backtest2.html" class="nav-link">BT2</a>
+    <span style="color:#ffb300;font-size:9px;letter-spacing:1px;">STRESS TEST</span>
+  </div>
+
+  <div class="content">
+    <div class="badge">
+      <b>// BT3 STRESS TEST</b> — slippage · simultaneous position cap · monte carlo · walk-forward<br>
+      Select <b>BT1</b> or <b>BT2</b> logic then configure stress parameters. Compare results to BT1/BT2 baselines.
+    </div>
+
+```
+<!-- CONFIG -->
+<div class="panel">
+  <div class="panel-title">// LOGIC MODE</div>
+  <div class="cfg-row">
+    <span class="cfg-label">SIGNAL LOGIC</span>
+    <div style="display:flex;gap:6px;">
+      <button class="mode-btn active" id="btn-bt1" onclick="setMode('BT1')">BT1</button>
+      <button class="mode-btn"        id="btn-bt2" onclick="setMode('BT2')">BT2</button>
+    </div>
+  </div>
+  <div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:6px;line-height:1.6;" id="mode-desc">
+    BT1: prev bar signal · next bar open entry · low/high resolution · loss-first
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">// BASE CONFIG</div>
+  <div class="cfg-row"><span class="cfg-label">RISK PER TRADE ($)</span><input class="cfg-input" id="cfg-risk" type="number" value="1000" min="1"></div>
+  <div class="cfg-row"><span class="cfg-label">REWARD RATIO</span><input class="cfg-input" id="cfg-rr" type="number" value="0.3" step="0.05" min="0.1"></div>
+  <div class="cfg-row"><span class="cfg-label">STOP DISTANCE ($)</span><input class="cfg-input" id="cfg-stop" type="number" value="3000" min="10"></div>
+  <div class="cfg-row"><span class="cfg-label">ACCOUNT SIZE ($)</span><input class="cfg-input" id="cfg-account" type="number" value="10000" min="100"></div>
+  <div class="cfg-row"><span class="cfg-label">FEE RATE (%)</span><input class="cfg-input" id="cfg-fee" type="number" value="0.02" step="0.005" min="0"></div>
+  <div class="cfg-row"><span class="cfg-label">TOUCH TOLERANCE (%)</span><input class="cfg-input" id="cfg-tol" type="number" value="0.08" step="0.01" min="0.01"></div>
+  <div class="cfg-row"><span class="cfg-label">MIN BAR OFFSET</span><input class="cfg-input" id="cfg-minbar" type="number" value="5" min="1" max="60"></div>
+  <div class="cfg-row"><span class="cfg-label">DAYS</span><input class="cfg-input" id="cfg-days" type="number" value="30" min="1" max="1800" onchange="updateCacheStatus()"></div>
+  <div class="cfg-row" style="cursor:pointer;" onclick="clearCache()">
+    <span class="cfg-label">CANDLE CACHE</span>
+    <span id="cache-status" style="font-size:9px;letter-spacing:1px;color:#004a14;">CHECKING...</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">// STRESS PARAMETERS</div>
+  <div class="cfg-row">
+    <span class="cfg-label">SLIPPAGE (%)</span>
+    <input class="cfg-input" id="cfg-slip" type="number" value="0.00" step="0.01" min="0" max="1">
+  </div>
+  <div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;">
+    0.00 = no slippage (baseline) · 0.02 = realistic · 0.05 = conservative
+  </div>
+  <div class="cfg-row">
+    <span class="cfg-label">SPREAD (%)</span>
+    <input class="cfg-input" id="cfg-spread" type="number" value="0.00" step="0.01" min="0" max="1">
+  </div>
+  <div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;">
+    0.00 = maker only (baseline) · 0.02 = taker spread · 0.05 = illiquid
+  </div>
+  <div class="cfg-row">
+    <span class="cfg-label">MAX SIMULTANEOUS POSITIONS</span>
+    <input class="cfg-input" id="cfg-maxpos" type="number" value="999" min="1" max="999">
+  </div>
+  <div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;">
+    999 = unlimited (baseline) · 1 = single position only
+  </div>
+  <div class="cfg-row">
+    <span class="cfg-label">MONTE CARLO SIMS</span>
+    <input class="cfg-input" id="cfg-mcsims" type="number" value="10000" min="1000" step="1000">
+  </div>
+  <div class="cfg-row">
+    <span class="cfg-label">WALK-FORWARD IN-SAMPLE (%)</span>
+    <input class="cfg-input" id="cfg-wfsplit" type="number" value="80" min="50" max="95">
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">// FAN LEVELS</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px;">
+    <button class="lvl-btn active" data-deg="27"  onclick="this.classList.toggle('active')">+27</button>
+    <button class="lvl-btn active" data-deg="-27" onclick="this.classList.toggle('active')">-27</button>
+    <button class="lvl-btn active" data-deg="45"  onclick="this.classList.toggle('active')">+45</button>
+    <button class="lvl-btn active" data-deg="-45" onclick="this.classList.toggle('active')">-45</button>
+    <button class="lvl-btn active" data-deg="60"  onclick="this.classList.toggle('active')">+60</button>
+    <button class="lvl-btn active" data-deg="-60" onclick="this.classList.toggle('active')">-60</button>
+    <button class="lvl-btn active" data-deg="72"  onclick="this.classList.toggle('active')">+72</button>
+    <button class="lvl-btn active" data-deg="-72" onclick="this.classList.toggle('active')">-72</button>
+    <button class="lvl-btn active" data-deg="78"  onclick="this.classList.toggle('active')">+78</button>
+    <button class="lvl-btn active" data-deg="-78" onclick="this.classList.toggle('active')">-78</button>
+  </div>
+</div>
+
+<button class="run-btn" id="run-btn" onclick="runBacktest()">&#9654; RUN STRESS TEST</button>
+
+<div id="progress-wrap">
+  <div id="prog-label">INITIALISING...</div>
+  <div class="prog-bg"><div class="prog-fill" id="prog-fill"></div></div>
+</div>
+
+<div id="results">
+  <!-- CORE STATS -->
+  <div class="section-title">// CORE STATS</div>
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <!-- SLIPPAGE IMPACT -->
+  <div id="slip-section" style="display:none;">
+    <div class="section-title">// EXECUTION QUALITY</div>
+    <div class="stat-grid" id="slip-grid"></div>
+  </div>
+
+  <!-- RISK & EXPOSURE -->
+  <div class="section-title">// RISK &amp; EXPOSURE</div>
+  <div class="stat-grid" id="risk-grid"></div>
+
+  <!-- CONCURRENT EXPOSURE -->
+  <div class="section-title">// SIMULTANEOUS EXPOSURE</div>
+  <div class="stat-grid" id="conc-grid"></div>
+  <table id="conc-table">
+    <thead><tr><th>CONCURRENT POSITIONS</th><th>TIMES OBSERVED</th><th>% OF TRADES</th><th>MAX EXPOSURE ($)</th></tr></thead>
+    <tbody id="conc-tbody"></tbody>
+  </table>
+
+  <!-- MONTE CARLO -->
+  <div class="section-title">// MONTE CARLO — <span id="mc-sims-label" style="color:#004a14;">10,000 SIMULATIONS</span></div>
+  <div class="stat-grid" id="mc-grid"></div>
+  <div class="mc-chart-wrap"><canvas id="mc-chart"></canvas></div>
+
+  <!-- WALK-FORWARD -->
+  <div class="section-title">// WALK-FORWARD ANALYSIS</div>
+  <div id="wf-periods" style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;"></div>
+  <div class="wf-grid" id="wf-grid"></div>
+  <div class="stat-grid" id="wf-degrad-grid"></div>
+
+  <!-- BY LEVEL -->
+  <div class="section-title">// BY LEVEL</div>
+  <table><thead><tr><th>LEVEL</th><th>TRADES</th><th>WIN%</th><th>NET PNL</th><th>AVG R</th><th>MAX CONC</th></tr></thead>
+    <tbody id="level-tbody"></tbody>
+  </table>
+
+  <!-- BY HOUR -->
+  <div class="section-title">// BY HOUR (UTC)</div>
+  <table><thead><tr><th>HOUR</th><th>TRADES</th><th>WIN%</th><th>NET PNL</th><th>% OF TOTAL</th></tr></thead>
+    <tbody id="hour-tbody"></tbody>
+  </table>
+
+  <!-- TRADE LOG -->
+  <div class="section-title">// TRADE LOG <span style="color:#004a14;font-size:9px;">(LAST 100)</span></div>
+  <div class="trade-log-wrap" id="trade-log"></div>
+</div>
+```
+
+  </div>
+
+  <div class="bar bar-bottom">
+    <span id="bar-status">READY</span>
+    <span id="bar-time">--</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════════
+const SYMBOL    = 'BTCUSDT';
+const CACHE_VER = 'v1';
+let   currentMode = 'BT1';
+let   mcChartInstance = null;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('btn-bt1').classList.toggle('active', m === 'BT1');
+  document.getElementById('btn-bt2').classList.toggle('active', m === 'BT2');
+  document.getElementById('mode-desc').textContent = m === 'BT1'
+    ? 'BT1: prev bar signal · next bar open entry · low/high resolution · loss-first'
+    : 'BT2: current bar signal · current bar close entry · close resolution · win-first';
+}
+
+function setProgress(pct, label) {
+  document.getElementById('prog-fill').style.width  = pct + '%';
+  document.getElementById('prog-label').textContent = label;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CACHE
+// ═══════════════════════════════════════════════════════════════════════════════
+function getCacheKey(days) {
+  return `obamadash_candles_${CACHE_VER}_${days}d_${new Date().toISOString().slice(0,10)}`;
+}
+function loadCachedCandles(days) {
+  try {
+    const key  = getCacheKey(days);
+    const data = localStorage.getItem(key);
+    if (!data) return null;
+    for (const k of Object.keys(localStorage))
+      if (k.startsWith('obamadash_candles_') && k !== key) localStorage.removeItem(k);
+    return JSON.parse(data);
+  } catch(e) { return null; }
+}
+function saveCachedCandles(days, candles) {
+  try { localStorage.setItem(getCacheKey(days), JSON.stringify(candles)); }
+  catch(e) {
+    for (const k of Object.keys(localStorage))
+      if (k.startsWith('obamadash_candles_')) localStorage.removeItem(k);
+    try { localStorage.setItem(getCacheKey(days), JSON.stringify(candles)); } catch(e2) {}
+  }
+}
+function clearCache() {
+  let n = 0;
+  for (const k of Object.keys(localStorage))
+    if (k.startsWith('obamadash_candles_')) { localStorage.removeItem(k); n++; }
+  updateCacheStatus();
+  alert(n ? `CLEARED ${n} CACHE ENTRIES` : 'NO CACHE TO CLEAR');
+}
+function updateCacheStatus() {
+  const days   = parseInt(document.getElementById('cfg-days').value) || 30;
+  const cached = loadCachedCandles(days);
+  const el     = document.getElementById('cache-status');
+  if (!el) return;
+  el.textContent = cached
+    ? `CACHED (${cached.length.toLocaleString()} CANDLES) — CLICK TO CLEAR`
+    : 'NO CACHE — WILL FETCH FROM BINANCE';
+  el.style.color = cached ? '#00cc33' : '#004a14';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════════════════════════════════════════
+async function fetchKlines(startTime, endTime) {
+  const url = `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=1m`
+    + `&startTime=${startTime}&endTime=${endTime}&limit=1000`;
+  const r = await fetch(url);
+  const d = await r.json();
+  return d.map(k => ({
+    time:  k[0] / 1000,
+    open:  parseFloat(k[1]),
+    high:  parseFloat(k[2]),
+    low:   parseFloat(k[3]),
+    close: parseFloat(k[4]),
+  }));
+}
+async function fetchAllCandles(days, onProgress) {
+  const now   = Date.now();
+  const start = now - days * 86400000;
+  let candles = [], cur = start;
+  while (cur < now) {
+    const end   = Math.min(cur + 60000000, now);
+    const batch = await fetchKlines(cur, end);
+    if (!batch.length) break;
+    candles = candles.concat(batch);
+    cur = batch[batch.length - 1].time * 1000 + 60000;
+    onProgress(Math.min(99, Math.round((cur - start) / (now - start) * 100)));
+    await new Promise(r => setTimeout(r, 80));
+  }
+  return candles;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MATH
+// ═══════════════════════════════════════════════════════════════════════════════
+function getAnchor0900(ts) {
+  const d = new Date(ts);
+  const a = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 9, 0, 0));
+  if (a > d) a.setUTCDate(a.getUTCDate() - 1);
+  return a;
+}
+function anglePrice(anchor, bars, deg) {
+  return anchor + bars * Math.tan(deg * Math.PI / 180);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SORTED INSERT (maintains ascending order for efficient concurrent tracking)
+// ═══════════════════════════════════════════════════════════════════════════════
+function insertSorted(arr, val) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; arr[m] < val ? lo = m + 1 : hi = m; }
+  arr.splice(lo, 0, val);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRADE SIMULATION
+// Applies slippage to entry. Mode controls resolution method.
+// Returns { result, entry, entryBar, exitBar }
+// ═══════════════════════════════════════════════════════════════════════════════
+function simulateTrade(candles, entryBar, dir, rawEntry, stopDist, rrRatio, slippage, mode) {
+  // Slippage worsens the fill: LONG pays more, SHORT pays less
+  const entry  = dir === 1
+    ? rawEntry * (1 + slippage)
+    : rawEntry * (1 - slippage);
+  const target = entry + dir * stopDist * rrRatio;
+  const stop   = entry - dir * stopDist;
+  const maxBar = Math.min(entryBar + 200, candles.length);
+
+  if (mode === 'BT1') {
+    // BT1: bar low/high resolution — LOSS checked before WIN per bar
+    for (let i = entryBar; i < maxBar; i++) {
+      const c = candles[i];
+      if (dir === 1) {
+        if (c.low  <= stop)   return { result: 'LOSS', entry, entryBar, exitBar: i };
+        if (c.high >= target) return { result: 'WIN',  entry, entryBar, exitBar: i };
+      } else {
+        if (c.high >= stop)   return { result: 'LOSS', entry, entryBar, exitBar: i };
+        if (c.low  <= target) return { result: 'WIN',  entry, entryBar, exitBar: i };
+      }
+    }
+  } else {
+    // BT2: bar close resolution — WIN checked before LOSS (matches FT if/elif)
+    for (let i = entryBar; i < maxBar; i++) {
+      const price = candles[i].close;
+      if (dir === 1) {
+        if (price >= target) return { result: 'WIN',  entry, entryBar, exitBar: i };
+        if (price <= stop)   return { result: 'LOSS', entry, entryBar, exitBar: i };
+      } else {
+        if (price <= target) return { result: 'WIN',  entry, entryBar, exitBar: i };
+        if (price >= stop)   return { result: 'LOSS', entry, entryBar, exitBar: i };
+      }
+    }
+  }
+  return { result: 'TIMEOUT', entry, entryBar, exitBar: maxBar - 1 };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CORE BACKTEST LOOP — reusable on any candle slice
+// config: { mode, risk, rrRatio, stopDist, feeRate, tolPct, minBar,
+//           slippage, maxPositions, activeLevels }
+// Returns { trades[], anchorDays }
+// ═══════════════════════════════════════════════════════════════════════════════
+function backtestCandles(candles, config) {
+  // Build anchor opens from this slice
+  const anchorOpens = {};
+  for (const c of candles) {
+    const anchor    = getAnchor0900(c.time * 1000);
+    const key       = anchor.toISOString().slice(0, 10);
+    if (!anchorOpens[key]) {
+      const anchorSec = anchor.getTime() / 1000;
+      if (Math.abs(c.time - anchorSec) < 180) anchorOpens[key] = c.open;
+    }
+  }
+
+  const trades       = [];
+  const debounce     = {};
+  const openExitBars  = []; // all open positions — sorted ascending
+  const openLongBars  = []; // open LONG positions
+  const openShortBars = []; // open SHORT positions
+  const clusterMap    = {}; // candle_time → count of trades fired that bar
+  const isBT1        = config.mode === 'BT1';
+
+  for (let i = 2; i < candles.length - 10; i++) {
+    const c    = candles[i];
+    const prev = candles[i - 1];
+
+    // BT1 uses prev as signal bar; BT2 uses current bar
+    const signalBar = isBT1 ? prev : c;
+
+    const anchor     = getAnchor0900(c.time * 1000);
+    const anchorKey  = anchor.toISOString().slice(0, 10);
+    const anchorOpen = anchorOpens[anchorKey];
+    if (!anchorOpen) continue;
+
+    const anchorSec  = anchor.getTime() / 1000;
+
+    // Date boundary: signal bar must be on the anchor day
+    const signalDate = new Date(signalBar.time * 1000).toISOString().slice(0, 10);
+    if (signalDate !== anchorKey) continue;
+
+    // BT1 additionally requires the entry bar (c) to be on the same anchor day
+    if (isBT1) {
+      const entryDate = new Date(c.time * 1000).toISOString().slice(0, 10);
+      if (entryDate !== anchorKey) continue;
+    }
+
+    // Bar count from signal bar's timestamp (BT1: prev bar; BT2: current bar)
+    const bar = Math.floor((signalBar.time - anchorSec) / 60);
+    if (bar < config.minBar) continue;
+
+    // Prune positions that have already closed (exitBar < current bar i)
+    while (openExitBars.length  && openExitBars[0]  < i) openExitBars.shift();
+    while (openLongBars.length  && openLongBars[0]  < i) openLongBars.shift();
+    while (openShortBars.length && openShortBars[0] < i) openShortBars.shift();
+
+    for (const deg of config.activeLevels) {
+      const label = deg > 0 ? `L+${deg}` : `L${deg}`;
+      const price  = anglePrice(anchorOpen, bar, deg);
+      const tol    = price * config.tolPct;
+      const dk     = `${anchorKey}_${label}`;
+
+      if (debounce[dk]) continue;
+
+      // ── SIGNAL DETECTION ──
+      let signalDir = null;
+
+      if (isBT1) {
+        // BT1: touch band + close + open check on prev bar
+        if (signalBar.low  <= price + tol && signalBar.low  >= price - tol
+            && signalBar.close > price && signalBar.open > signalBar.close - tol) {
+          signalDir = 'LONG';
+        } else if (signalBar.high >= price - tol && signalBar.high <= price + tol
+            && signalBar.close < price && signalBar.open < signalBar.close + tol) {
+          signalDir = 'SHORT';
+        }
+      } else {
+        // BT2: touch band + close only on current bar
+        if (signalBar.low  <= price + tol && signalBar.low  >= price - tol
+            && signalBar.close > price) {
+          signalDir = 'LONG';
+        } else if (signalBar.high >= price - tol && signalBar.high <= price + tol
+            && signalBar.close < price) {
+          signalDir = 'SHORT';
+        }
+      }
+
+      if (!signalDir) continue;
+
+      // ── SIMULTANEOUS POSITION CAP ──
+      // Check CURRENT count of open positions (after pruning) before firing
+      if (openExitBars.length >= config.maxPositions) continue;
+
+      debounce[dk] = true;
+
+      const dir      = signalDir === 'LONG' ? 1 : -1;
+      // BT1 entry = next bar (c) open; BT2 entry = signal bar (c) close
+      const rawEntry = isBT1 ? c.open : signalBar.close;
+      // BT1 simulation starts at bar i (entry bar IS bar i);
+      // BT2 simulation starts at i+1 (entry bar is after signal bar)
+      const entryIdx = isBT1 ? i : i + 1;
+
+      const sim = simulateTrade(
+        candles, entryIdx, dir, rawEntry,
+        config.stopDist, config.rrRatio, config.slippage, config.mode
+      );
+
+      if (sim.result === 'TIMEOUT') continue;
+
+      // Track this position in the open sets
+      insertSorted(openExitBars, sim.exitBar);
+      if (signalDir === 'LONG') insertSorted(openLongBars,  sim.exitBar);
+      else                      insertSorted(openShortBars, sim.exitBar);
+
+      // Track cluster: how many trades fire on this signal candle's timestamp
+      const ck = signalBar.time;
+      clusterMap[ck] = (clusterMap[ck] || 0) + 1;
+
+      const posSize  = config.risk / config.stopDist;
+      const spreadCost = posSize * sim.entry * (config.spread || 0) * 2;
+      const feeCost  = posSize * sim.entry * config.feeRate * 2;
+      const grossPnl = sim.result === 'WIN' ? config.risk * config.rrRatio : -config.risk;
+      const netPnl   = grossPnl - feeCost - spreadCost;
+      const hour     = new Date(c.time * 1000).getUTCHours();
+
+      trades.push({
+        time:          c.time,
+        level:         label,
+        dir:           signalDir,
+        entry:         sim.entry,
+        rawEntry,
+        result:        sim.result,
+        grossPnl,
+        feeCost,
+        spreadCost,
+        netPnl,
+        hour,
+        entryBar:      sim.entryBar,
+        exitBar:       sim.exitBar,
+        concurrent:    openExitBars.length,
+        concurrentDir: signalDir === 'LONG' ? openLongBars.length : openShortBars.length,
+        clusterKey:    ck,
+      });
+    }
+  }
+
+  return { trades, anchorDays: Object.keys(anchorOpens).length, clusterMap };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MONTE CARLO — shuffle trade P&L sequence N times, track equity + max drawdown
+// ═══════════════════════════════════════════════════════════════════════════════
+function runMonteCarlo(trades, numSims) {
+  const pnls = trades.map(t => t.netPnl);
+  const n    = pnls.length;
+  if (!n) return null;
+
+  const finalEquities = new Float64Array(numSims);
+  const maxDrawdowns  = new Float64Array(numSims);
+
+  for (let s = 0; s < numSims; s++) {
+    // Fisher-Yates shuffle (in-place on copy)
+    const sh = [...pnls];
+    for (let i = n - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      const t = sh[i]; sh[i] = sh[j]; sh[j] = t;
+    }
+    let equity = 0, peak = 0, maxDD = 0;
+    for (const p of sh) {
+      equity += p;
+      if (equity > peak) peak = equity;
+      const dd = peak - equity;
+      if (dd > maxDD) maxDD = dd;
+    }
+    finalEquities[s] = equity;
+    maxDrawdowns[s]  = maxDD;
+  }
+
+  // Sort for percentile extraction
+  finalEquities.sort();
+  maxDrawdowns.sort();
+
+  const pct = (arr, p) => arr[Math.floor(arr.length * p)];
+
+  return {
+    p5:           pct(finalEquities, 0.05),
+    p25:          pct(finalEquities, 0.25),
+    p50:          pct(finalEquities, 0.50),
+    p75:          pct(finalEquities, 0.75),
+    p95:          pct(finalEquities, 0.95),
+    min:          finalEquities[0],
+    max:          finalEquities[finalEquities.length - 1],
+    pctProfitable:(Array.from(finalEquities).filter(e => e > 0).length / numSims * 100).toFixed(1),
+    medMaxDD:     pct(maxDrawdowns, 0.50),
+    p95MaxDD:     pct(maxDrawdowns, 0.95),
+    allEquities:  Array.from(finalEquities),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONCURRENT & RISK STATS
+// ═══════════════════════════════════════════════════════════════════════════════
+function computeConcurrentStats(trades, clusterMap, risk, stopDist) {
+  if (!trades.length) return null;
+
+  const maxConc    = Math.max(...trades.map(t => t.concurrent));
+  const avgConc    = (trades.reduce((s, t) => s + t.concurrent, 0) / trades.length).toFixed(2);
+  const dist       = {};
+  for (const t of trades) dist[t.concurrent] = (dist[t.concurrent] || 0) + 1;
+
+  // Max directional: worst-case same-direction concurrent
+  const maxLongConc  = Math.max(...trades.filter(t=>t.dir==='LONG') .map(t=>t.concurrentDir), 0);
+  const maxShortConc = Math.max(...trades.filter(t=>t.dir==='SHORT').map(t=>t.concurrentDir), 0);
+  const maxDirConc   = Math.max(maxLongConc, maxShortConc);
+
+  // Max total risk ($) = max concurrent × risk per trade
+  const maxTotalRisk = maxConc * risk;
+
+  // Max directional risk ($)
+  const maxDirRisk = maxDirConc * risk;
+
+  // Max simultaneous losses = maxConc × risk (theoretical worst case)
+  const maxSimultLosses = maxConc * risk;
+
+  // Max trade cluster = most trades firing in a single candle
+  const maxCluster = clusterMap && Object.values(clusterMap).length
+    ? Math.max(...Object.values(clusterMap))
+    : 1;
+
+  const maxExposure = maxTotalRisk;
+
+  // Intraday drawdown: group by UTC date, compute per-day running P&L
+  const byDate = {};
+  for (const t of trades) {
+    const d = new Date(t.time * 1000).toISOString().slice(0,10);
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(t.netPnl);
+  }
+  let maxIntradayDD = 0;
+  let worstDay      = '';
+  for (const [date, pnls] of Object.entries(byDate)) {
+    let run = 0, peak = 0, dd = 0;
+    for (const p of pnls) {
+      run += p;
+      if (run > peak) peak = run;
+      dd = Math.max(dd, peak - run);
+    }
+    if (dd > maxIntradayDD) { maxIntradayDD = dd; worstDay = date; }
+  }
+
+  return {
+    maxConc, avgConc, dist,
+    maxLongConc, maxShortConc, maxDirConc,
+    maxTotalRisk, maxDirRisk, maxSimultLosses,
+    maxCluster, maxExposure,
+    maxIntradayDD, worstDay,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WALK-FORWARD — split candles at splitPct, run backtestCandles on each half
+// ═══════════════════════════════════════════════════════════════════════════════
+function runWalkForward(candles, config, splitPct) {
+  const splitIdx  = Math.floor(candles.length * splitPct / 100);
+  const inSlice   = candles.slice(0, splitIdx);
+  const outSlice  = candles.slice(splitIdx);
+  const inResult  = backtestCandles(inSlice,  config);
+  const outResult = backtestCandles(outSlice, config);
+
+  function summarise(trades, days) {
+    if (!trades.length) return { trades: 0, days };
+    const wins    = trades.filter(t => t.result === 'WIN').length;
+    const total   = trades.length;
+    const netPnl  = trades.reduce((s, t) => s + t.netPnl, 0);
+    const winRate = (wins / total * 100).toFixed(1);
+    let peak = 0, run = 0, maxDD = 0;
+    for (const t of trades) {
+      run += t.netPnl;
+      if (run > peak) peak = run;
+      const dd = peak - run;
+      if (dd > maxDD) maxDD = dd;
+    }
+    const annualised = netPnl * (365 / Math.max(days, 1));
+    const calmar     = maxDD > 0 ? (annualised / maxDD).toFixed(2) : 'inf';
+    const pnlPerTrade = (netPnl / total).toFixed(2);
+    return { trades: total, wins, winRate, netPnl, maxDD, calmar, days, pnlPerTrade };
+  }
+
+  const inDays  = Math.round(inSlice.length  / 1440);
+  const outDays = Math.round(outSlice.length / 1440);
+
+  return {
+    inSample:  summarise(inResult.trades,  inDays),
+    outSample: summarise(outResult.trades, outDays),
+    splitPct,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STAT CARD BUILDER
+// ═══════════════════════════════════════════════════════════════════════════════
+function sc(label, value, cls, sub, full, hi) {
+  return `<div class="stat-card${full?' full':''}${hi?' hi':''}">
+    <div class="stat-label">${label}</div>
+    <div class="stat-value ${cls}">${value}</div>
+    ${sub ? `<div class="stat-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MONTE CARLO HISTOGRAM
+// ═══════════════════════════════════════════════════════════════════════════════
+function drawMCHistogram(allEquities) {
+  if (mcChartInstance) { mcChartInstance.destroy(); mcChartInstance = null; }
+  const n       = 40;
+  const min     = allEquities[0];
+  const max     = allEquities[allEquities.length - 1];
+  const bSize   = (max - min) / n;
+  const counts  = new Array(n).fill(0);
+  const labels  = [];
+
+  for (const e of allEquities) {
+    const idx = Math.min(Math.floor((e - min) / bSize), n - 1);
+    counts[idx]++;
+  }
+  for (let i = 0; i < n; i++) {
+    const v = min + i * bSize;
+    labels.push(v >= 0 ? `+$${Math.round(v/1000)}k` : `-$${Math.round(-v/1000)}k`);
+  }
+
+  const colors = counts.map((_, i) => (min + i * bSize) >= 0 ? 'rgba(0,204,51,0.75)' : 'rgba(255,49,49,0.75)');
+
+  mcChartInstance = new Chart(document.getElementById('mc-chart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => `${ctx.parsed.y.toLocaleString()} runs` }
+      }},
+      scales: {
+        x: { ticks: { color: '#004a14', font: { family: 'Share Tech Mono', size: 8 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { display: false } },
+        y: { ticks: { color: '#006618', font: { family: 'Share Tech Mono', size: 9 } }, grid: { color: '#0c1a0c' } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN BACKTEST RUNNER
+// ═══════════════════════════════════════════════════════════════════════════════
+async function runBacktest() {
+  const risk        = parseFloat(document.getElementById('cfg-risk').value);
+  const rrRatio     = parseFloat(document.getElementById('cfg-rr').value);
+  const stopDist    = parseFloat(document.getElementById('cfg-stop').value);
+  const accountSize = parseFloat(document.getElementById('cfg-account').value);
+  const feePct      = parseFloat(document.getElementById('cfg-fee').value);
+  const feeRate     = feePct / 100;
+  const tolPct      = parseFloat(document.getElementById('cfg-tol').value) / 100;
+  const days        = parseInt(document.getElementById('cfg-days').value);
+  const minBar      = parseInt(document.getElementById('cfg-minbar').value) || 5;
+  const slipPct     = parseFloat(document.getElementById('cfg-slip').value)   || 0;
+  const spreadPct   = parseFloat(document.getElementById('cfg-spread').value) || 0;
+  const slippage    = slipPct   / 100;
+  const spread      = spreadPct / 100;
+  const maxPositions= parseInt(document.getElementById('cfg-maxpos').value) || 999;
+  const numMCSims   = parseInt(document.getElementById('cfg-mcsims').value) || 10000;
+  const wfSplit     = parseInt(document.getElementById('cfg-wfsplit').value) || 80;
+
+  const activeLevels = Array.from(document.querySelectorAll('.lvl-btn.active'))
+                            .map(b => parseInt(b.dataset.deg));
+  if (!activeLevels.length) { alert('SELECT AT LEAST ONE FAN LEVEL'); return; }
+
+  const config = {
+    mode: currentMode, risk, rrRatio, stopDist, feeRate,
+    tolPct, minBar, slippage, spread, maxPositions, activeLevels
+  };
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  document.getElementById('results').style.display  = 'none';
+  document.getElementById('progress-wrap').style.display = 'block';
+  setProgress(0, 'INITIALISING...');
+
+  // ── FETCH / CACHE ──
+  let candles;
+  const cached = loadCachedCandles(days);
+  if (cached) {
+    setProgress(50, `LOADED ${cached.length.toLocaleString()} CANDLES FROM CACHE`);
+    await new Promise(r => setTimeout(r, 200));
+    candles = cached;
+  } else {
+    try {
+      candles = await fetchAllCandles(days, pct => setProgress(pct * 0.6, `FETCHING... ${pct}%`));
+      saveCachedCandles(days, candles);
+      updateCacheStatus();
+    } catch(e) {
+      setProgress(0, 'FETCH ERROR — CHECK CONNECTION');
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  // ── MAIN BACKTEST ──
+  setProgress(62, `SCANNING ${candles.length.toLocaleString()} CANDLES (${currentMode} LOGIC)...`);
+  await new Promise(r => setTimeout(r, 30));
+  const { trades, clusterMap } = backtestCandles(candles, config);
+
+  if (!trades.length) {
+    setProgress(0, 'NO TRADES FOUND — TRY WIDER TOLERANCE OR MORE DAYS');
+    btn.disabled = false;
+    return;
+  }
+
+  // ── MONTE CARLO ──
+  setProgress(72, `RUNNING ${numMCSims.toLocaleString()} MONTE CARLO SIMULATIONS...`);
+  await new Promise(r => setTimeout(r, 30));
+  const mcResult = runMonteCarlo(trades, numMCSims);
+
+  // ── WALK-FORWARD ──
+  setProgress(88, `WALK-FORWARD ANALYSIS (${wfSplit}%/${100-wfSplit}% SPLIT)...`);
+  await new Promise(r => setTimeout(r, 30));
+  const wfResult = runWalkForward(candles, config, wfSplit);
+
+  // ── CONCURRENT STATS ──
+  const concResult = computeConcurrentStats(trades, clusterMap, config.risk, config.stopDist);
+
+  setProgress(100, `DONE — ${trades.length} TRADES · ${numMCSims.toLocaleString()} MC SIMS · WALK-FORWARD COMPLETE`);
+  await new Promise(r => setTimeout(r, 400));
+  document.getElementById('progress-wrap').style.display = 'none';
+
+  renderResults(trades, mcResult, concResult, wfResult, config, accountSize, days, slipPct, spreadPct, numMCSims);
+  btn.disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+function renderResults(trades, mc, conc, wf, config, accountSize, days, slipPct, spreadPct, numMCSims) {
+  const total      = trades.length;
+  const wins       = trades.filter(t => t.result === 'WIN').length;
+  const losses     = total - wins;
+  const winRate    = wins / total * 100;
+  const netPnl     = trades.reduce((s, t) => s + t.netPnl, 0);
+  const grossPnl   = trades.reduce((s, t) => s + t.grossPnl, 0);
+  const totalFee   = trades.reduce((s, t) => s + t.feeCost, 0);
+  const totalSpread= trades.reduce((s, t) => s + (t.spreadCost||0), 0);
+  const totalSlip  = trades.reduce((s, t) => s + Math.abs(t.entry - t.rawEntry) * (config.risk / config.stopDist), 0);
+  const avgSlip    = totalSlip / total;
+  const avgSpread  = totalSpread / total;
+  const baseNetPnl = grossPnl - totalFee; // what PnL would be with no slippage/spread
+  const execEff    = baseNetPnl !== 0 ? ((netPnl / baseNetPnl) * 100).toFixed(1) : '100.0';
+  const avgR       = netPnl / (total * config.risk);
+  const breakEven  = 1 / (1 + config.rrRatio) * 100;
+
+  let peak = 0, run = 0, maxDD = 0;
+  for (const t of trades) {
+    run += t.netPnl;
+    if (run > peak) peak = run;
+    const dd = peak - run;
+    if (dd > maxDD) maxDD = dd;
+  }
+
+  const annualised = netPnl * (365 / days);
+  const calmar     = maxDD > 0 ? (annualised / maxDD).toFixed(2) : 'inf';
+
+  let maxConsecL = 0, consec = 0, maxConsecW = 0, consecW = 0;
+  for (const t of trades) {
+    if (t.result === 'LOSS') { consec++; consecW = 0; }
+    else { consecW++; consec = 0; }
+    if (consec  > maxConsecL) maxConsecL = consec;
+    if (consecW > maxConsecW) maxConsecW = consecW;
+  }
+
+  const grossWins   = trades.filter(t=>t.result==='WIN').reduce((s,t)=>s+t.grossPnl,0);
+  const grossLosses = Math.abs(trades.filter(t=>t.result==='LOSS').reduce((s,t)=>s+t.grossPnl,0));
+  const pf = grossLosses ? (grossWins / grossLosses).toFixed(2) : 'inf';
+
+  const lossRate = losses / total || 0.5;
+  const winRate2 = wins / total   || 0.5;
+  const rorBase  = lossRate / winRate2;
+  const ror      = (Math.pow(rorBase, accountSize / config.risk) * 100).toFixed(3);
+
+  const slipFlag = slipPct > 0 ? ` (+${slipPct}% SLIP)` : '';
+
+  // ── CORE STATS ──
+  document.getElementById('stat-grid').innerHTML =
+    sc('WIN RATE', winRate.toFixed(1)+'%',
+       winRate>=85?'green':winRate>=breakEven?'amber':'red',
+       `BREAK-EVEN: ${breakEven.toFixed(1)}%  |  TARGET: 85.0%${slipFlag}`) +
+    sc('TOTAL TRADES', total, '',
+       `WINS: ${wins}  /  LOSSES: ${losses}`) +
+    sc('NET PNL', '$'+netPnl.toFixed(2), netPnl>0?'green':'red',
+       `GROSS: $${grossPnl.toFixed(2)}`) +
+    sc('TOTAL FEES', '$'+totalFee.toFixed(2), 'amber',
+       (totalFee/Math.abs(grossPnl||1)*100).toFixed(0)+'% OF GROSS') +
+    sc('AVG R/TRADE', avgR.toFixed(3)+'R', avgR>0?'green':'red',
+       `RISK: $${config.risk}  |  RR: ${config.rrRatio}:1`) +
+    sc('DAILY EDGE', '$'+(netPnl/days).toFixed(2)+'/day', netPnl>0?'green':'red',
+       `TRADES/DAY: ${(total/days).toFixed(1)}  |  ${days}d`) +
+    sc('MAX DRAWDOWN', '$'+maxDD.toFixed(2), 'red',
+       `${peak>0?(maxDD/peak*100).toFixed(1):0}% OF PEAK  |  ${(maxDD/accountSize*100).toFixed(1)}% OF ACCT`) +
+    sc('CALMAR RATIO', calmar, parseFloat(calmar)>=3?'green':parseFloat(calmar)>=1?'amber':'red',
+       `ANNUALISED: $${annualised.toFixed(0)}  /  MAX DD: $${maxDD.toFixed(0)}`) +
+    sc('PROFIT FACTOR', pf, parseFloat(pf)>=2?'green':parseFloat(pf)>=1.5?'amber':'red',
+       `WINS: $${grossWins.toFixed(0)}  /  LOSSES: $${grossLosses.toFixed(0)}`) +
+    sc('MAX CONSEC LOSS', maxConsecL, maxConsecL<=3?'green':maxConsecL<=6?'amber':'red',
+       `MAX WIN STREAK: ${maxConsecW}`) +
+    sc('ACCOUNT / RISK', '$'+accountSize.toLocaleString(), 'amber',
+       `${(config.risk/accountSize*100).toFixed(1)}% RISK PER TRADE`) +
+    sc('RISK OF RUIN', ror+'%', parseFloat(ror)<0.1?'green':parseFloat(ror)<1?'amber':'red',
+       `AT $${config.risk} RISK ON $${accountSize.toLocaleString()}`);
+
+  // ── EXECUTION QUALITY ──
+  const hasSlipOrSpread = slipPct > 0 || spreadPct > 0;
+  document.getElementById('slip-section').style.display = hasSlipOrSpread ? 'block' : 'none';
+  if (hasSlipOrSpread) {
+    document.getElementById('slip-grid').innerHTML =
+      sc('SLIPPAGE APPLIED', slipPct+'%', slipPct>0?'amber':'', `TOTAL DRAG: $${totalSlip.toFixed(2)}`) +
+      sc('SPREAD APPLIED', spreadPct+'%', spreadPct>0?'amber':'', `TOTAL COST: $${totalSpread.toFixed(2)}`) +
+      sc('AVG SLIP / TRADE', '$'+avgSlip.toFixed(2), avgSlip>0?'red':'green',
+         `${(totalSlip/Math.abs(grossPnl||1)*100).toFixed(1)}% OF GROSS PNL`) +
+      sc('AVG SPREAD / TRADE', '$'+avgSpread.toFixed(2), avgSpread>0?'red':'green',
+         `${(totalSpread/Math.abs(grossPnl||1)*100).toFixed(1)}% OF GROSS PNL`) +
+      sc('EXECUTION EFFICIENCY', execEff+'%',
+         parseFloat(execEff)>=99?'green':parseFloat(execEff)>=95?'amber':'red',
+         'ACTUAL NET PNL / BASELINE NET PNL') +
+      sc('BASELINE NET PNL', '$'+baseNetPnl.toFixed(2), 'green',
+         'NO SLIPPAGE / SPREAD — FEE ONLY');
+  }
+
+  // ── RISK & EXPOSURE ──
+  document.getElementById('risk-grid').innerHTML =
+    sc('MAX OPEN POSITIONS', conc.maxConc, conc.maxConc>=5?'red':conc.maxConc>=3?'amber':'green',
+       `CAPITAL AT RISK: $${conc.maxTotalRisk.toLocaleString()}`) +
+    sc('MAX TOTAL RISK', '$'+conc.maxTotalRisk.toLocaleString(), conc.maxTotalRisk/accountSize>=0.5?'red':'amber',
+       `${(conc.maxTotalRisk/accountSize*100).toFixed(1)}% OF ACCOUNT AT PEAK`) +
+    sc('MAX DIRECTIONAL RISK', '$'+conc.maxDirRisk.toLocaleString(),
+       conc.maxDirRisk/accountSize>=0.3?'red':'amber',
+       `LONG: ${conc.maxLongConc} pos  /  SHORT: ${conc.maxShortConc} pos`) +
+    sc('MAX SIMULTANEOUS LOSSES', '$'+conc.maxSimultLosses.toLocaleString(), 'red',
+       `${conc.maxConc} concurrent × $${config.risk} risk — theoretical worst case`) +
+    sc('MAX TRADE CLUSTER', conc.maxCluster+' signals / candle',
+       conc.maxCluster>=5?'red':conc.maxCluster>=3?'amber':'green',
+       'MOST LEVELS TRIGGERING IN A SINGLE 1M BAR') +
+    sc('MAX INTRADAY DRAWDOWN', '$'+conc.maxIntradayDD.toFixed(2), 'red',
+       `WORST DAY: ${conc.worstDay}  |  ${(conc.maxIntradayDD/accountSize*100).toFixed(1)}% OF ACCOUNT`);
+
+  // ── CONCURRENT EXPOSURE ──
+  document.getElementById('conc-grid').innerHTML =
+    sc('AVG SIMULTANEOUS', conc.avgConc+' pos', 'amber',
+       'AVERAGE OPEN POSITIONS ACROSS ALL TRADES') +
+    sc('POSITION CAP', config.maxPositions>=999?'UNLIMITED':'MAX '+config.maxPositions,
+       config.maxPositions>=999?'amber':'blue',
+       config.maxPositions>=999?'SET A CAP TO SEE IMPACT':'ACTIVE — SIGNALS SKIPPED AT CAP');
+
+  const cb = document.getElementById('conc-tbody');
+  cb.innerHTML = '';
+  for (const [k, v] of Object.entries(conc.dist).sort((a,b)=>parseInt(a)-parseInt(b))) {
+    const exposure = parseInt(k) * config.risk;
+    const pct      = (v / total * 100).toFixed(1);
+    cb.innerHTML += `<tr>
+      <td class="a">${k} POSITION${k==='1'?'':'S'}</td>
+      <td>${v.toLocaleString()}</td>
+      <td class="${parseFloat(pct)>50?'g':''}">${pct}%</td>
+      <td class="${exposure>=5000?'r':exposure>=3000?'a':''}">$${exposure.toLocaleString()}</td>
+    </tr>`;
+  }
+
+  // ── MONTE CARLO ──
+  document.getElementById('mc-sims-label').textContent = numMCSims.toLocaleString() + ' SIMULATIONS';
+  document.getElementById('mc-grid').innerHTML =
+    sc('P5 EQUITY (WORST 5%)', '$'+mc.p5.toFixed(0), mc.p5>0?'green':'red',
+       'ONLY 5% OF PATHS WORSE THAN THIS') +
+    sc('P50 EQUITY (MEDIAN)', '$'+mc.p50.toFixed(0), mc.p50>0?'green':'red',
+       'EXPECTED IF TRADE ORDER RANDOMISED') +
+    sc('P95 EQUITY (BEST 5%)', '$'+mc.p95.toFixed(0), 'green',
+       'ONLY 5% OF PATHS BETTER THAN THIS') +
+    sc('% PROFITABLE RUNS', mc.pctProfitable+'%', parseFloat(mc.pctProfitable)>=99?'green':'amber',
+       'OF ALL '+numMCSims.toLocaleString()+' SHUFFLED SEQUENCES') +
+    sc('MEDIAN MAX DRAWDOWN', '$'+mc.medMaxDD.toFixed(0), 'amber',
+       '50TH PERCENTILE ACROSS ALL RUNS') +
+    sc('P95 MAX DRAWDOWN', '$'+mc.p95MaxDD.toFixed(0), 'red',
+       'WORST-CASE DD IN 95% OF SIMULATIONS');
+
+  drawMCHistogram(mc.allEquities);
+
+  // ── WALK-FORWARD ──
+  const { inSample: iS, outSample: oS } = wf;
+  const totalDays = iS.days + oS.days;
+  document.getElementById('wf-periods').textContent =
+    `IN-SAMPLE: ${iS.days}d (${wf.splitPct}%) → OUT-OF-SAMPLE: ${oS.days}d (${100-wf.splitPct}%) → TOTAL: ${totalDays}d`;
+
+  document.getElementById('wf-grid').innerHTML = `
+    <div class="wf-card is">
+      <div class="wf-title is">// IN-SAMPLE (TRAIN)</div>
+      <div class="wf-row"><span class="wf-key">TRADES</span><span class="wf-val">${iS.trades}</span></div>
+      <div class="wf-row"><span class="wf-key">WIN RATE</span><span class="wf-val">${iS.winRate}%</span></div>
+      <div class="wf-row"><span class="wf-key">NET PNL</span><span class="wf-val" style="color:${iS.netPnl>=0?'#00ff41':'#ff3131'}">$${iS.netPnl?.toFixed(0)}</span></div>
+      <div class="wf-row"><span class="wf-key">PNL / TRADE</span><span class="wf-val">$${iS.pnlPerTrade}</span></div>
+      <div class="wf-row"><span class="wf-key">MAX DD</span><span class="wf-val" style="color:#ff3131">$${iS.maxDD?.toFixed(0)}</span></div>
+      <div class="wf-row"><span class="wf-key">CALMAR</span><span class="wf-val">${iS.calmar}</span></div>
+    </div>
+    <div class="wf-card oos">
+      <div class="wf-title oos">// OUT-OF-SAMPLE (TEST)</div>
+      <div class="wf-row"><span class="wf-key">TRADES</span><span class="wf-val">${oS.trades}</span></div>
+      <div class="wf-row"><span class="wf-key">WIN RATE</span><span class="wf-val" style="color:${parseFloat(oS.winRate)>=85?'#00ff41':parseFloat(oS.winRate)>=breakEven?'#ffb300':'#ff3131'}">${oS.winRate}%</span></div>
+      <div class="wf-row"><span class="wf-key">NET PNL</span><span class="wf-val" style="color:${oS.netPnl>=0?'#00ff41':'#ff3131'}">$${oS.netPnl?.toFixed(0)}</span></div>
+      <div class="wf-row"><span class="wf-key">PNL / TRADE</span><span class="wf-val">$${oS.pnlPerTrade}</span></div>
+      <div class="wf-row"><span class="wf-key">MAX DD</span><span class="wf-val" style="color:#ff3131">$${oS.maxDD?.toFixed(0)}</span></div>
+      <div class="wf-row"><span class="wf-key">CALMAR</span><span class="wf-val">${oS.calmar}</span></div>
+    </div>`;
+
+  // Degradation stats
+  const wrDeg   = (parseFloat(oS.winRate) - parseFloat(iS.winRate)).toFixed(1);
+  const pptDeg  = (parseFloat(oS.pnlPerTrade) - parseFloat(iS.pnlPerTrade)).toFixed(2);
+  const calDeg  = (parseFloat(oS.calmar) - parseFloat(iS.calmar)).toFixed(2);
+  document.getElementById('wf-degrad-grid').innerHTML =
+    sc('WIN RATE SHIFT (OOS−IS)', (wrDeg>=0?'+':'')+wrDeg+'%',
+       parseFloat(wrDeg)>=0?'green':parseFloat(wrDeg)>=-2?'amber':'red',
+       'NEGATIVE = DEGRADED ON UNSEEN DATA') +
+    sc('PNL/TRADE SHIFT', (pptDeg>=0?'+$':'$')+pptDeg,
+       parseFloat(pptDeg)>=0?'green':parseFloat(pptDeg)>=-50?'amber':'red',
+       'EDGE PERSISTENCE ON OUT-OF-SAMPLE') +
+    sc('CALMAR SHIFT', (calDeg>=0?'+':'')+calDeg,
+       parseFloat(calDeg)>=0?'green':parseFloat(calDeg)>=-1?'amber':'red',
+       'RISK-ADJUSTED RETURN CHANGE') +
+    sc('VERDICT', iS.trades&&oS.trades ? (
+        parseFloat(wrDeg)>=-2 && parseFloat(pptDeg)>=-100
+          ? 'STRATEGY ROBUST'
+          : parseFloat(wrDeg)>=-5 ? 'MILD OVERFIT' : 'POSSIBLE OVERFIT'
+      ) : 'INSUFFICIENT DATA',
+       parseFloat(wrDeg)>=-2?'green':parseFloat(wrDeg)>=-5?'amber':'red',
+       'BASED ON WIN RATE AND PNL/TRADE SHIFT', false, true);
+
+  // ── BY LEVEL ──
+  const byLevel = {};
+  for (const t of trades) {
+    if (!byLevel[t.level]) byLevel[t.level] = { wins:0, total:0, netPnl:0, maxConc:0 };
+    const lv = byLevel[t.level];
+    lv.total++;
+    if (t.result === 'WIN') lv.wins++;
+    lv.netPnl  += t.netPnl;
+    if (t.concurrent > lv.maxConc) lv.maxConc = t.concurrent;
+  }
+  const lb = document.getElementById('level-tbody');
+  lb.innerHTML = '';
+  for (const [label, d] of Object.entries(byLevel).sort((a,b) => b[1].netPnl - a[1].netPnl)) {
+    const wr   = (d.wins / d.total * 100).toFixed(1);
+    const avgR = (d.netPnl / (d.total * config.risk)).toFixed(3);
+    lb.innerHTML += `<tr>
+      <td class="a">${label}</td>
+      <td>${d.total}</td>
+      <td class="${parseFloat(wr)>=85?'g':parseFloat(wr)>=breakEven?'':'r'}">${wr}%</td>
+      <td class="${d.netPnl>=0?'g':'r'}">$${d.netPnl.toFixed(0)}</td>
+      <td class="${parseFloat(avgR)>=0?'g':'r'}">${avgR}R</td>
+      <td class="${d.maxConc>=5?'r':d.maxConc>=3?'a':''}">${d.maxConc}</td>
+    </tr>`;
+  }
+
+  // ── BY HOUR ──
+  const byHour = {};
+  for (const t of trades) {
+    if (!byHour[t.hour]) byHour[t.hour] = { wins:0, total:0, netPnl:0 };
+    byHour[t.hour].total++;
+    if (t.result === 'WIN') byHour[t.hour].wins++;
+    byHour[t.hour].netPnl += t.netPnl;
+  }
+  const hb = document.getElementById('hour-tbody');
+  hb.innerHTML = '';
+  for (const [h, d] of Object.entries(byHour).sort((a,b) => b[1].total - a[1].total)) {
+    const wr   = (d.wins / d.total * 100).toFixed(1);
+    const pct  = (d.total / total * 100).toFixed(1);
+    hb.innerHTML += `<tr>
+      <td class="b">${String(h).padStart(2,'0')}:00 UTC</td>
+      <td>${d.total}</td>
+      <td class="${parseFloat(wr)>=85?'g':parseFloat(wr)>=breakEven?'':'r'}">${wr}%</td>
+      <td class="${d.netPnl>=0?'g':'r'}">$${d.netPnl.toFixed(0)}</td>
+      <td>${pct}%</td>
+    </tr>`;
+  }
+
+  // ── TRADE LOG ──
+  const tl = document.getElementById('trade-log');
+  tl.innerHTML = '';
+  for (const t of [...trades].slice(-100).reverse()) {
+    const dt     = new Date(t.time * 1000).toUTCString().slice(5,17).toUpperCase();
+    const cls    = t.netPnl > 0 ? 'win' : 'loss';
+    const pnlTxt = (t.netPnl>=0?'+$':'$') + t.netPnl.toFixed(2);
+    tl.innerHTML += `<div class="trade-row ${cls}">
+      <span style="color:#006618">${dt}</span>
+      <span class="a">${t.level}</span>
+      <span style="color:#00aa28">${t.dir}</span>
+      <span style="color:${t.netPnl>=0?'#00ff41':'#ff3131'}">${pnlTxt}</span>
+      <span style="color:#004a14">×${t.concurrent}</span>
+    </div>`;
+  }
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('bar-status').textContent =
+    `${total} TRADES  |  ${currentMode}  |  ${slipPct>0?slipPct+'% SLIP  |  ':''}MC ${(mc.pctProfitable)}% PROFITABLE`;
+  document.getElementById('bar-time').textContent =
+    new Date().toUTCString().slice(5,22).toUpperCase() + ' UTC';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════════════════
+window.addEventListener('load', updateCacheStatus);
+</script>
+
+</body>
+</html>
