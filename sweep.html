@@ -475,7 +475,7 @@ winRateAll, winRateWL, maxDD, calmar, total, decided };
 let pnlChartInstance = null;
 let wrChartInstance  = null;
 
-function renderChart(id, instanceRef, labels, datasets, yLabel, zeroLine=true){
+function renderChart(id, instanceRef, labels, datasets, yLabel){
 const ctx = document.getElementById(id).getContext(‘2d’);
 if(window[instanceRef]) window[instanceRef].destroy();
 window[instanceRef] = new Chart(ctx, {
@@ -492,12 +492,6 @@ titleColor:’#006618’, bodyColor:’#00cc33’,
 titleFont:{ family:‘Share Tech Mono’, size:9 },
 bodyFont:{ family:‘Share Tech Mono’, size:9 },
 },
-annotation: zeroLine ? {
-annotations:{ zero:{
-type:‘line’, yMin:0, yMax:0,
-borderColor:’#1a4d1a’, borderWidth:1, borderDash:[4,4]
-}}
-} : {}
 },
 scales:{
 x:{
@@ -550,6 +544,12 @@ label:‘TMO-CLOSE PNL ($)’,
 data: tmoData,
 borderColor:’#ff3131’, backgroundColor:‘rgba(255,49,49,0.03)’,
 borderWidth:1, pointRadius:0, tension:0.3, fill:false, borderDash:[3,3],
+},
+{
+label:‘ZERO’,
+data: rows.map(()=>0),
+borderColor:’#1a4d1a’, borderWidth:1, pointRadius:0,
+borderDash:[4,4], fill:false,
 }
 ], ‘PNL ($)’);
 
