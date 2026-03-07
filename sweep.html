@@ -4,693 +4,335 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#070d07">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ObamaDash — Timeout Sweep</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{
-  width:100%;height:100%;
-  background:#030803;color:#00cc33;
-  font-family:'Share Tech Mono',monospace;font-size:11px;
-  overflow-x:hidden;
-}
-#app{display:flex;flex-direction:column;width:100%;min-height:100dvh;}
-.bar{
-  flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
-  padding:0 10px;background:#070d07;color:#006618;
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;
-}
-.bar-top{
-  border-bottom:1px solid #0f2a0f;
-  padding-top:env(safe-area-inset-top);
-  min-height:calc(32px + env(safe-area-inset-top));
-  align-items:flex-end;padding-bottom:6px;
-}
-.bar-bottom{
-  border-top:1px solid #0f2a0f;padding-top:5px;
-  padding-bottom:calc(env(safe-area-inset-bottom) + 5px);
-  min-height:24px;height:auto;align-items:flex-start;
-}
-.bar-title{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:4px;color:#00cc33;}
-.content{flex:1;overflow-y:auto;padding:12px 10px;}
+html,body{background:#030803;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:11px;}
+body{padding:12px 10px;}
+input{background:#000;border:1px solid #0f2a0f;color:#00cc33;
+  font-family:'Share Tech Mono',monospace;font-size:11px;width:90px;padding:3px 6px;text-align:right;}
+.row{display:flex;justify-content:space-between;margin-bottom:8px;}
+.lbl{color:#006618;font-size:9px;letter-spacing:1px;line-height:1.8;}
 .panel{border:1px solid #0f2a0f;padding:10px;margin-bottom:12px;}
-.panel-title{color:#006618;font-size:9px;letter-spacing:3px;margin-bottom:10px;}
-.cfg-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.cfg-label{color:#006618;font-size:9px;letter-spacing:1px;}
-.cfg-input{
-  background:#000;border:1px solid #0f2a0f;color:#00cc33;
-  font-family:'Share Tech Mono',monospace;font-size:11px;
-  width:90px;padding:3px 6px;text-align:right;
-}
-.cfg-input:focus{outline:none;border-color:#004a14;}
-.run-btn{
-  width:100%;background:#001a06;border:1px solid #00cc33;color:#00cc33;
+.ptitle{color:#006618;font-size:9px;letter-spacing:3px;margin-bottom:10px;}
+button.run{width:100%;background:#001a06;border:1px solid #00cc33;color:#00cc33;
   font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;
-  padding:12px;cursor:pointer;margin-bottom:12px;
-}
-.run-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.run-btn:not(:disabled):hover{background:#002a0a;}
-.progress-bar-bg{width:100%;height:4px;background:#0f2a0f;margin-top:6px;}
-.progress-bar-fill{height:4px;background:#00cc33;width:0%;transition:width 0.2s;}
-#progress-label{color:#006618;font-size:9px;letter-spacing:1px;margin-bottom:4px;}
-.section-title{color:#006618;font-size:9px;letter-spacing:3px;margin:14px 0 8px;}
-.lvl-btn{
-  background:#030803;border:1px solid #0f2a0f;color:#006618;
-  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;
-  padding:4px 8px;cursor:pointer;
-}
-.lvl-btn.active{border-color:#00cc33;color:#00cc33;background:#001a06;}
-
-/* ── OPTIMAL BANNER ── */
-.optimal-banner{
-border:1px solid #00cc33;background:#001a06;
-padding:12px 10px;margin-bottom:14px;
-}
-.optimal-title{color:#006618;font-size:9px;letter-spacing:3px;margin-bottom:8px;}
-.optimal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.optimal-card{padding:8px;border:1px solid #0f2a0f;}
-.optimal-label{color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:2px;}
-.optimal-value{font-size:20px;font-weight:bold;}
-.optimal-sub{color:#004a14;font-size:9px;letter-spacing:1px;margin-top:3px;}
-
-/* ── CHART ── */
-.chart-wrap{
-border:1px solid #0f2a0f;padding:10px;margin-bottom:14px;
-position:relative;height:240px;
-}
-
-/* ── TABLE ── */
-.sweep-table{width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;}
-.sweep-table th{
-color:#006618;border-bottom:1px solid #0f2a0f;
-padding:4px 6px;text-align:right;font-weight:normal;
-}
-.sweep-table th:first-child{text-align:left;}
-.sweep-table td{
-padding:4px 6px;border-bottom:1px solid #030d03;
-text-align:right;color:#004a14;
-}
-.sweep-table td:first-child{text-align:left;color:#006618;}
-.sweep-table tr.best td{color:#00cc33 !important;}
-.sweep-table tr.best td:first-child{color:#00cc33;}
-.sweep-table tr.positive td{color:#006618;}
-.sweep-table tr.positive td:first-child{color:#006618;}
-.red{color:#ff3131 !important;}
-.green{color:#00cc33 !important;}
-.amber{color:#ffb300 !important;}
+  padding:12px;cursor:pointer;margin-bottom:12px;}
+button.run:disabled{opacity:0.4;}
+.lvl{background:#030803;border:1px solid #0f2a0f;color:#006618;
+  font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 8px;cursor:pointer;}
+.lvl.on{border-color:#00cc33;color:#00cc33;background:#001a06;}
+#log{color:#006618;font-size:9px;letter-spacing:1px;min-height:20px;margin-bottom:12px;word-break:break-all;}
+table{width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;}
+th{color:#006618;border-bottom:1px solid #0f2a0f;padding:4px 4px;text-align:right;font-weight:normal;}
+th:first-child{text-align:left;}
+td{padding:4px 4px;border-bottom:1px solid #030d03;text-align:right;color:#004a14;}
+td:first-child{text-align:left;color:#006618;}
+tr.best td{color:#00cc33!important;}
+.g{color:#00cc33!important;}.r{color:#ff3131!important;}.a{color:#ffb300!important;}
 </style>
-
 </head>
 <body>
-<div id="app">
 
-  <div class="bar bar-top">
-    <span class="bar-title">// TIMEOUT SWEEP</span>
-    <span style="font-size:9px;letter-spacing:1px;color:#006618;">ObamaDash</span>
-  </div>
+<div style="color:#00cc33;letter-spacing:4px;font-size:11px;margin-bottom:12px;">// TIMEOUT SWEEP</div>
 
-  <div class="content">
-
-```
-<!-- DESCRIPTION -->
-<div style="border:1px solid #0f2a0f;background:#000d00;padding:10px;margin-bottom:12px;
-            color:#006618;font-size:9px;letter-spacing:1px;line-height:1.8;">
-  Scans all signals <b style="color:#00cc33;">once</b>, then simulates Mode B across every
-  timeout bar value in the sweep range — no re-fetching. Finds the timeout that
-  maximises net PnL and plots the full curve.
-</div>
-
-<!-- BASE CONFIG -->
 <div class="panel">
-  <div class="panel-title">// BASE CONFIG</div>
-  <div class="cfg-row"><span class="cfg-label">DAYS</span>
-    <input class="cfg-input" id="cfg-days" type="number" value="1800" min="30" max="1800"
-           onchange="updateCacheStatus()"></div>
-  <div class="cfg-row"><span class="cfg-label">RISK PER TRADE ($)</span>
-    <input class="cfg-input" id="cfg-risk" type="number" value="1000" min="1"></div>
-  <div class="cfg-row"><span class="cfg-label">REWARD RATIO</span>
-    <input class="cfg-input" id="cfg-rr" type="number" value="0.3" step="0.05" min="0.1"></div>
-  <div class="cfg-row"><span class="cfg-label">STOP DISTANCE ($)</span>
-    <input class="cfg-input" id="cfg-stop" type="number" value="3000" min="10"></div>
-  <div class="cfg-row"><span class="cfg-label">FEE RATE (%)</span>
-    <input class="cfg-input" id="cfg-fee" type="number" value="0.02" step="0.005" min="0"></div>
-  <div class="cfg-row"><span class="cfg-label">TOUCH TOLERANCE (%)</span>
-    <input class="cfg-input" id="cfg-tol" type="number" value="0.08" step="0.01" min="0.01"></div>
-  <div class="cfg-row"><span class="cfg-label">MIN BAR OFFSET</span>
-    <input class="cfg-input" id="cfg-minbar" type="number" value="5" min="1" max="60"></div>
-  <div class="cfg-row" style="cursor:pointer;" onclick="clearCache()">
-    <span class="cfg-label">CANDLE CACHE</span>
-    <span id="cache-status" style="font-size:9px;letter-spacing:1px;color:#004a14;">CHECKING...</span>
-  </div>
+  <div class="ptitle">// CONFIG</div>
+  <div class="row"><span class="lbl">DAYS</span><input id="days" type="number" value="1800"></div>
+  <div class="row"><span class="lbl">RISK ($)</span><input id="risk" type="number" value="1000"></div>
+  <div class="row"><span class="lbl">RR RATIO</span><input id="rr" type="number" value="0.3" step="0.05"></div>
+  <div class="row"><span class="lbl">STOP DIST ($)</span><input id="stop" type="number" value="3000"></div>
+  <div class="row"><span class="lbl">FEE (%)</span><input id="fee" type="number" value="0.02" step="0.005"></div>
+  <div class="row"><span class="lbl">TOLERANCE (%)</span><input id="tol" type="number" value="0.08" step="0.01"></div>
+  <div class="row"><span class="lbl">MIN BAR</span><input id="minbar" type="number" value="5"></div>
 </div>
 
-<!-- SWEEP CONFIG -->
 <div class="panel">
-  <div class="panel-title">// SWEEP RANGE</div>
-  <div class="cfg-row"><span class="cfg-label">FROM (bars)</span>
-    <input class="cfg-input" id="cfg-from" type="number" value="10" min="5" max="500"></div>
-  <div class="cfg-row"><span class="cfg-label">TO (bars)</span>
-    <input class="cfg-input" id="cfg-to"   type="number" value="400" min="10" max="2000"></div>
-  <div class="cfg-row"><span class="cfg-label">STEP (bars)</span>
-    <input class="cfg-input" id="cfg-step" type="number" value="10" min="1" max="100"></div>
-  <div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-top:4px;" id="sweep-count-label">
-    — steps calculated on run —
-  </div>
+  <div class="ptitle">// SWEEP RANGE</div>
+  <div class="row"><span class="lbl">FROM (bars)</span><input id="from" type="number" value="10"></div>
+  <div class="row"><span class="lbl">TO (bars)</span><input id="to" type="number" value="500"></div>
+  <div class="row"><span class="lbl">STEP (bars)</span><input id="step" type="number" value="10"></div>
 </div>
 
-<!-- FAN LEVELS -->
 <div class="panel">
-  <div class="panel-title">// FAN LEVELS</div>
-  <div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px;">
-    <button class="lvl-btn active" data-deg="27"  onclick="this.classList.toggle('active')">+27</button>
-    <button class="lvl-btn active" data-deg="-27" onclick="this.classList.toggle('active')">-27</button>
-    <button class="lvl-btn active" data-deg="45"  onclick="this.classList.toggle('active')">+45</button>
-    <button class="lvl-btn active" data-deg="-45" onclick="this.classList.toggle('active')">-45</button>
-    <button class="lvl-btn active" data-deg="60"  onclick="this.classList.toggle('active')">+60</button>
-    <button class="lvl-btn active" data-deg="-60" onclick="this.classList.toggle('active')">-60</button>
-    <button class="lvl-btn active" data-deg="72"  onclick="this.classList.toggle('active')">+72</button>
-    <button class="lvl-btn active" data-deg="-72" onclick="this.classList.toggle('active')">-72</button>
-    <button class="lvl-btn active" data-deg="78"  onclick="this.classList.toggle('active')">+78</button>
-    <button class="lvl-btn active" data-deg="-78" onclick="this.classList.toggle('active')">-78</button>
-  </div>
+  <div class="ptitle">// FAN LEVELS</div>
+  <div id="lvls" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
 </div>
 
-<button class="run-btn" id="run-btn" onclick="runSweep()">&#9654; RUN TIMEOUT SWEEP</button>
+<button class="run" id="runbtn" onclick="go()">▶ RUN SWEEP</button>
 
-<div id="progress-wrap" style="margin-bottom:12px;display:none;">
-  <div id="progress-label">INITIALISING...</div>
-  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
-</div>
+<div id="log">READY</div>
 
-<div id="results" style="display:none;">
+<div id="out"></div>
 
-  <!-- OPTIMAL BANNER -->
-  <div class="section-title">// OPTIMAL TIMEOUT</div>
-  <div class="optimal-banner" id="optimal-banner"></div>
-
-  <!-- NET PNL CHART -->
-  <div class="section-title">// NET PNL vs TIMEOUT BARS</div>
-  <div class="chart-wrap">
-    <canvas id="pnl-chart"></canvas>
-  </div>
-
-  <!-- WIN RATE CHART -->
-  <div class="section-title">// WIN RATE (ALL TRADES) vs TIMEOUT BARS</div>
-  <div class="chart-wrap">
-    <canvas id="wr-chart"></canvas>
-  </div>
-
-  <!-- FULL TABLE -->
-  <div class="section-title">// FULL SWEEP TABLE</div>
-  <div style="overflow-x:auto;margin-bottom:40px;">
-    <table class="sweep-table" id="sweep-table">
-      <thead>
-        <tr>
-          <th>BARS</th>
-          <th>TIME</th>
-          <th>NET PNL</th>
-          <th>WIN% ALL</th>
-          <th>WIN% W/L</th>
-          <th>RESOLVED</th>
-          <th>TMO-CLOSE</th>
-          <th>TMO PNL</th>
-          <th>MAX DD</th>
-          <th>CALMAR</th>
-        </tr>
-      </thead>
-      <tbody id="sweep-tbody"></tbody>
-    </table>
-  </div>
-
-</div>
-```
-
-  </div>
-
-  <div class="bar bar-bottom">
-    <span id="bar-status" style="font-size:9px;letter-spacing:1px;color:#004a14;">READY</span>
-    <span>
-      <a href="index.html"     style="color:#004a14;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-decoration:none;">HOME</a>
-      <a href="backtest2.html" style="color:#00aaff;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px;">BT2</a>
-      <a href="backtest3.html" style="color:#ffb300;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-decoration:none;margin-left:8px;">BT3</a>
-    </span>
-  </div>
-
-</div>
 <script>
-window.onerror = function(msg, src, line, col, err) {
-  const el = document.getElementById('progress-label');
-  if(el) el.textContent = 'JS ERROR: ' + msg + ' (line ' + line + ')';
-  const fill = document.getElementById('progress-fill');
-  if(fill) fill.style.background = '#ff3131';
-  const wrap = document.getElementById('progress-wrap');
-  if(wrap) wrap.style.display = 'block';
-  console.error(msg, src, line, err);
-};
-console.log('[SWEEP] script loaded');
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════════
-const SYMBOL    = 'BTCUSDT';
-const ANGLES    = [27, -27, 45, -45, 60, -60, 72, -72, 78, -78];
-const CACHE_VER = 'v1';
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CACHE
-// ═══════════════════════════════════════════════════════════════════════════════
-function getCacheKey(days){
-return `obamadash_candles_${CACHE_VER}_${days}d_${new Date().toISOString().slice(0,10)}`;
-}
-function loadCachedCandles(days){
-try{
-const key = getCacheKey(days);
-const d   = localStorage.getItem(key);
-if(!d) return null;
-const p = JSON.parse(d);
-for(const k of Object.keys(localStorage))
-if(k.startsWith(‘obamadash_candles_’) && k !== key) localStorage.removeItem(k);
-return p;
-}catch(e){ return null; }
-}
-function saveCachedCandles(days, candles){
-try{ localStorage.setItem(getCacheKey(days), JSON.stringify(candles)); }
-catch(e){
-for(const k of Object.keys(localStorage))
-if(k.startsWith(‘obamadash_candles_’)) localStorage.removeItem(k);
-try{ localStorage.setItem(getCacheKey(days), JSON.stringify(candles)); }catch(e2){}
-}
-}
-function clearCache(){
-let n = 0;
-for(const k of Object.keys(localStorage))
-if(k.startsWith(‘obamadash_candles_’)){ localStorage.removeItem(k); n++; }
-updateCacheStatus();
-alert(n ? `CLEARED ${n} CACHE ENTRY` : ‘NO CACHE TO CLEAR’);
-}
-function updateCacheStatus(){
-const days   = parseInt(document.getElementById(‘cfg-days’).value) || 1800;
-const cached = loadCachedCandles(days);
-const el     = document.getElementById(‘cache-status’);
-if(!el) return;
-if(cached){
-el.textContent = ‘CACHED (’ + cached.length.toLocaleString() + ‘) — CLICK TO CLEAR’;
-el.style.color = ‘#00cc33’;
-} else {
-el.textContent = ‘NO CACHE — WILL FETCH’;
-el.style.color = ‘#004a14’;
-}
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// FETCH
-// ═══════════════════════════════════════════════════════════════════════════════
-async function fetchKlines(sym, iv, t0, t1, lim=1000){
-const url = `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${iv}`
-+ `&startTime=${t0}&endTime=${t1}&limit=${lim}`;
-const r = await fetch(url);
-const d = await r.json();
-return d.map(k=>({ time:k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4] }));
-}
-async function fetchAllCandles(days, onPct){
-const now = Date.now(), start = now - days*86400000;
-let candles=[], cur=start;
-while(cur<now){
-const end   = Math.min(cur + 60000000, now);
-const batch = await fetchKlines(SYMBOL,‘1m’,cur,end);
-if(!batch.length) break;
-candles = candles.concat(batch);
-cur = batch[batch.length-1].time*1000 + 60000;
-onPct(Math.min(99, Math.round((cur-start)/(now-start)*100)));
-await new Promise(r=>setTimeout(r,80));
-}
-return candles;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MATH
-// ═══════════════════════════════════════════════════════════════════════════════
-function getAnchor0900(ts){
-const d = new Date(ts);
-const a = new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),9,0,0));
-if(a>d) a.setUTCDate(a.getUTCDate()-1);
-return a;
-}
-function fanPrice(anchor, bars, deg){
-return anchor + bars * Math.tan(deg * Math.PI / 180);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PROGRESS
-// ═══════════════════════════════════════════════════════════════════════════════
-function setProgress(pct, label){
-document.getElementById(‘progress-fill’).style.width  = pct + ‘%’;
-document.getElementById(‘progress-label’).textContent = label;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PHASE 1 — SCAN SIGNALS ONCE
-// Returns array of raw signals: { entryIdx, dir, entry, posSize, feeCost }
-// candles is kept in closure for Phase 2
-// ═══════════════════════════════════════════════════════════════════════════════
-function scanSignals(candles, config){
-const { risk, stopDist, feeRate, tolPct, minBar, activeLevels } = config;
-const anchorOpens = {};
-for(const c of candles){
-const a   = getAnchor0900(c.time*1000);
-const key = a.toISOString().slice(0,10);
-if(!anchorOpens[key]){
-const aSec = a.getTime()/1000;
-if(Math.abs(c.time - aSec) < 180) anchorOpens[key] = c.open;
-}
-}
-
-const signals  = [];
-const debounce = {};
-
-for(let i=2; i<candles.length-10; i++){
-const c          = candles[i];
-const anchor     = getAnchor0900(c.time*1000);
-const anchorKey  = anchor.toISOString().slice(0,10);
-const anchorOpen = anchorOpens[anchorKey];
-if(!anchorOpen) continue;
-const candleDate = new Date(c.time*1000).toISOString().slice(0,10);
-if(candleDate !== anchorKey) continue;
-const anchorSec = anchor.getTime()/1000;
-const bar       = Math.floor((c.time - anchorSec)/60);
-if(bar < minBar) continue;
-
-```
-for(const deg of activeLevels){
-  const label = deg > 0 ? `L+${deg}` : `L${deg}`;
-  const price = fanPrice(anchorOpen, bar, deg);
-  const tol   = price * tolPct;
-  const dk    = `${anchorKey}_${label}`;
-
-  // LONG
-  if(c.low <= price+tol && c.low >= price-tol && c.close > price && !debounce[dk]){
-    debounce[dk] = true;
-    const entry   = c.close;
-    const posSize = risk / stopDist;
-    const feeCost = posSize * entry * feeRate * 2;
-    signals.push({ entryIdx: i+1, dir: 1, entry, posSize, feeCost,
-                    target: entry + stopDist*config.rrRatio,
-                    stop:   entry - stopDist });
-    continue;
-  }
-  // SHORT
-  if(c.high >= price-tol && c.high <= price+tol && c.close < price && !debounce[dk]){
-    debounce[dk] = true;
-    const entry   = c.close;
-    const posSize = risk / stopDist;
-    const feeCost = posSize * entry * feeRate * 2;
-    signals.push({ entryIdx: i+1, dir: -1, entry, posSize, feeCost,
-                    target: entry - stopDist*config.rrRatio,
-                    stop:   entry + stopDist });
-  }
-}
-```
-
-}
-return signals;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — SIMULATE ONE TIMEOUT VALUE
-// Pure function: no globals, always Mode B (force-close at tmoBars)
-// ═══════════════════════════════════════════════════════════════════════════════
-function simulateTimeout(candles, signals, tmoBars, days){
-let wins=0, losses=0, tmoCnt=0;
-let netPnl=0, tmoNetPnl=0;
-let peak=0, run=0, maxDD=0;
-
-for(const s of signals){
-const limit = Math.min(s.entryIdx + tmoBars, candles.length);
-let result=‘TIMEOUT_CLOSE’, exitPrice=candles[limit-1]?.close ?? s.entry;
-
-```
-for(let i=s.entryIdx; i<limit; i++){
-  const price = candles[i].close;
-  if(s.dir===1){
-    if(price >= s.target){ result='WIN';  exitPrice=price; break; }
-    if(price <= s.stop)  { result='LOSS'; exitPrice=price; break; }
-  } else {
-    if(price <= s.target){ result='WIN';  exitPrice=price; break; }
-    if(price >= s.stop)  { result='LOSS'; exitPrice=price; break; }
-  }
-}
-
-let tradeNet;
-if(result === 'WIN'){
-  wins++;
-  tradeNet = s.posSize * Math.abs(s.target - s.entry) - s.feeCost;
-} else if(result === 'LOSS'){
-  losses++;
-  tradeNet = -(s.posSize * Math.abs(s.stop - s.entry)) - s.feeCost;
-} else {
-  // TIMEOUT_CLOSE — mark-to-market
-  tmoCnt++;
-  const priceDiff = (exitPrice - s.entry) * s.dir;
-  tradeNet = priceDiff * s.posSize - s.feeCost;
-  tmoNetPnl += tradeNet;
-}
-
-netPnl += tradeNet;
-run    += tradeNet;
-if(run > peak) peak = run;
-const dd = peak - run;
-if(dd > maxDD) maxDD = dd;
-```
-
-}
-
-const total       = wins + losses + tmoCnt;
-const decided     = wins + losses;
-const winRateAll  = total   > 0 ? (wins/total*100)   : 0;
-const winRateWL   = decided > 0 ? (wins/decided*100) : 0;
-const annualised  = netPnl * (365/days);
-const calmar      = maxDD > 0 ? annualised/maxDD : Infinity;
-
-return { tmoBars, wins, losses, tmoCnt, netPnl, tmoNetPnl,
-winRateAll, winRateWL, maxDD, calmar, total, decided };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CHART INSTANCES
-// ═══════════════════════════════════════════════════════════════════════════════
-let pnlChartInstance = null;
-let wrChartInstance  = null;
-
-function renderChart(id, instanceRef, labels, datasets, yLabel){
-const ctx = document.getElementById(id).getContext(‘2d’);
-if(window[instanceRef]) window[instanceRef].destroy();
-window[instanceRef] = new Chart(ctx, {
-type:‘line’,
-data:{ labels, datasets },
-options:{
-responsive:true, maintainAspectRatio:false,
-animation:{ duration:300 },
-plugins:{
-legend:{ labels:{ color:’#006618’, font:{ family:‘Share Tech Mono’, size:9 } } },
-tooltip:{
-backgroundColor:’#070d07’, borderColor:’#0f2a0f’, borderWidth:1,
-titleColor:’#006618’, bodyColor:’#00cc33’,
-titleFont:{ family:‘Share Tech Mono’, size:9 },
-bodyFont:{ family:‘Share Tech Mono’, size:9 },
-},
-},
-scales:{
-x:{
-ticks:{ color:’#004a14’, font:{ family:‘Share Tech Mono’, size:8 }, maxTicksLimit:12 },
-grid:{ color:’#070d07’ }
-},
-y:{
-ticks:{ color:’#004a14’, font:{ family:‘Share Tech Mono’, size:8 } },
-grid:{ color:’#0a1a0a’ },
-title:{ display:true, text:yLabel, color:’#004a14’,
-font:{ family:‘Share Tech Mono’, size:8 } }
-}
-}
-}
+var DEGS=[27,-27,45,-45,60,-60,72,-72,78,-78];
+var lvlEl=document.getElementById('lvls');
+DEGS.forEach(function(d){
+  var b=document.createElement('button');
+  b.className='lvl on';
+  b.textContent=(d>0?'+':'')+d;
+  b.dataset.deg=d;
+  b.onclick=function(){this.classList.toggle('on');};
+  lvlEl.appendChild(b);
 });
+
+function log(s){ document.getElementById('log').textContent=s; }
+
+function g(id){ return document.getElementById(id).value; }
+
+function anchor(ts){
+  var d=new Date(ts);
+  var a=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),9,0,0));
+  if(a>d) a.setUTCDate(a.getUTCDate()-1);
+  return a;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// RENDER RESULTS
-// ═══════════════════════════════════════════════════════════════════════════════
-function renderResults(rows, days){
-// Find optimal (best net PnL)
-const best = rows.reduce((b,r) => r.netPnl > b.netPnl ? r : b, rows[0]);
-// Find best win rate (all) for reference
-const bestWR = rows.reduce((b,r) => r.winRateAll > b.winRateAll ? r : b, rows[0]);
-// First profitable bar count
-const firstProfit = rows.find(r => r.netPnl > 0);
-
-// ── OPTIMAL BANNER ──
-document.getElementById(‘optimal-banner’).innerHTML = `<div class="optimal-title">// OPTIMAL TIMEOUT = ${best.tmoBars} BARS (~${(best.tmoBars/60).toFixed(1)}h)</div> <div class="optimal-grid"> <div class="optimal-card"> <div class="optimal-label">NET PNL</div> <div class="optimal-value ${best.netPnl>=0?'green':'red'}">$${best.netPnl.toFixed(0)}</div> <div class="optimal-sub">$${(best.netPnl/days).toFixed(2)}/day</div> </div> <div class="optimal-card"> <div class="optimal-label">WIN RATE (ALL TRADES)</div> <div class="optimal-value ${best.winRateAll>=76.9?'green':'red'}">${best.winRateAll.toFixed(1)}%</div> <div class="optimal-sub">W/L ONLY: ${best.winRateWL.toFixed(1)}%</div> </div> <div class="optimal-card"> <div class="optimal-label">RESOLVED / TMO-CLOSE</div> <div class="optimal-value amber">${best.decided} / ${best.tmoCnt}</div> <div class="optimal-sub">TMO DRAG: $${best.tmoNetPnl.toFixed(0)}</div> </div> <div class="optimal-card"> <div class="optimal-label">MAX DRAWDOWN</div> <div class="optimal-value red">$${best.maxDD.toFixed(0)}</div> <div class="optimal-sub">CALMAR: ${isFinite(best.calmar)?best.calmar.toFixed(2):'inf'}</div> </div> </div> ${firstProfit ?`<div style="margin-top:8px;color:#004a14;font-size:9px;letter-spacing:1px;">
-FIRST PROFITABLE TIMEOUT: <span style="color:#00cc33;">${firstProfit.tmoBars} bars
-(~${(firstProfit.tmoBars/60).toFixed(1)}h)</span>
-</div>` : '<div style="margin-top:8px;color:#ff3131;font-size:9px;letter-spacing:1px;">NO PROFITABLE TIMEOUT FOUND IN RANGE</div>'}`;
-
-// ── CHARTS ──
-const labels    = rows.map(r => r.tmoBars+’’);
-const pnlData   = rows.map(r => parseFloat(r.netPnl.toFixed(2)));
-const wrData    = rows.map(r => parseFloat(r.winRateAll.toFixed(2)));
-const tmoData   = rows.map(r => parseFloat(r.tmoNetPnl.toFixed(2)));
-
-renderChart(‘pnl-chart’, ‘pnlChartInstance’, labels, [
-{
-label:‘NET PNL ($)’,
-data: pnlData,
-borderColor:’#00cc33’, backgroundColor:‘rgba(0,204,51,0.05)’,
-borderWidth:1.5, pointRadius:0, tension:0.3, fill:true,
-},
-{
-label:‘TMO-CLOSE PNL ($)’,
-data: tmoData,
-borderColor:’#ff3131’, backgroundColor:‘rgba(255,49,49,0.03)’,
-borderWidth:1, pointRadius:0, tension:0.3, fill:false, borderDash:[3,3],
-},
-{
-label:‘ZERO’,
-data: rows.map(()=>0),
-borderColor:’#1a4d1a’, borderWidth:1, pointRadius:0,
-borderDash:[4,4], fill:false,
-}
-], ‘PNL ($)’);
-
-renderChart(‘wr-chart’, ‘wrChartInstance’, labels, [
-{
-label:‘WIN RATE ALL (%)’,
-data: wrData,
-borderColor:’#ffb300’, backgroundColor:‘rgba(255,179,0,0.05)’,
-borderWidth:1.5, pointRadius:0, tension:0.3, fill:true,
-},
-{
-label:‘BREAK-EVEN (76.9%)’,
-data: rows.map(()=>76.9),
-borderColor:’#1a4d1a’, borderWidth:1, pointRadius:0,
-borderDash:[4,4], fill:false,
-}
-], ‘WIN RATE (%)’);
-
-// ── TABLE ──
-const tbody = document.getElementById(‘sweep-tbody’);
-tbody.innerHTML = ‘’;
-for(const r of rows){
-const isBest     = r.tmoBars === best.tmoBars;
-const isPositive = r.netPnl > 0 && !isBest;
-const rowCls     = isBest ? ‘best’ : isPositive ? ‘positive’ : ‘’;
-const pnlCls     = r.netPnl>=0 ? ‘green’ : ‘red’;
-const wrCls      = r.winRateAll>=76.9 ? ‘green’ : ‘red’;
-const calStr     = isFinite(r.calmar) ? r.calmar.toFixed(2) : ‘inf’;
-tbody.innerHTML += ` <tr class="${rowCls}"> <td>${r.tmoBars}${isBest?' ★':''}</td> <td>${(r.tmoBars/60).toFixed(1)}h</td> <td class="${pnlCls}">$${r.netPnl.toFixed(0)}</td> <td class="${wrCls}">${r.winRateAll.toFixed(1)}%</td> <td>${r.winRateWL.toFixed(1)}%</td> <td>${r.decided}</td> <td>${r.tmoCnt}</td> <td class="${r.tmoNetPnl>=0?'green':'red'}">$${r.tmoNetPnl.toFixed(0)}</td> <td class="red">$${r.maxDD.toFixed(0)}</td> <td class="${parseFloat(calStr)>=1?'green':parseFloat(calStr)>=0?'amber':'red'}">${calStr}</td> </tr>`;
+function fanP(open,bars,deg){
+  return open + bars*Math.tan(deg*Math.PI/180);
 }
 
-document.getElementById(‘results’).style.display = ‘block’;
-document.getElementById(‘bar-status’).textContent =
-`${rows.length} STEPS  |  OPTIMAL: ${best.tmoBars} BARS  |  $${best.netPnl.toFixed(0)}`;
+function tick(){ return new Promise(function(r){setTimeout(r,0);}); }
+
+function loadCache(days){
+  try{
+    var k='obd_'+days+'_'+new Date().toISOString().slice(0,10);
+    var d=localStorage.getItem(k);
+    return d?JSON.parse(d):null;
+  }catch(e){return null;}
+}
+function saveCache(days,c){
+  try{
+    var k='obd_'+days+'_'+new Date().toISOString().slice(0,10);
+    localStorage.setItem(k,JSON.stringify(c));
+  }catch(e){}
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MAIN
-// ═══════════════════════════════════════════════════════════════════════════════
-async function runSweep(){
-try {
-await _runSweep();
-} catch(e) {
-document.getElementById(‘progress-label’).textContent = ’ERROR: ’ + e.message;
-document.getElementById(‘progress-fill’).style.background = ‘#ff3131’;
-console.error(e);
-document.getElementById(‘run-btn’).disabled = false;
-}
-}
-
-async function _runSweep(){
-console.log(’[SWEEP] start’);
-const risk        = parseFloat(document.getElementById(‘cfg-risk’).value);
-const rrRatio     = parseFloat(document.getElementById(‘cfg-rr’).value);
-const stopDist    = parseFloat(document.getElementById(‘cfg-stop’).value);
-const feePct      = parseFloat(document.getElementById(‘cfg-fee’).value);
-const feeRate     = feePct / 100;
-const tolPct      = parseFloat(document.getElementById(‘cfg-tol’).value) / 100;
-const minBar      = parseInt(document.getElementById(‘cfg-minbar’).value) || 5;
-const days        = parseInt(document.getElementById(‘cfg-days’).value);
-const fromBars    = parseInt(document.getElementById(‘cfg-from’).value);
-const toBars      = parseInt(document.getElementById(‘cfg-to’).value);
-const stepBars    = parseInt(document.getElementById(‘cfg-step’).value);
-
-const activeLevels = Array.from(document.querySelectorAll(’.lvl-btn.active’))
-.map(b => parseInt(b.dataset.deg));
-if(!activeLevels.length){ alert(‘SELECT AT LEAST ONE FAN LEVEL’); return; }
-if(fromBars >= toBars){ alert(‘FROM must be less than TO’); return; }
-
-const steps = Math.floor((toBars - fromBars) / stepBars) + 1;
-document.getElementById(‘sweep-count-label’).textContent = `${steps} STEPS TO RUN`;
-
-const btn = document.getElementById(‘run-btn’);
-btn.disabled = true;
-document.getElementById(‘results’).style.display = ‘none’;
-document.getElementById(‘progress-wrap’).style.display = ‘block’;
-setProgress(0, ‘FETCHING CANDLES…’);
-
-// ── FETCH / CACHE ──
-let candles;
-const cached = loadCachedCandles(days);
-if(cached){
-setProgress(30, `LOADED ${cached.length.toLocaleString()} CANDLES FROM CACHE`);
-await new Promise(r=>setTimeout(r,200));
-candles = cached;
-} else {
-try{
-candles = await fetchAllCandles(days, pct => setProgress(pct*0.3, `FETCHING... ${pct}%`));
-saveCachedCandles(days, candles);
-updateCacheStatus();
-}catch(e){
-setProgress(0, ‘FETCH ERROR — CHECK CONNECTION’);
-btn.disabled = false;
-return;
-}
+async function fetchAll(days){
+  var now=Date.now(), start=now-days*86400000;
+  var all=[], cur=start;
+  var n=0;
+  while(cur<now){
+    var end=Math.min(cur+60000000,now);
+    var url='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m'
+      +'&startTime='+cur+'&endTime='+end+'&limit=1000';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    if(!d.length) break;
+    d.forEach(function(k){
+      all.push({time:k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4]});
+    });
+    cur=d[d.length-1][0]+60000;
+    n++;
+    if(n%5===0){
+      var pct=Math.round((cur-start)/(now-start)*100);
+      log('FETCHING... '+pct+'% ('+all.length+' candles)');
+      await tick();
+    }
+  }
+  return all;
 }
 
-// ── SCAN SIGNALS ONCE ──
-setProgress(35, `SCANNING ${candles.length.toLocaleString()} CANDLES FOR SIGNALS...`);
-await new Promise(r=>setTimeout(r,30));
-
-const config = { risk, rrRatio, stopDist, feeRate, tolPct, minBar, activeLevels };
-const signals = scanSignals(candles, config);
-
-setProgress(45, `FOUND ${signals.length} SIGNALS — SWEEPING ${steps} TIMEOUT VALUES...`);
-await new Promise(r=>setTimeout(r,30));
-
-// ── SWEEP ──
-const rows = [];
-let stepsDone = 0;
-for(let t=fromBars; t<=toBars; t+=stepBars){
-rows.push(simulateTimeout(candles, signals, t, days));
-stepsDone++;
-// Yield to UI every 10 steps so progress bar updates
-if(stepsDone % 10 === 0){
-const pct = 45 + Math.round(stepsDone/steps * 50);
-setProgress(pct, `SWEEP ${stepsDone}/${steps} — BARS: ${t}`);
-await new Promise(r=>setTimeout(r,0));
+function scanSigs(candles, cfg){
+  var ao={};
+  candles.forEach(function(c){
+    var a=anchor(c.time*1000);
+    var k=a.toISOString().slice(0,10);
+    if(!ao[k] && Math.abs(c.time-a.getTime()/1000)<180) ao[k]=c.open;
+  });
+  var sigs=[], deb={};
+  for(var i=2;i<candles.length-10;i++){
+    var c=candles[i];
+    var a=anchor(c.time*1000);
+    var ak=a.toISOString().slice(0,10);
+    if(!ao[ak]) continue;
+    if(new Date(c.time*1000).toISOString().slice(0,10)!==ak) continue;
+    var bar=Math.floor((c.time-a.getTime()/1000)/60);
+    if(bar<cfg.minBar) continue;
+    for(var di=0;di<cfg.levels.length;di++){
+      var deg=cfg.levels[di];
+      var lbl=(deg>0?'L+':'L')+deg;
+      var price=fanP(ao[ak],bar,deg);
+      var tol=price*cfg.tolPct;
+      var dk=ak+'_'+lbl;
+      if(c.low<=price+tol&&c.low>=price-tol&&c.close>price&&!deb[dk]){
+        deb[dk]=true;
+        var e=c.close,ps=cfg.risk/cfg.stopDist,fc=ps*e*cfg.feeRate*2;
+        sigs.push({i:i+1,dir:1,e:e,ps:ps,fc:fc,tp:e+cfg.stopDist*cfg.rrRatio,sl:e-cfg.stopDist});
+        continue;
+      }
+      if(c.high>=price-tol&&c.high<=price+tol&&c.close<price&&!deb[dk]){
+        deb[dk]=true;
+        var e2=c.close,ps2=cfg.risk/cfg.stopDist,fc2=ps2*e2*cfg.feeRate*2;
+        sigs.push({i:i+1,dir:-1,e:e2,ps:ps2,fc:fc2,tp:e2-cfg.stopDist*cfg.rrRatio,sl:e2+cfg.stopDist});
+      }
+    }
+  }
+  return sigs;
 }
+
+function simOne(candles, sigs, tmo, days){
+  var wins=0,losses=0,tmos=0,net=0,tmoNet=0,peak=0,run=0,maxDD=0;
+  for(var si=0;si<sigs.length;si++){
+    var s=sigs[si];
+    var lim=Math.min(s.i+tmo,candles.length);
+    var res='T', ep=candles[lim-1]?candles[lim-1].close:s.e;
+    for(var j=s.i;j<lim;j++){
+      var p=candles[j].close;
+      if(s.dir===1){
+        if(p>=s.tp){res='W';ep=p;break;}
+        if(p<=s.sl){res='L';ep=p;break;}
+      } else {
+        if(p<=s.tp){res='W';ep=p;break;}
+        if(p>=s.sl){res='L';ep=p;break;}
+      }
+    }
+    var t;
+    if(res==='W'){wins++;t=s.ps*Math.abs(s.tp-s.e)-s.fc;}
+    else if(res==='L'){losses++;t=-s.ps*Math.abs(s.sl-s.e)-s.fc;}
+    else{tmos++;t=(ep-s.e)*s.dir*s.ps-s.fc;tmoNet+=t;}
+    net+=t; run+=t;
+    if(run>peak) peak=run;
+    var dd=peak-run;
+    if(dd>maxDD) maxDD=dd;
+  }
+  var tot=wins+losses+tmos, dec=wins+losses;
+  var wrAll=tot>0?wins/tot*100:0, wrWL=dec>0?wins/dec*100:0;
+  var ann=net*(365/days);
+  var calmar=maxDD>0?(ann/maxDD):null;
+  return {tmo:tmo,wins:wins,losses:losses,tmos:tmos,
+    net:net,tmoNet:tmoNet,wrAll:wrAll,wrWL:wrWL,
+    maxDD:maxDD,calmar:calmar,dec:dec};
 }
 
-setProgress(100, `DONE — ${steps} STEPS COMPLETE`);
-await new Promise(r=>setTimeout(r,400));
-document.getElementById(‘progress-wrap’).style.display = ‘none’;
+function fmt(n){return n>=0?'$'+n.toFixed(0):'$'+n.toFixed(0);}
 
-renderResults(rows, days);
-btn.disabled = false;
+function renderTable(rows){
+  var best=rows[0];
+  rows.forEach(function(r){if(r.net>best.net) best=r;});
+  var firstPos=null;
+  rows.forEach(function(r){if(r.net>0&&!firstPos) firstPos=r;});
+
+  var html='<div style="border:1px solid #00cc33;background:#001a06;padding:10px;margin-bottom:14px;">';
+  html+='<div style="color:#006618;font-size:9px;letter-spacing:2px;margin-bottom:6px;">'
+    +'OPTIMAL: '+best.tmo+' BARS (~'+(best.tmo/60).toFixed(1)+'h)'
+    +(firstPos?' | FIRST +: '+firstPos.tmo+' bars':' | NO POSITIVE IN RANGE')+'</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+  var pc=best.net>=0?'g':'r';
+  var wc=best.wrAll>=76.9?'g':'r';
+  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
+    +'<div style="color:#004a14;font-size:9px;">NET PNL</div>'
+    +'<div style="font-size:18px;" class="'+pc+'">'+fmt(best.net)+'</div>'
+    +'<div style="color:#004a14;font-size:9px;">'+( best.net/365).toFixed(2)+'/day (ann)</div></div>';
+  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
+    +'<div style="color:#004a14;font-size:9px;">WIN RATE ALL</div>'
+    +'<div style="font-size:18px;" class="'+wc+'">'+best.wrAll.toFixed(1)+'%</div>'
+    +'<div style="color:#004a14;font-size:9px;">W/L ONLY: '+best.wrWL.toFixed(1)+'%</div></div>';
+  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
+    +'<div style="color:#004a14;font-size:9px;">RESOLVED / FORCED</div>'
+    +'<div style="font-size:18px;color:#ffb300;">'+best.dec+' / '+best.tmos+'</div>'
+    +'<div style="color:#004a14;font-size:9px;">TMO PNL: '+fmt(best.tmoNet)+'</div></div>';
+  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
+    +'<div style="color:#004a14;font-size:9px;">MAX DRAWDOWN</div>'
+    +'<div style="font-size:18px;color:#ff3131;">$'+best.maxDD.toFixed(0)+'</div>'
+    +'<div style="color:#004a14;font-size:9px;">CALMAR: '+(best.calmar!=null?best.calmar.toFixed(2):'inf')+'</div></div>';
+  html+='</div></div>';
+
+  html+='<table><thead><tr>'
+    +'<th>BARS</th><th>TIME</th><th>NET PNL</th>'
+    +'<th>WR ALL</th><th>WR W/L</th>'
+    +'<th>RESOLVED</th><th>FORCED</th><th>TMO PNL</th>'
+    +'<th>MAX DD</th><th>CALMAR</th>'
+    +'</tr></thead><tbody>';
+
+  rows.forEach(function(r){
+    var isBest=r.tmo===best.tmo;
+    var cls=isBest?'best':'';
+    var pc2=r.net>=0?'g':'r';
+    var wc2=r.wrAll>=76.9?'g':'r';
+    var tc=r.tmoNet>=0?'g':'r';
+    var cal=r.calmar!=null?r.calmar.toFixed(2):'inf';
+    var cc=r.calmar!=null&&r.calmar>=1?'g':r.calmar!=null&&r.calmar>=0?'a':'r';
+    html+='<tr class="'+cls+'">'
+      +'<td>'+r.tmo+(isBest?' ★':'')+'</td>'
+      +'<td>'+(r.tmo/60).toFixed(1)+'h</td>'
+      +'<td class="'+pc2+'">'+fmt(r.net)+'</td>'
+      +'<td class="'+wc2+'">'+r.wrAll.toFixed(1)+'%</td>'
+      +'<td>'+r.wrWL.toFixed(1)+'%</td>'
+      +'<td>'+r.dec+'</td>'
+      +'<td>'+r.tmos+'</td>'
+      +'<td class="'+tc+'">'+fmt(r.tmoNet)+'</td>'
+      +'<td class="r">$'+r.maxDD.toFixed(0)+'</td>'
+      +'<td class="'+cc+'">'+cal+'</td>'
+      +'</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('out').innerHTML=html;
 }
 
-// ── INIT ──
-window.addEventListener(‘load’, updateCacheStatus);
+async function go(){
+  var btn=document.getElementById('runbtn');
+  btn.disabled=true;
+  document.getElementById('out').innerHTML='';
+  try{
+    var days=parseInt(g('days'))||1800;
+    var risk=parseFloat(g('risk'))||1000;
+    var rrRatio=parseFloat(g('rr'))||0.3;
+    var stopDist=parseFloat(g('stop'))||3000;
+    var feeRate=parseFloat(g('fee'))/100;
+    var tolPct=parseFloat(g('tol'))/100;
+    var minBar=parseInt(g('minbar'))||5;
+    var from=parseInt(g('from'))||10;
+    var to=parseInt(g('to'))||500;
+    var step=parseInt(g('step'))||10;
+    var levels=[];
+    document.querySelectorAll('.lvl.on').forEach(function(b){
+      levels.push(parseInt(b.dataset.deg));
+    });
+    if(!levels.length){alert('SELECT LEVELS');btn.disabled=false;return;}
+
+    log('CHECKING CACHE...');
+    await tick();
+    var candles=loadCache(days);
+    if(candles){
+      log('CACHE HIT — '+candles.length+' CANDLES');
+      await tick();
+    } else {
+      candles=await fetchAll(days);
+      saveCache(days,candles);
+      log('FETCHED '+candles.length+' CANDLES — SCANNING...');
+      await tick();
+    }
+
+    var cfg={risk:risk,rrRatio:rrRatio,stopDist:stopDist,
+             feeRate:feeRate,tolPct:tolPct,minBar:minBar,levels:levels};
+    log('SCANNING SIGNALS...');
+    await tick();
+    var sigs=scanSigs(candles,cfg);
+    log('FOUND '+sigs.length+' SIGNALS — SWEEPING...');
+    await tick();
+
+    var rows=[];
+    var steps=Math.floor((to-from)/step)+1;
+    var done=0;
+    for(var t=from;t<=to;t+=step){
+      rows.push(simOne(candles,sigs,t,days));
+      done++;
+      if(done%10===0){
+        log('SWEEP '+done+'/'+steps+' (bar '+t+')');
+        await tick();
+      }
+    }
+    log('DONE — '+rows.length+' STEPS');
+    renderTable(rows);
+  } catch(err){
+    log('ERROR: '+err.message);
+    console.error(err);
+  }
+  btn.disabled=false;
+}
 </script>
 
 </body>
