@@ -1,4 +1,4 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en">
 <head>
@@ -12,8 +12,10 @@ html,body{background:#030803;color:#00cc33;font-family:'Share Tech Mono',monospa
 body{padding:12px 10px 60px;}
 .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
 .lbl{color:#006618;font-size:9px;letter-spacing:1px;}
-input{background:#000;border:1px solid #0f2a0f;color:#00cc33;
-  font-family:'Share Tech Mono',monospace;font-size:11px;width:100px;padding:3px 6px;text-align:right;}
+input[type=number],input[type=text]{
+  background:#000;border:1px solid #0f2a0f;color:#00cc33;
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  width:100%;padding:3px 6px;text-align:right;}
 input:focus{outline:none;border-color:#004a14;}
 .panel{border:1px solid #0f2a0f;padding:10px;margin-bottom:12px;}
 .ptitle{color:#006618;font-size:9px;letter-spacing:3px;margin-bottom:10px;}
@@ -25,85 +27,94 @@ input:focus{outline:none;border-color:#004a14;}
   font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 8px;cursor:pointer;}
 .lvl.on{border-color:#00cc33;color:#00cc33;background:#001a06;}
 #log{color:#006618;font-size:9px;letter-spacing:1px;min-height:18px;margin-bottom:12px;word-break:break-all;}
+.prog-bg{width:100%;height:4px;background:#0f2a0f;margin-bottom:12px;}
+.prog-fill{height:4px;background:#00cc33;width:0%;transition:width 0.1s;}
 
-/* heat map */
-.hmap-wrap{overflow-x:auto;margin-bottom:20px;}
-.hmap{border-collapse:collapse;font-size:8px;letter-spacing:0.5px;}
-.hmap th{
-background:#070d07;color:#006618;
-border:1px solid #0f2a0f;padding:4px 6px;
-text-align:center;font-weight:normal;white-space:nowrap;
-}
-.hmap td{
-border:1px solid #0a170a;padding:4px 6px;
-text-align:center;white-space:nowrap;
-cursor:pointer;min-width:60px;
-}
-.hmap td:hover{border-color:#00cc33;}
-.hmap .row-hdr{
-background:#070d07;color:#006618;
-border:1px solid #0f2a0f;padding:4px 6px;
-text-align:right;white-space:nowrap;font-size:9px;
-}
+/* banner */
+.banner{border:1px solid #00cc33;background:#001a06;padding:10px;margin-bottom:14px;}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.bcard{border:1px solid #0f2a0f;padding:6px;}
+.blbl{color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:2px;}
+.bval{font-size:16px;font-weight:bold;}
+.bsub{color:#004a14;font-size:9px;margin-top:2px;}
 
-/* top 10 table */
-table.rank{width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;margin-bottom:20px;}
-table.rank th{color:#006618;border-bottom:1px solid #0f2a0f;padding:4px 4px;text-align:right;font-weight:normal;}
-table.rank th:first-child{text-align:left;}
-table.rank td{padding:4px 4px;border-bottom:1px solid #030d03;text-align:right;color:#004a14;}
-table.rank td:first-child{text-align:left;color:#006618;}
-table.rank tr.best td{color:#00cc33!important;}
+/* sort controls */
+.sort-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.srt-btn{background:#030803;border:1px solid #0f2a0f;color:#006618;
+font-family:‘Share Tech Mono’,monospace;font-size:9px;letter-spacing:1px;
+padding:3px 8px;cursor:pointer;}
+.srt-btn.active{border-color:#00aaff;color:#00aaff;background:#001a20;}
 
-/* detail panel */
-#detail{border:1px solid #ffb300;background:#1a1200;padding:10px;margin-bottom:16px;display:none;}
-#detail .dtitle{color:#ffb300;font-size:9px;letter-spacing:2px;margin-bottom:8px;}
-#detail .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-#detail .dcard{border:1px solid #2a1f00;padding:6px;}
-#detail .dlbl{color:#4a3800;font-size:9px;letter-spacing:1px;margin-bottom:2px;}
-#detail .dval{font-size:16px;font-weight:bold;}
-#detail .dsub{color:#4a3800;font-size:9px;margin-top:2px;}
+/* filter bar */
+.flt-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;}
+.flt-lbl{color:#006618;font-size:9px;letter-spacing:1px;}
+select{background:#000;border:1px solid #0f2a0f;color:#00cc33;
+font-family:‘Share Tech Mono’,monospace;font-size:9px;padding:3px 5px;}
 
+/* table */
+table.res{width:100%;border-collapse:collapse;font-size:9px;letter-spacing:0.5px;}
+table.res th{color:#006618;border-bottom:1px solid #0f2a0f;padding:4px 4px;
+text-align:right;font-weight:normal;cursor:pointer;white-space:nowrap;}
+table.res th:first-child{text-align:left;}
+table.res th:hover{color:#00cc33;}
+table.res td{padding:3px 4px;border-bottom:1px solid #030d03;
+text-align:right;color:#004a14;white-space:nowrap;}
+table.res td:first-child{text-align:left;color:#006618;}
+table.res tr.top1 td{color:#00cc33!important;}
+table.res tr.top10 td{color:#006618!important;}
 .g{color:#00cc33!important;}.r{color:#ff3131!important;}.a{color:#ffb300!important;}
 .sec{color:#006618;font-size:9px;letter-spacing:3px;margin:14px 0 8px;}
+
+/* show more */
+#show-more-btn{width:100%;background:#001a06;border:1px solid #004a14;color:#006618;
+font-family:‘Share Tech Mono’,monospace;font-size:9px;letter-spacing:2px;
+padding:8px;cursor:pointer;margin-top:6px;margin-bottom:20px;}
 </style>
 
 </head>
 <body>
 
 <div style="color:#00cc33;letter-spacing:4px;font-size:11px;margin-bottom:4px;">// CONFIG SWEEP</div>
-<div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:12px;">
-  stop distance × rr ratio grid — signals scanned once
-</div>
+<div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:12px;">stop × rr × tolerance × timeout — all combos ranked</div>
 
 <div class="panel">
   <div class="ptitle">// FIXED PARAMS</div>
-  <div class="row"><span class="lbl">DAYS</span><input id="days" type="number" value="1800"></div>
-  <div class="row"><span class="lbl">RISK ($)</span><input id="risk" type="number" value="1000"></div>
-  <div class="row"><span class="lbl">FEE (%)</span><input id="fee" type="number" value="0.02" step="0.005"></div>
-  <div class="row"><span class="lbl">TOLERANCE (%)</span><input id="tol" type="number" value="0.08" step="0.01"></div>
-  <div class="row"><span class="lbl">MIN BAR</span><input id="minbar" type="number" value="5"></div>
-  <div class="row"><span class="lbl">TIMEOUT BARS</span><input id="tmo" type="number" value="200"></div>
+  <div class="row"><span class="lbl">DAYS</span>
+    <div style="width:100px;"><input id="days" type="number" value="1800"></div></div>
+  <div class="row"><span class="lbl">RISK ($)</span>
+    <div style="width:100px;"><input id="risk" type="number" value="1000"></div></div>
+  <div class="row"><span class="lbl">MIN BAR</span>
+    <div style="width:100px;"><input id="minbar" type="number" value="5"></div></div>
+  <div class="row"><span class="lbl">FEE (%)</span>
+    <div style="width:100px;"><input id="fee" type="number" value="0.02" step="0.005"></div></div>
 </div>
 
 <div class="panel">
-  <div class="ptitle">// STOP DISTANCE RANGE ($)</div>
-  <div class="row"><span class="lbl">FROM</span><input id="sl-from" type="number" value="100"></div>
-  <div class="row"><span class="lbl">TO</span><input id="sl-to" type="number" value="5000"></div>
-  <div class="row"><span class="lbl">STEPS (count)</span><input id="sl-steps" type="number" value="8" min="2" max="20"></div>
-  <div style="color:#004a14;font-size:9px;letter-spacing:1px;" id="sl-preview">—</div>
+  <div class="ptitle">// STOP DISTANCE ($) — log-spaced</div>
+  <div class="row"><span class="lbl">FROM</span>
+    <div style="width:100px;"><input id="sl-from" type="number" value="100"></div></div>
+  <div class="row"><span class="lbl">TO</span>
+    <div style="width:100px;"><input id="sl-to" type="number" value="5000"></div></div>
+  <div class="row"><span class="lbl">STEPS</span>
+    <div style="width:100px;"><input id="sl-n" type="number" value="6" min="2" max="15"></div></div>
 </div>
 
 <div class="panel">
-  <div class="ptitle">// RR RATIO VALUES</div>
-  <div class="row">
-    <span class="lbl">RATIOS (comma-separated)</span>
-  </div>
-  <input id="rr-vals" type="text"
-    value="0.2,0.3,0.5,0.8,1.0,1.5,2.0,3.0"
-    style="width:100%;margin-bottom:4px;">
-  <div style="color:#004a14;font-size:9px;letter-spacing:1px;">
-    break-even WR = 1/(1+RR) — shown in header
-  </div>
+  <div class="ptitle">// RR RATIOS (comma-separated)</div>
+  <input id="rr-vals" type="text" style="text-align:left;"
+    value="0.2,0.3,0.5,0.8,1.0,1.5,2.0,3.0">
+</div>
+
+<div class="panel">
+  <div class="ptitle">// TOLERANCE % (comma-separated)</div>
+  <input id="tol-vals" type="text" style="text-align:left;"
+    value="0.04,0.06,0.08,0.12,0.16">
+</div>
+
+<div class="panel">
+  <div class="ptitle">// TIMEOUT BARS (comma-separated)</div>
+  <input id="tmo-vals" type="text" style="text-align:left;"
+    value="50,100,150,200,300,400">
 </div>
 
 <div class="panel">
@@ -111,9 +122,12 @@ table.rank tr.best td{color:#00cc33!important;}
   <div id="lvls" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
 </div>
 
-<button class="runbtn" id="runbtn" onclick="go()">▶ RUN CONFIG SWEEP</button>
+<div id="combo-count" style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;">—</div>
+<button class="runbtn" id="runbtn" onclick="go()">&#9654; RUN CONFIG SWEEP</button>
 
 <div id="log">READY</div>
+<div class="prog-bg" id="prog-bg" style="display:none;"><div class="prog-fill" id="prog-fill"></div></div>
+
 <div id="out"></div>
 
 <script>
@@ -124,46 +138,55 @@ var DEGS=[27,-27,45,-45,60,-60,72,-72,78,-78];
     var b=document.createElement('button');
     b.className='lvl on'; b.dataset.deg=d;
     b.textContent=(d>0?'+':'')+d;
-    b.onclick=function(){this.classList.toggle('on');};
+    b.onclick=function(){this.classList.toggle('on');updateCount();};
     el.appendChild(b);
+  });
+  updateCount();
+  ['sl-from','sl-to','sl-n','rr-vals','tol-vals','tmo-vals'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',updateCount);
   });
 })();
 
-// update stop preview
-function updateSlPreview(){
-  var from=parseFloat(document.getElementById('sl-from').value)||100;
-  var to=parseFloat(document.getElementById('sl-to').value)||5000;
-  var n=parseInt(document.getElementById('sl-steps').value)||8;
-  var vals=makeStops(from,to,n);
-  document.getElementById('sl-preview').textContent='VALUES: '+vals.map(function(v){return '$'+v;}).join(', ');
+function parseList(id){
+  return document.getElementById(id).value.split(',')
+    .map(function(s){return parseFloat(s.trim());})
+    .filter(function(v){return !isNaN(v)&&v>0;});
 }
-['sl-from','sl-to','sl-steps'].forEach(function(id){
-  document.getElementById(id).addEventListener('input', updateSlPreview);
-});
-updateSlPreview();
 
-function makeStops(from,to,n){
-  // logarithmic spacing — better for price ranges
-  var vals=[];
-  var logFrom=Math.log(from), logTo=Math.log(to);
+function logSpaced(from,to,n){
+  var vals=[], lf=Math.log(from), lt=Math.log(to);
   for(var i=0;i<n;i++){
-    var t=i/(n-1);
-    var v=Math.exp(logFrom + t*(logTo-logFrom));
-    vals.push(Math.round(v));
+    var t=n===1?0:i/(n-1);
+    vals.push(Math.round(Math.exp(lf+t*(lt-lf))));
   }
-  // dedupe
   var seen={};
   return vals.filter(function(v){if(seen[v])return false;seen[v]=true;return true;});
 }
 
+function updateCount(){
+  var stops=logSpaced(
+    parseFloat(document.getElementById('sl-from').value)||100,
+    parseFloat(document.getElementById('sl-to').value)||5000,
+    parseInt(document.getElementById('sl-n').value)||6);
+  var rrs=parseList('rr-vals');
+  var tols=parseList('tol-vals');
+  var tmos=parseList('tmo-vals');
+  var lvls=document.querySelectorAll('.lvl.on').length;
+  var total=stops.length*rrs.length*tols.length*tmos.length;
+  document.getElementById('combo-count').textContent=
+    stops.length+' stops × '+rrs.length+' RRs × '+tols.length+' tols × '+tmos.length+' tmos = '+total+' COMBOS'
+    +(lvls?' | '+lvls+' LEVELS':'');
+}
+
 function g(id){return document.getElementById(id).value;}
 function log(s){document.getElementById('log').textContent=s;}
+function setProg(p){document.getElementById('prog-fill').style.width=p+'%';}
 function tick(){return new Promise(function(r){setTimeout(r,0);});}
 
 // ── CACHE ──
 function loadCache(days){
   try{
-    var k='obd_cs_v1_'+days+'_'+new Date().toISOString().slice(0,10);
+    var k='obd_cfg_v1_'+days+'_'+new Date().toISOString().slice(0,10);
     var d=localStorage.getItem(k);
     return d?JSON.parse(d):null;
   }catch(e){return null;}
@@ -171,9 +194,9 @@ function loadCache(days){
 function saveCache(days,c){
   try{
     for(var k in localStorage)
-      if(k.indexOf('obd_cs_v1_')===0) localStorage.removeItem(k);
-    var key='obd_cs_v1_'+days+'_'+new Date().toISOString().slice(0,10);
-    localStorage.setItem(key,JSON.stringify(c));
+      if(k.indexOf('obd_cfg_v1_')===0||k.indexOf('obd_cs_v1_')===0||k.indexOf('obd_sw_v1_')===0||k.indexOf('obd_')===0)
+        localStorage.removeItem(k);
+    localStorage.setItem('obd_cfg_v1_'+days+'_'+new Date().toISOString().slice(0,10),JSON.stringify(c));
   }catch(e){}
 }
 
@@ -189,9 +212,10 @@ async function fetchAll(days){
     if(!r.ok) throw new Error('HTTP '+r.status);
     var d=await r.json();
     if(!d.length) break;
-    d.forEach(function(k){
+    for(var i=0;i<d.length;i++){
+      var k=d[i];
       all.push({time:k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4]});
-    });
+    }
     cur=d[d.length-1][0]+60000; n++;
     if(n%5===0){
       log('FETCHING... '+Math.round((cur-start)/(now-start)*100)+'% ('+all.length+' candles)');
@@ -202,38 +226,38 @@ async function fetchAll(days){
 }
 
 // ── ANCHOR / FAN ──
-function anchor(ts){
-  var d=new Date(ts);
-  var a=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),9,0,0));
-  if(a>d) a.setUTCDate(a.getUTCDate()-1);
-  return a;
-}
-function fanP(open,bars,deg){
-  return open+bars*Math.tan(deg*Math.PI/180);
-}
-
-// ── SCAN SIGNALS — returns raw touches only (no stop/tp yet) ──
-// We store entry index + dir + entry price; stop/tp computed per sim
-function scanRaw(candles, tolPct, minBar, levels){
+function buildAnchorOpens(candles){
   var ao={};
-  candles.forEach(function(c){
-    var a=anchor(c.time*1000);
+  for(var i=0;i<candles.length;i++){
+    var c=candles[i];
+    var d=new Date(c.time*1000);
+    var a=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),9,0,0));
+    if(a>d) a.setUTCDate(a.getUTCDate()-1);
     var k=a.toISOString().slice(0,10);
-    if(!ao[k]&&Math.abs(c.time-a.getTime()/1000)<180) ao[k]=c.open;
-  });
+    if(!ao[k]&&Math.abs(c.time-a.getTime()/1000)<180) ao[k]={open:c.open,ts:a.getTime()/1000};
+  }
+  return ao;
+}
+function fanP(open,bars,deg){return open+bars*Math.tan(deg*Math.PI/180);}
+
+// ── SCAN — returns raw touches for given tolerance ──
+function scanRaw(candles, ao, tolPct, minBar, levels){
   var raw=[], deb={};
   for(var i=2;i<candles.length-10;i++){
     var c=candles[i];
-    var a=anchor(c.time*1000);
+    var d=new Date(c.time*1000);
+    var a=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),9,0,0));
+    if(a>d) a.setUTCDate(a.getUTCDate()-1);
     var ak=a.toISOString().slice(0,10);
-    if(!ao[ak]) continue;
-    if(new Date(c.time*1000).toISOString().slice(0,10)!==ak) continue;
-    var bar=Math.floor((c.time-a.getTime()/1000)/60);
+    var ancData=ao[ak]; if(!ancData) continue;
+    var cd=new Date(c.time*1000).toISOString().slice(0,10);
+    if(cd!==ak) continue;
+    var bar=Math.floor((c.time-ancData.ts)/60);
     if(bar<minBar) continue;
     for(var di=0;di<levels.length;di++){
       var deg=levels[di];
       var lbl=(deg>0?'L+':'L')+deg;
-      var price=fanP(ao[ak],bar,deg);
+      var price=fanP(ancData.open,bar,deg);
       var tol=price*tolPct;
       var dk=ak+'_'+lbl;
       if(c.low<=price+tol&&c.low>=price-tol&&c.close>price&&!deb[dk]){
@@ -250,209 +274,174 @@ function scanRaw(candles, tolPct, minBar, levels){
   return raw;
 }
 
-// ── SIMULATE ONE CONFIG ──
-function simConfig(candles, raw, stopDist, rrRatio, tmo, risk, feeRate, days){
+// ── SIMULATE ONE COMBO ──
+function simOne(candles, raw, stop, rr, tmo, risk, feeRate, days){
   var wins=0,losses=0,tmos=0,net=0,tmoNet=0,peak=0,run=0,maxDD=0;
+  var ps=risk/stop, grossW=0, grossL=0;
   for(var si=0;si<raw.length;si++){
     var s=raw[si];
-    var tp = s.dir===1 ? s.e+stopDist*rrRatio : s.e-stopDist*rrRatio;
-    var sl = s.dir===1 ? s.e-stopDist         : s.e+stopDist;
-    var ps = risk/stopDist;
-    var fc = ps*s.e*feeRate*2;
-    var lim=Math.min(s.i+tmo, candles.length);
+    var tp=s.dir===1?s.e+stop*rr:s.e-stop*rr;
+    var sl=s.dir===1?s.e-stop:s.e+stop;
+    var fc=ps*s.e*feeRate*2;
+    var lim=Math.min(s.i+tmo,candles.length);
     var res='T', ep=candles[lim-1]?candles[lim-1].close:s.e;
     for(var j=s.i;j<lim;j++){
       var p=candles[j].close;
-      if(s.dir===1){
-        if(p>=tp){res='W';ep=p;break;}
-        if(p<=sl){res='L';ep=p;break;}
-      } else {
-        if(p<=tp){res='W';ep=p;break;}
-        if(p>=sl){res='L';ep=p;break;}
-      }
+      if(s.dir===1){if(p>=tp){res='W';ep=p;break;}if(p<=sl){res='L';ep=p;break;}}
+      else{if(p<=tp){res='W';ep=p;break;}if(p>=sl){res='L';ep=p;break;}}
     }
     var t;
-    if(res==='W'){wins++;t=ps*Math.abs(tp-s.e)-fc;}
-    else if(res==='L'){losses++;t=-ps*Math.abs(sl-s.e)-fc;}
+    if(res==='W'){wins++;t=ps*stop*rr-fc;grossW+=ps*stop*rr;}
+    else if(res==='L'){losses++;t=-ps*stop-fc;grossL+=ps*stop;}
     else{tmos++;t=(ep-s.e)*s.dir*ps-fc;tmoNet+=t;}
-    net+=t; run+=t;
-    if(run>peak) peak=run;
-    var dd=peak-run; if(dd>maxDD) maxDD=dd;
+    net+=t;run+=t;
+    if(run>peak)peak=run;
+    var dd=peak-run;if(dd>maxDD)maxDD=dd;
   }
-  var tot=wins+losses+tmos, dec=wins+losses;
-  var wrAll=tot>0?wins/tot*100:0, wrWL=dec>0?wins/dec*100:0;
+  var tot=wins+losses+tmos,dec=wins+losses;
+  var wrAll=tot>0?wins/tot*100:0,wrWL=dec>0?wins/dec*100:0;
+  var beWR=100/(1+rr);
   var ann=net*(365/days);
   var calmar=maxDD>0?ann/maxDD:null;
-  var beWR=100/(1+rrRatio);
-  return {stopDist:stopDist,rrRatio:rrRatio,wins:wins,losses:losses,tmos:tmos,
-    net:net,tmoNet:tmoNet,wrAll:wrAll,wrWL:wrWL,maxDD:maxDD,
-    calmar:calmar,dec:dec,tot:tot,ann:ann,beWR:beWR};
+  var pf=grossL>0?grossW/grossL:null;
+  return {stop:stop,rr:rr,tol:0,tmo:tmo,
+    wins:wins,losses:losses,tmos:tmos,tot:tot,dec:dec,
+    net:net,tmoNet:tmoNet,wrAll:wrAll,wrWL:wrWL,
+    beWR:beWR,maxDD:maxDD,calmar:calmar,ann:ann,pf:pf};
 }
 
-// ── COLOUR CELL ──
-function cellColour(net, maxAbs){
-  if(net===null) return '#070d07';
-  var t=Math.abs(net)/maxAbs; // 0..1
-  if(net>0){
-    var g=Math.round(50+t*180);
-    return 'rgba(0,'+g+',20,0.35)';
-  } else {
-    var r=Math.round(60+t*180);
-    return 'rgba('+r+',10,10,0.35)';
-  }
+// ── SORT STATE ──
+var _results=[], _sortKey='net', _sortDir=-1, _showN=50;
+
+function sortBy(key){
+  if(_sortKey===key){_sortDir*=-1;}
+  else{_sortKey=key;_sortDir=-1;}
+  document.querySelectorAll('.srt-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.key===key);
+  });
+  _showN=50;
+  renderTable();
 }
 
-// ── RENDER ──
-function render(grid, stops, rrs, tmo, days){
-  // Flatten all results for top-10
-  var all=[];
-  for(var si=0;si<stops.length;si++)
-    for(var ri=0;ri<rrs.length;ri++)
-      if(grid[si][ri]) all.push(grid[si][ri]);
+function renderTable(){
+  var rows=_results.slice();
+  rows.sort(function(a,b){return _sortDir*(a[_sortKey]>b[_sortKey]?1:a[_sortKey]<b[_sortKey]?-1:0);});
 
-  all.sort(function(a,b){return b.net-a.net;});
-  var best=all[0];
-  var maxAbs=Math.max.apply(null, all.map(function(r){return Math.abs(r.net);}));
+  var best=rows[0];
+  var shown=rows.slice(0,_showN);
 
   var html='';
 
-  // ── BEST CELL BANNER ──
-  var pc=best.net>=0?'g':'r';
-  var wc=best.wrAll>=best.beWR?'g':'r';
-  html+='<div style="border:1px solid #00cc33;background:#001a06;padding:10px;margin-bottom:14px;">';
-  html+='<div style="color:#006618;font-size:9px;letter-spacing:2px;margin-bottom:8px;">'
-    +'BEST: STOP $'+best.stopDist+' | RR '+best.rrRatio+' | TMO '+tmo+' BARS</div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
-  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
-    +'<div style="color:#004a14;font-size:9px;">NET PNL</div>'
-    +'<div style="font-size:18px;" class="'+pc+'">$'+best.net.toFixed(0)+'</div>'
-    +'<div style="color:#004a14;font-size:9px;">$'+(best.net/days).toFixed(2)+'/day</div></div>';
-  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
-    +'<div style="color:#004a14;font-size:9px;">WIN RATE ALL</div>'
-    +'<div style="font-size:18px;" class="'+wc+'">'+best.wrAll.toFixed(1)+'%</div>'
-    +'<div style="color:#004a14;font-size:9px;">BE: '+best.beWR.toFixed(1)+'% | W/L: '+best.wrWL.toFixed(1)+'%</div></div>';
-  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
-    +'<div style="color:#004a14;font-size:9px;">RESOLVED / FORCED</div>'
-    +'<div style="font-size:18px;color:#ffb300;">'+best.dec+' / '+best.tmos+'</div>'
-    +'<div style="color:#004a14;font-size:9px;">POS SIZE: $'+( best.net>=0?'':'')+( 1000/best.stopDist).toFixed(3)+'/pt</div></div>';
-  html+='<div style="border:1px solid #0f2a0f;padding:6px;">'
-    +'<div style="color:#004a14;font-size:9px;">MAX DD | CALMAR</div>'
-    +'<div style="font-size:18px;color:#ff3131;">$'+best.maxDD.toFixed(0)+'</div>'
-    +'<div style="color:#004a14;font-size:9px;">CALMAR: '+(best.calmar!=null?best.calmar.toFixed(2):'inf')+'</div></div>';
-  html+='</div></div>';
+  // banner — always best by net
+  var byNet=_results.slice().sort(function(a,b){return b.net-a.net;})[0];
+  var pc=byNet.net>=0?'g':'r';
+  html+='<div class="banner">'
+    +'<div style="color:#006618;font-size:9px;letter-spacing:2px;margin-bottom:8px;">'
+    +'BEST NET PNL — STOP $'+byNet.stop+' | RR '+byNet.rr+' | TOL '+byNet.tol+'% | TMO '+byNet.tmo+' BARS</div>'
+    +'<div class="bgrid">'
+    +'<div class="bcard"><div class="blbl">NET PNL</div>'
+      +'<div class="bval '+pc+'">$'+byNet.net.toFixed(0)+'</div>'
+      +'<div class="bsub">$'+(byNet.net/parseFloat(g('days'))).toFixed(2)+'/day</div></div>'
+    +'<div class="bcard"><div class="blbl">WIN RATE ALL / W/L</div>'
+      +'<div class="bval '+(byNet.wrAll>=byNet.beWR?'g':'r')+'">'+byNet.wrAll.toFixed(1)+'%</div>'
+      +'<div class="bsub">W/L: '+byNet.wrWL.toFixed(1)+'% | BE: '+byNet.beWR.toFixed(1)+'%</div></div>'
+    +'<div class="bcard"><div class="blbl">RESOLVED / FORCED</div>'
+      +'<div class="bval a">'+byNet.dec+' / '+byNet.tmos+'</div>'
+      +'<div class="bsub">P/F: '+(byNet.pf!=null?byNet.pf.toFixed(2):'—')+'</div></div>'
+    +'<div class="bcard"><div class="blbl">MAX DD | CALMAR</div>'
+      +'<div class="bval r">$'+byNet.maxDD.toFixed(0)+'</div>'
+      +'<div class="bsub">'+(byNet.calmar!=null?byNet.calmar.toFixed(2):'inf')+'</div></div>'
+    +'</div></div>';
 
-  // ── HEAT MAP ──
-  html+='<div style="color:#006618;font-size:9px;letter-spacing:3px;margin:14px 0 8px;">// PNL HEAT MAP — STOP (rows) × RR (cols)</div>';
-  html+='<div class="hmap-wrap"><table class="hmap"><thead><tr>';
-  html+='<th>STOP \\ RR</th>';
-  rrs.forEach(function(rr){
-    var be=(100/(1+rr)).toFixed(0);
-    html+='<th>'+rr+'<br><span style="color:#333;font-size:7px;">BE '+be+'%</span></th>';
+  // sort bar
+  var sortKeys=[
+    {k:'net',l:'NET PNL'},{k:'calmar',l:'CALMAR'},{k:'wrAll',l:'WR ALL'},
+    {k:'wrWL',l:'WR W/L'},{k:'maxDD',l:'MAX DD'},{k:'dec',l:'RESOLVED'},
+    {k:'tmos',l:'FORCED'},{k:'stop',l:'STOP'},{k:'rr',l:'RR'},
+    {k:'tol',l:'TOL'},{k:'tmo',l:'TMO'}
+  ];
+  html+='<div class="sec">// '+rows.length+' COMBOS — SORTED BY '+_sortKey.toUpperCase()+' — TAP HEADER TO SORT</div>';
+  html+='<div class="sort-bar">';
+  sortKeys.forEach(function(s){
+    html+='<button class="srt-btn'+(s.k===_sortKey?' active':'')+'" '
+      +'data-key="'+s.k+'" onclick="sortBy(\''+s.k+'\')">'+s.l+'</button>';
   });
-  html+='</tr></thead><tbody>';
+  html+='</div>';
 
-  for(var si=0;si<stops.length;si++){
-    html+='<tr><td class="row-hdr">$'+stops[si]+'</td>';
-    for(var ri=0;ri<rrs.length;ri++){
-      var res=grid[si][ri];
-      if(!res){html+='<td>—</td>';continue;}
-      var isBest=res.stopDist===best.stopDist&&res.rrRatio===best.rrRatio;
-      var bg=cellColour(res.net, maxAbs);
-      var tcol=res.net>=0?'#00cc33':'#ff3131';
-      var border=isBest?'border:2px solid #00cc33;':'' ;
-      html+='<td style="background:'+bg+';color:'+tcol+';'+border+'" '
-        +'onclick="showDetail('+si+','+ri+')">'
-        +(res.net>=0?'+':'')+'$'+Math.round(res.net/1000)+'k</td>';
-    }
-    html+='</tr>';
-  }
-  html+='</tbody></table></div>';
-
-  // ── TOP 10 ──
-  html+='<div style="color:#006618;font-size:9px;letter-spacing:3px;margin:14px 0 8px;">// TOP 10 COMBOS BY NET PNL</div>';
-  html+='<table class="rank"><thead><tr>'
-    +'<th>#</th><th>STOP</th><th>RR</th><th>NET PNL</th>'
-    +'<th>WR ALL</th><th>WR W/L</th><th>BE WR</th>'
-    +'<th>RESOLVED</th><th>FORCED</th><th>MAX DD</th><th>CALMAR</th>'
+  // table
+  html+='<div style="overflow-x:auto;">';
+  html+='<table class="res"><thead><tr>'
+    +'<th onclick="sortBy(\'net\')">NET PNL</th>'
+    +'<th onclick="sortBy(\'stop\')">STOP</th>'
+    +'<th onclick="sortBy(\'rr\')">RR</th>'
+    +'<th onclick="sortBy(\'tol\')">TOL%</th>'
+    +'<th onclick="sortBy(\'tmo\')">TMO</th>'
+    +'<th onclick="sortBy(\'wrAll\')">WR ALL</th>'
+    +'<th onclick="sortBy(\'wrWL\')">WR W/L</th>'
+    +'<th onclick="sortBy(\'dec\')">RESOLVED</th>'
+    +'<th onclick="sortBy(\'tmos\')">FORCED</th>'
+    +'<th onclick="sortBy(\'maxDD\')">MAX DD</th>'
+    +'<th onclick="sortBy(\'calmar\')">CALMAR</th>'
+    +'<th onclick="sortBy(\'pf\')">P/F</th>'
     +'</tr></thead><tbody>';
-  var top=all.slice(0,10);
-  top.forEach(function(r,idx){
-    var isBest=idx===0;
-    var cls=isBest?'best':'';
+
+  shown.forEach(function(r,idx){
+    var rank=idx;// rank in current sort
+    var cls=rank===0?'top1':rank<10?'top10':'';
     var pc2=r.net>=0?'g':'r';
-    var wc2=r.wrAll>=r.beWR?'g':'r';
+    var wc=r.wrAll>=r.beWR?'g':'r';
     var cal=r.calmar!=null?r.calmar.toFixed(2):'inf';
     var cc=r.calmar!=null&&r.calmar>=0.5?'g':r.calmar!=null&&r.calmar>=0?'a':'r';
+    var pf=r.pf!=null?r.pf.toFixed(2):'—';
     html+='<tr class="'+cls+'">'
-      +'<td>'+(idx+1)+(isBest?' ★':'')+'</td>'
-      +'<td>$'+r.stopDist+'</td>'
-      +'<td>'+r.rrRatio+'</td>'
       +'<td class="'+pc2+'">$'+r.net.toFixed(0)+'</td>'
-      +'<td class="'+wc2+'">'+r.wrAll.toFixed(1)+'%</td>'
+      +'<td>$'+r.stop+'</td>'
+      +'<td>'+r.rr+'</td>'
+      +'<td>'+r.tol+'%</td>'
+      +'<td>'+r.tmo+'</td>'
+      +'<td class="'+wc+'">'+r.wrAll.toFixed(1)+'%</td>'
       +'<td>'+r.wrWL.toFixed(1)+'%</td>'
-      +'<td>'+r.beWR.toFixed(1)+'%</td>'
       +'<td>'+r.dec+'</td>'
       +'<td>'+r.tmos+'</td>'
       +'<td class="r">$'+r.maxDD.toFixed(0)+'</td>'
       +'<td class="'+cc+'">'+cal+'</td>'
+      +'<td>'+pf+'</td>'
       +'</tr>';
   });
-  html+='</tbody></table>';
+  html+='</tbody></table></div>';
+
+  if(rows.length>_showN){
+    html+='<button id="show-more-btn" onclick="showMore()">SHOW MORE ('+(rows.length-_showN)+' remaining)</button>';
+  }
 
   document.getElementById('out').innerHTML=html;
-
-  // store grid for click detail
-  window._grid=grid; window._stops=stops; window._rrs=rrs; window._days=days;
 }
 
-function showDetail(si, ri){
-  var r=window._grid[si][ri]; if(!r) return;
-  var el=document.getElementById('detail');
-  var pc=r.net>=0?'#00cc33':'#ff3131';
-  var wc=r.wrAll>=r.beWR?'#00cc33':'#ff3131';
-  el.innerHTML='<div class="dtitle">// STOP $'+r.stopDist+' | RR '+r.rrRatio
-    +' | BE '+r.beWR.toFixed(1)+'%</div>'
-    +'<div class="dgrid">'
-    +'<div class="dcard"><div class="dlbl">NET PNL</div>'
-      +'<div class="dval" style="color:'+pc+'">$'+r.net.toFixed(0)+'</div>'
-      +'<div class="dsub">$'+(r.net/window._days).toFixed(2)+'/day</div></div>'
-    +'<div class="dcard"><div class="dlbl">WIN RATE ALL</div>'
-      +'<div class="dval" style="color:'+wc+'">'+r.wrAll.toFixed(1)+'%</div>'
-      +'<div class="dsub">W/L: '+r.wrWL.toFixed(1)+'% | BE: '+r.beWR.toFixed(1)+'%</div></div>'
-    +'<div class="dcard"><div class="dlbl">WINS / LOSSES / FORCED</div>'
-      +'<div class="dval" style="color:#ffb300;">'+r.wins+'/'+r.losses+'/'+r.tmos+'</div>'
-      +'<div class="dsub">TMO PNL: $'+r.tmoNet.toFixed(0)+'</div></div>'
-    +'<div class="dcard"><div class="dlbl">MAX DD | CALMAR</div>'
-      +'<div class="dval" style="color:#ff3131;">$'+r.maxDD.toFixed(0)+'</div>'
-      +'<div class="dsub">'+(r.calmar!=null?r.calmar.toFixed(2):'inf')+'</div></div>'
-    +'</div>';
-  el.style.display='block';
-  el.scrollIntoView({behavior:'smooth', block:'nearest'});
-}
+function showMore(){_showN+=100;renderTable();}
 
+// ── MAIN ──
 async function go(){
   var btn=document.getElementById('runbtn');
   btn.disabled=true;
   document.getElementById('out').innerHTML='';
-  document.getElementById('detail').style.display='none';
+  document.getElementById('prog-bg').style.display='block';
+  setProg(0);
   try{
     var days   =parseInt(g('days'))||1800;
     var risk   =parseFloat(g('risk'))||1000;
     var feeRate=parseFloat(g('fee'))/100;
-    var tolPct =parseFloat(g('tol'))/100;
     var minBar =parseInt(g('minbar'))||5;
-    var tmo    =parseInt(g('tmo'))||200;
-    var slFrom =parseFloat(g('sl-from'))||100;
-    var slTo   =parseFloat(g('sl-to'))||5000;
-    var slN    =parseInt(g('sl-steps'))||8;
-    var rrText =g('rr-vals');
+    var slFrom =parseFloat(document.getElementById('sl-from').value)||100;
+    var slTo   =parseFloat(document.getElementById('sl-to').value)||5000;
+    var slN    =parseInt(document.getElementById('sl-n').value)||6;
+    var stops  =logSpaced(slFrom,slTo,slN);
+    var rrs    =parseList('rr-vals');
+    var tols   =parseList('tol-vals');
+    var tmos   =parseList('tmo-vals');
     var levels =[];
     document.querySelectorAll('.lvl.on').forEach(function(b){levels.push(parseInt(b.dataset.deg));});
     if(!levels.length){alert('SELECT LEVELS');btn.disabled=false;return;}
-
-    var stops=makeStops(slFrom,slTo,slN);
-    var rrs=rrText.split(',').map(function(s){return parseFloat(s.trim());}).filter(function(v){return !isNaN(v)&&v>0;});
-    if(!rrs.length){alert('ENTER VALID RR VALUES');btn.disabled=false;return;}
+    var total=stops.length*rrs.length*tols.length*tmos.length;
 
     log('CHECKING CACHE...');
     await tick();
@@ -465,28 +454,49 @@ async function go(){
       saveCache(days,candles);
     }
 
-    log('SCANNING SIGNALS (once)...');
+    log('BUILDING ANCHOR MAP...');
     await tick();
-    var raw=scanRaw(candles, tolPct, minBar, levels);
-    log('FOUND '+raw.length+' SIGNALS — RUNNING '+stops.length+'×'+rrs.length+'='+stops.length*rrs.length+' COMBOS...');
-    await tick();
+    var ao=buildAnchorOpens(candles);
 
-    var grid=[];
-    var done=0, total=stops.length*rrs.length;
-    for(var si=0;si<stops.length;si++){
-      grid[si]=[];
-      for(var ri=0;ri<rrs.length;ri++){
-        grid[si][ri]=simConfig(candles, raw, stops[si], rrs[ri], tmo, risk, feeRate, days);
-        done++;
-        if(done%4===0){
-          log('RUNNING... '+done+'/'+total+' combos');
-          await tick();
+    var results=[];
+    var done=0;
+
+    for(var ti=0;ti<tols.length;ti++){
+      var tolPct=tols[ti]/100;
+      log('SCANNING TOL '+tols[ti]+'%... ('+( ti+1)+'/'+tols.length+')');
+      await tick();
+      var raw=scanRaw(candles,ao,tolPct,minBar,levels);
+      log('TOL '+tols[ti]+'%: '+raw.length+' signals — running combos...');
+      await tick();
+
+      for(var si=0;si<stops.length;si++){
+        for(var ri=0;ri<rrs.length;ri++){
+          for(var mi=0;mi<tmos.length;mi++){
+            var res=simOne(candles,raw,stops[si],rrs[ri],tmos[mi],risk,feeRate,days);
+            res.tol=tols[ti];
+            results.push(res);
+            done++;
+            if(done%20===0){
+              var pct=Math.round(done/total*100);
+              setProg(pct);
+              log('RUNNING '+done+'/'+total+' combos ('+pct+'%)');
+              await tick();
+            }
+          }
         }
       }
     }
 
-    log('DONE — '+total+' COMBOS COMPLETE');
-    render(grid, stops, rrs, tmo, days);
+    setProg(100);
+    log('DONE — '+results.length+' COMBOS');
+    await tick();
+
+    _results=results;
+    _sortKey='net';
+    _sortDir=-1;
+    _showN=50;
+    renderTable();
+
   } catch(err){
     log('ERROR: '+err.message);
     console.error(err);
@@ -494,10 +504,6 @@ async function go(){
   btn.disabled=false;
 }
 </script>
-
-<!-- detail panel lives outside #out so it persists on re-render -->
-
-<div id="detail"></div>
 
 </body>
 </html>
