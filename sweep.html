@@ -243,6 +243,16 @@ text-align:right;color:#004a14;
 
 </div>
 <script>
+window.onerror = function(msg, src, line, col, err) {
+  const el = document.getElementById('progress-label');
+  if(el) el.textContent = 'JS ERROR: ' + msg + ' (line ' + line + ')';
+  const fill = document.getElementById('progress-fill');
+  if(fill) fill.style.background = '#ff3131';
+  const wrap = document.getElementById('progress-wrap');
+  if(wrap) wrap.style.display = 'block';
+  console.error(msg, src, line, err);
+};
+console.log('[SWEEP] script loaded');
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -590,6 +600,18 @@ document.getElementById(‘bar-status’).textContent =
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════════
 async function runSweep(){
+try {
+await _runSweep();
+} catch(e) {
+document.getElementById(‘progress-label’).textContent = ’ERROR: ’ + e.message;
+document.getElementById(‘progress-fill’).style.background = ‘#ff3131’;
+console.error(e);
+document.getElementById(‘run-btn’).disabled = false;
+}
+}
+
+async function _runSweep(){
+console.log(’[SWEEP] start’);
 const risk        = parseFloat(document.getElementById(‘cfg-risk’).value);
 const rrRatio     = parseFloat(document.getElementById(‘cfg-rr’).value);
 const stopDist    = parseFloat(document.getElementById(‘cfg-stop’).value);
