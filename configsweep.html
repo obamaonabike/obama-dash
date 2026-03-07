@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ObamaDash — Config Sweep</title>
+<title>ObamaDash -- Config Sweep</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -75,7 +75,7 @@ padding:8px;cursor:pointer;margin-top:6px;margin-bottom:20px;}
 <body>
 
 <div style="color:#00cc33;letter-spacing:4px;font-size:11px;margin-bottom:4px;">// CONFIG SWEEP</div>
-<div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:12px;">stop × rr × tolerance × timeout — all combos ranked</div>
+<div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:12px;">stop ? rr ? tolerance ? timeout -- all combos ranked</div>
 
 <div class="panel">
   <div class="ptitle">// FIXED PARAMS</div>
@@ -90,7 +90,7 @@ padding:8px;cursor:pointer;margin-top:6px;margin-bottom:20px;}
 </div>
 
 <div class="panel">
-  <div class="ptitle">// STOP DISTANCE ($) — log-spaced</div>
+  <div class="ptitle">// STOP DISTANCE ($) -- log-spaced</div>
   <div class="row"><span class="lbl">FROM</span>
     <div style="width:100px;"><input id="sl-from" type="number" value="100"></div></div>
   <div class="row"><span class="lbl">TO</span>
@@ -129,11 +129,11 @@ padding:8px;cursor:pointer;margin-top:6px;margin-bottom:20px;}
     <button class="lvl"    id="pos-mrg" onclick="setPosMode('MRG')">MERGED</button>
   </div>
   <div id="pos-desc" style="color:#004a14;font-size:9px;letter-spacing:1px;line-height:1.6;">
-    IND: each signal resolved independently — classic backtest
+    IND: each signal resolved independently -- classic backtest
   </div>
 </div>
 
-<div id="combo-count" style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;">—</div>
+<div id="combo-count" style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;">--</div>
 <button class="runbtn" id="runbtn" onclick="go()">&#9654; RUN CONFIG SWEEP</button>
 
 <div id="log">READY</div>
@@ -185,7 +185,7 @@ function updateCount(){
   var lvls=document.querySelectorAll('.lvl.on').length;
   var total=stops.length*rrs.length*tols.length*tmos.length;
   document.getElementById('combo-count').textContent=
-    stops.length+' stops × '+rrs.length+' RRs × '+tols.length+' tols × '+tmos.length+' tmos = '+total+' COMBOS'
+    stops.length+' stops ? '+rrs.length+' RRs ? '+tols.length+' tols ? '+tmos.length+' tmos = '+total+' COMBOS'
     +(lvls?' | '+lvls+' LEVELS':'');
 }
 
@@ -194,7 +194,7 @@ function log(s){document.getElementById('log').textContent=s;}
 function setProg(p){document.getElementById('prog-fill').style.width=p+'%';}
 function tick(){return new Promise(function(r){setTimeout(r,0);});}
 
-// ── CACHE ──
+// ?? CACHE ??
 function loadCache(days){
   try{
     var k='obd_cfg_v1_'+days+'_'+new Date().toISOString().slice(0,10);
@@ -211,7 +211,7 @@ function saveCache(days,c){
   }catch(e){}
 }
 
-// ── FETCH ──
+// ?? FETCH ??
 async function fetchAll(days){
   var now=Date.now(), start=now-days*86400000;
   var all=[], cur=start, n=0;
@@ -236,7 +236,7 @@ async function fetchAll(days){
   return all;
 }
 
-// ── ANCHOR / FAN ──
+// ?? ANCHOR / FAN ??
 function buildAnchorOpens(candles){
   var ao={};
   for(var i=0;i<candles.length;i++){
@@ -251,7 +251,7 @@ function buildAnchorOpens(candles){
 }
 function fanP(open,bars,deg){return open+bars*Math.tan(deg*Math.PI/180);}
 
-// ── SCAN — returns raw touches for given tolerance ──
+// ?? SCAN -- returns raw touches for given tolerance ??
 function scanRaw(candles, ao, tolPct, minBar, levels){
   var raw=[], deb={};
   for(var i=2;i<candles.length-10;i++){
@@ -285,7 +285,7 @@ function scanRaw(candles, ao, tolPct, minBar, levels){
   return raw;
 }
 
-// ── SIMULATE ONE COMBO ──
+// ?? SIMULATE ONE COMBO ??
 function simOne(candles, raw, stop, rr, tmo, risk, feeRate, days){
   var wins=0,losses=0,tmos=0,net=0,tmoNet=0,peak=0,run=0,maxDD=0;
   var ps=risk/stop, grossW=0, grossL=0;
@@ -321,18 +321,18 @@ function simOne(candles, raw, stop, rr, tmo, risk, feeRate, days){
     beWR:beWR,maxDD:maxDD,calmar:calmar,ann:ann,pf:pf};
 }
 
-// ── POSITION MODE ──
+// ?? POSITION MODE ??
 var _posMode = 'IND';
 function setPosMode(m){
   _posMode = m;
   document.getElementById('pos-ind').className = 'lvl' + (m==='IND' ? ' on' : '');
   document.getElementById('pos-mrg').className = 'lvl' + (m==='MRG' ? ' on' : '');
   document.getElementById('pos-desc').textContent = m === 'IND'
-    ? 'IND: each signal resolved independently — classic backtest'
-    : 'MRG: first TP/SL in stack closes entire direction — Binance hedge mode';
+    ? 'IND: each signal resolved independently -- classic backtest'
+    : 'MRG: first TP/SL in stack closes entire direction -- Binance hedge mode';
 }
 
-// ── MERGED SIMULATE ONE COMBO ──
+// ?? MERGED SIMULATE ONE COMBO ??
 // raw signals already sorted by bar index (i)
 function simOneMerged(candles, raw, stop, rr, tmo, risk, feeRate, days){
   var wins=0,losses=0,tmos=0,net=0,tmoNet=0,peak=0,run=0,maxDD=0;
@@ -354,7 +354,7 @@ function simOneMerged(candles, raw, stop, rr, tmo, risk, feeRate, days){
       if(sig.dir===1) longStack.push(pos); else shortStack.push(pos);
     }
 
-    // ── check LONG stack ──
+    // ?? check LONG stack ??
     if(longStack.length > 0){
       var loTP=Infinity, hiSL=-Infinity;
       for(var k=0;k<longStack.length;k++){
@@ -381,7 +381,7 @@ function simOneMerged(candles, raw, stop, rr, tmo, risk, feeRate, days){
       }
     }
 
-    // ── check SHORT stack ──
+    // ?? check SHORT stack ??
     if(shortStack.length > 0){
       var hiTP=-Infinity, loSL=Infinity;
       for(var j=0;j<shortStack.length;j++){
@@ -435,7 +435,7 @@ function simOneMerged(candles, raw, stop, rr, tmo, risk, feeRate, days){
     beWR:beWR,maxDD:maxDD,calmar:calmar,ann:ann,pf:pf};
 }
 
-// ── SORT STATE ──
+// ?? SORT STATE ??
 var _results=[], _sortKey='net', _sortDir=-1, _showN=50;
 
 function sortBy(key){
@@ -457,12 +457,12 @@ function renderTable(){
 
   var html='';
 
-  // banner — always best by net
+  // banner -- always best by net
   var byNet=_results.slice().sort(function(a,b){return b.net-a.net;})[0];
   var pc=byNet.net>=0?'g':'r';
   html+='<div class="banner">'
     +'<div style="color:#006618;font-size:9px;letter-spacing:2px;margin-bottom:8px;">'
-    +'BEST NET PNL — STOP $'+byNet.stop+' | RR '+byNet.rr+' | TOL '+byNet.tol+'% | TMO '+byNet.tmo+' BARS</div>'
+    +'BEST NET PNL -- STOP $'+byNet.stop+' | RR '+byNet.rr+' | TOL '+byNet.tol+'% | TMO '+byNet.tmo+' BARS</div>'
     +'<div class="bgrid">'
     +'<div class="bcard"><div class="blbl">NET PNL</div>'
       +'<div class="bval '+pc+'">$'+byNet.net.toFixed(0)+'</div>'
@@ -472,7 +472,7 @@ function renderTable(){
       +'<div class="bsub">W/L: '+byNet.wrWL.toFixed(1)+'% | BE: '+byNet.beWR.toFixed(1)+'%</div></div>'
     +'<div class="bcard"><div class="blbl">RESOLVED / FORCED</div>'
       +'<div class="bval a">'+byNet.dec+' / '+byNet.tmos+'</div>'
-      +'<div class="bsub">P/F: '+(byNet.pf!=null?byNet.pf.toFixed(2):'—')+'</div></div>'
+      +'<div class="bsub">P/F: '+(byNet.pf!=null?byNet.pf.toFixed(2):'--')+'</div></div>'
     +'<div class="bcard"><div class="blbl">MAX DD | CALMAR</div>'
       +'<div class="bval r">$'+byNet.maxDD.toFixed(0)+'</div>'
       +'<div class="bsub">'+(byNet.calmar!=null?byNet.calmar.toFixed(2):'inf')+'</div></div>'
@@ -485,7 +485,7 @@ function renderTable(){
     {k:'tmos',l:'FORCED'},{k:'stop',l:'STOP'},{k:'rr',l:'RR'},
     {k:'tol',l:'TOL'},{k:'tmo',l:'TMO'}
   ];
-  html+='<div class="sec">// '+rows.length+' COMBOS — SORTED BY '+_sortKey.toUpperCase()+' — TAP HEADER TO SORT</div>';
+  html+='<div class="sec">// '+rows.length+' COMBOS -- SORTED BY '+_sortKey.toUpperCase()+' -- TAP HEADER TO SORT</div>';
   html+='<div class="sort-bar">';
   sortKeys.forEach(function(s){
     html+='<button class="srt-btn'+(s.k===_sortKey?' active':'')+'" '
@@ -517,7 +517,7 @@ function renderTable(){
     var wc=r.wrAll>=r.beWR?'g':'r';
     var cal=r.calmar!=null?r.calmar.toFixed(2):'inf';
     var cc=r.calmar!=null&&r.calmar>=0.5?'g':r.calmar!=null&&r.calmar>=0?'a':'r';
-    var pf=r.pf!=null?r.pf.toFixed(2):'—';
+    var pf=r.pf!=null?r.pf.toFixed(2):'--';
     html+='<tr class="'+cls+'">'
       +'<td class="'+pc2+'">$'+r.net.toFixed(0)+'</td>'
       +'<td>$'+r.stop+'</td>'
@@ -544,7 +544,7 @@ function renderTable(){
 
 function showMore(){_showN+=100;renderTable();}
 
-// ── MAIN ──
+// ?? MAIN ??
 async function go(){
   var btn=document.getElementById('runbtn');
   btn.disabled=true;
@@ -572,7 +572,7 @@ async function go(){
     await tick();
     var candles=loadCache(days);
     if(candles){
-      log('CACHE HIT — '+candles.length+' CANDLES');
+      log('CACHE HIT -- '+candles.length+' CANDLES');
       await tick();
     } else {
       candles=await fetchAll(days);
@@ -591,7 +591,7 @@ async function go(){
       log('SCANNING TOL '+tols[ti]+'%... ('+( ti+1)+'/'+tols.length+')');
       await tick();
       var raw=scanRaw(candles,ao,tolPct,minBar,levels);
-      log('TOL '+tols[ti]+'%: '+raw.length+' signals — running combos...');
+      log('TOL '+tols[ti]+'%: '+raw.length+' signals -- running combos...');
       await tick();
 
       for(var si=0;si<stops.length;si++){
@@ -615,7 +615,7 @@ async function go(){
     }
 
     setProg(100);
-    log('DONE — '+results.length+' COMBOS');
+    log('DONE -- '+results.length+' COMBOS');
     await tick();
 
     _results=results;
