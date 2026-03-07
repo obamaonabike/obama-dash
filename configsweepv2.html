@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ObamaDash — Config Sweep</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:#030803;color:#00cc33;font-family:'Share Tech Mono',monospace;font-size:11px;}
+body{padding:12px 10px 60px;}
+.row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.lbl{color:#006618;font-size:9px;letter-spacing:1px;}
+input[type=number],input[type=text]{
+  background:#000;border:1px solid #0f2a0f;color:#00cc33;
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  width:100%;padding:3px 6px;text-align:right;}
+input:focus{outline:none;border-color:#004a14;}
+.panel{border:1px solid #0f2a0f;padding:10px;margin-bottom:12px;}
+.ptitle{color:#006618;font-size:9px;letter-spacing:3px;margin-bottom:10px;}
+.runbtn{width:100%;background:#001a06;border:1px solid #00cc33;color:#00cc33;
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;
+  padding:12px;cursor:pointer;margin-bottom:12px;}
+.runbtn:disabled{opacity:0.4;cursor:not-allowed;}
+.lvl{background:#030803;border:1px solid #0f2a0f;color:#006618;
+  font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 8px;cursor:pointer;}
+.lvl.on{border-color:#00cc33;color:#00cc33;background:#001a06;}
+#log{color:#006618;font-size:9px;letter-spacing:1px;min-height:18px;margin-bottom:12px;word-break:break-all;}
+.prog-bg{width:100%;height:4px;background:#0f2a0f;margin-bottom:12px;}
+.prog-fill{height:4px;background:#00cc33;width:0%;transition:width 0.1s;}
+
+/* banner */
+.banner{border:1px solid #00cc33;background:#001a06;padding:10px;margin-bottom:14px;}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.bcard{border:1px solid #0f2a0f;padding:6px;}
+.blbl{color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:2px;}
+.bval{font-size:16px;font-weight:bold;}
+.bsub{color:#004a14;font-size:9px;margin-top:2px;}
+
+/* sort controls */
+.sort-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.srt-btn{background:#030803;border:1px solid #0f2a0f;color:#006618;
+font-family:‘Share Tech Mono’,monospace;font-size:9px;letter-spacing:1px;
+padding:3px 8px;cursor:pointer;}
+.srt-btn.active{border-color:#00aaff;color:#00aaff;background:#001a20;}
+
+/* filter bar */
+.flt-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;}
+.flt-lbl{color:#006618;font-size:9px;letter-spacing:1px;}
+select{background:#000;border:1px solid #0f2a0f;color:#00cc33;
+font-family:‘Share Tech Mono’,monospace;font-size:9px;padding:3px 5px;}
+
+/* table */
+table.res{width:100%;border-collapse:collapse;font-size:9px;letter-spacing:0.5px;}
+table.res th{color:#006618;border-bottom:1px solid #0f2a0f;padding:4px 4px;
+text-align:right;font-weight:normal;cursor:pointer;white-space:nowrap;}
+table.res th:first-child{text-align:left;}
+table.res th:hover{color:#00cc33;}
+table.res td{padding:3px 4px;border-bottom:1px solid #030d03;
+text-align:right;color:#004a14;white-space:nowrap;}
+table.res td:first-child{text-align:left;color:#006618;}
+table.res tr.top1 td{color:#00cc33!important;}
+table.res tr.top10 td{color:#006618!important;}
+.g{color:#00cc33!important;}.r{color:#ff3131!important;}.a{color:#ffb300!important;}
+.sec{color:#006618;font-size:9px;letter-spacing:3px;margin:14px 0 8px;}
+
+/* show more */
+#show-more-btn{width:100%;background:#001a06;border:1px solid #004a14;color:#006618;
+font-family:‘Share Tech Mono’,monospace;font-size:9px;letter-spacing:2px;
+padding:8px;cursor:pointer;margin-top:6px;margin-bottom:20px;}
+</style>
+
+</head>
+<body>
+
+<div style="color:#00cc33;letter-spacing:4px;font-size:11px;margin-bottom:4px;">// CONFIG SWEEP</div>
+<div style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:12px;">stop × rr × tolerance × timeout — all combos ranked</div>
+
+<div class="panel">
+  <div class="ptitle">// FIXED PARAMS</div>
+  <div class="row"><span class="lbl">DAYS</span>
+    <div style="width:100px;"><input id="days" type="number" value="1800"></div></div>
+  <div class="row"><span class="lbl">RISK ($)</span>
+    <div style="width:100px;"><input id="risk" type="number" value="1000"></div></div>
+  <div class="row"><span class="lbl">MIN BAR</span>
+    <div style="width:100px;"><input id="minbar" type="number" value="5"></div></div>
+  <div class="row"><span class="lbl">FEE (%)</span>
+    <div style="width:100px;"><input id="fee" type="number" value="0.02" step="0.005"></div></div>
+</div>
+
+<div class="panel">
+  <div class="ptitle">// STOP DISTANCE ($) — log-spaced</div>
+  <div class="row"><span class="lbl">FROM</span>
+    <div style="width:100px;"><input id="sl-from" type="number" value="100"></div></div>
+  <div class="row"><span class="lbl">TO</span>
+    <div style="width:100px;"><input id="sl-to" type="number" value="5000"></div></div>
+  <div class="row"><span class="lbl">STEPS</span>
+    <div style="width:100px;"><input id="sl-n" type="number" value="6" min="2" max="15"></div></div>
+</div>
+
+<div class="panel">
+  <div class="ptitle">// RR RATIOS (comma-separated)</div>
+  <input id="rr-vals" type="text" style="text-align:left;"
+    value="0.2,0.3,0.5,0.8,1.0,1.5,2.0,3.0">
+</div>
+
+<div class="panel">
+  <div class="ptitle">// TOLERANCE % (comma-separated)</div>
+  <input id="tol-vals" type="text" style="text-align:left;"
+    value="0.04,0.06,0.08,0.12,0.16">
+</div>
+
+<div class="panel">
+  <div class="ptitle">// TIMEOUT BARS (comma-separated)</div>
+  <input id="tmo-vals" type="text" style="text-align:left;"
+    value="50,100,150,200,300,400">
+</div>
+
+<div class="panel">
+  <div class="ptitle">// FAN LEVELS</div>
+  <div id="lvls" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+</div>
+
+<div class="panel">
+  <div class="ptitle">// POSITION MODE</div>
+  <div style="display:flex;gap:6px;margin-bottom:8px;">
+    <button class="lvl on" id="pos-ind" onclick="setPosMode('IND')">INDEPENDENT</button>
+    <button class="lvl"    id="pos-mrg" onclick="setPosMode('MRG')">MERGED</button>
+  </div>
+  <div id="pos-desc" style="color:#004a14;font-size:9px;letter-spacing:1px;line-height:1.6;">
+    IND: each signal resolved independently — classic backtest
+  </div>
+</div>
+
+<div id="combo-count" style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:8px;">—</div>
+<button class="runbtn" id="runbtn" onclick="go()">&#9654; RUN CONFIG SWEEP</button>
+
+<div id="log">READY</div>
+<div class="prog-bg" id="prog-bg" style="display:none;"><div class="prog-fill" id="prog-fill"></div></div>
+
+<div id="out"></div>
+
+<script>
+var DEGS=[27,-27,45,-45,60,-60,72,-72,78,-78];
+(function(){
+  var el=document.getElementById('lvls');
+  DEGS.forEach(function(d){
+    var b=document.createElement('button');
+    b.className='lvl on'; b.dataset.deg=d;
+    b.textContent=(d>0?'+':'')+d;
+    b.onclick=function(){this.classList.toggle('on');updateCount();};
+    el.appendChild(b);
+  });
+  updateCount();
+  ['sl-from','sl-to','sl-n','rr-vals','tol-vals','tmo-vals'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',updateCount);
+  });
+})();
+
+function parseList(id){
+  return document.getElementById(id).value.split(',')
+    .map(function(s){return parseFloat(s.trim());})
+    .filter(function(v){return !isNaN(v)&&v>0;});
+}
+
+function logSpaced(from,to,n){
+  var vals=[], lf=Math.log(from), lt=Math.log(to);
+  for(var i=0;i<n;i++){
+    var t=n===1?0:i/(n-1);
+    vals.push(Math.round(Math.exp(lf+t*(lt-lf))));
+  }
+  var seen={};
+  return vals.filter(function(v){if(seen[v])return false;seen[v]=true;return true;});
+}
+
+function updateCount(){
+  var stops=logSpaced(
+    parseFloat(document.getElementById('sl-from').value)||100,
+    parseFloat(document.getElementById('sl-to').value)||5000,
+    parseInt(document.getElementById('sl-n').value)||6);
+  var rrs=parseList('rr-vals');
+  var tols=parseList('tol-vals');
+  var tmos=parseList('tmo-vals');
+  var lvls=document.querySelectorAll('.lvl.on').length;
+  var total=stops.length*rrs.length*tols.length*tmos.length;
+  document.getElementById('combo-count').textContent=
+    stops.length+' stops × '+rrs.length+' RRs × '+tols.length+' tols × '+tmos.length+' tmos = '+total+' COMBOS'
+    +(lvls?' | '+lvls+' LEVELS':'');
+}
+
+function g(id){return document.getElementById(id).value;}
+function log(s){document.getElementById('log').textContent=s;}
+function setProg(p){document.getElementById('prog-fill').style.width=p+'%';}
+function tick(){return new Promise(function(r){setTimeout(r,0);});}
+
+// ── CACHE ──
+function loadCache(days){
+  try{
+    var k='obd_cfg_v1_'+days+'_'+new Date().toISOString().slice(0,10);
+    var d=localStorage.getItem(k);
+    return d?JSON.parse(d):null;
+  }catch(e){return null;}
+}
+function saveCache(days,c){
+  try{
+    for(var k in localStorage)
+      if(k.indexOf('obd_cfg_v1_')===0||k.indexOf('obd_cs_v1_')===0||k.indexOf('obd_sw_v1_')===0||k.indexOf('obd_')===0)
+        localStorage.removeItem(k);
+    localStorage.setItem('obd_cfg_v1_'+days+'_'+new Date().toISOString().slice(0,10),JSON.stringify(c));
+  }catch(e){}
+}
+
+// ── FETCH ──
+async function fetchAll(days){
+  var now=Date.now(), start=now-days*86400000;
+  var all=[], cur=start, n=0;
+  while(cur<now){
+    var end=Math.min(cur+60000000,now);
+    var url='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m'
+      +'&startTime='+cur+'&endTime='+end+'&limit=1000';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    if(!d.length) break;
+    for(var i=0;i<d.length;i++){
+      var k=d[i];
+      all.push({time:k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4]});
+    }
+    cur=d[d.length-1][0]+60000; n++;
+    if(n%5===0){
+      log('FETCHING... '+Math.round((cur-start)/(now-start)*100)+'% ('+all.length+' candles)');
+      await tick();
+    }
+  }
+  return all;
+}
+
+// ── ANCHOR / FAN ──
+function buildAnchorOpens(candles){
+  var ao={};
+  for(var i=0;i<candles.length;i++){
+    var c=candles[i];
+    var d=new Date(c.time*1000);
+    var a=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),9,0,0));
+    if(a>d) a.setUTCDate(a.getUTCDate()-1);
+    var k=a.toISOString().slice(0,10);
+    if(!ao[k]&&Math.abs(c.time-a.getTime()/1000)<180) ao[k]={open:c.open,ts:a.getTime()/1000};
+  }
+  return ao;
+}
+function fanP(open,bars,deg){return open+bars*Math.tan(deg*Math.PI/180);}
+
+// ── SCAN — returns raw touches for given tolerance ──
+function scanRaw(candles, ao, tolPct, minBar, levels){
+  var raw=[], deb={};
+  for(var i=2;i<candles.length-10;i++){
+    var c=candles[i];
+    var d=new Date(c.time*1000);
+    var a=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),9,0,0));
+    if(a>d) a.setUTCDate(a.getUTCDate()-1);
+    var ak=a.toISOString().slice(0,10);
+    var ancData=ao[ak]; if(!ancData) continue;
+    var cd=new Date(c.time*1000).toISOString().slice(0,10);
+    if(cd!==ak) continue;
+    var bar=Math.floor((c.time-ancData.ts)/60);
+    if(bar<minBar) continue;
+    for(var di=0;di<levels.length;di++){
+      var deg=levels[di];
+      var lbl=(deg>0?'L+':'L')+deg;
+      var price=fanP(ancData.open,bar,deg);
+      var tol=price*tolPct;
+      var dk=ak+'_'+lbl;
+      if(c.low<=price+tol&&c.low>=price-tol&&c.close>price&&!deb[dk]){
+        deb[dk]=true;
+        raw.push({i:i+1,dir:1,e:c.close});
+        continue;
+      }
+      if(c.high>=price-tol&&c.high<=price+tol&&c.close<price&&!deb[dk]){
+        deb[dk]=true;
+        raw.push({i:i+1,dir:-1,e:c.close});
+      }
+    }
+  }
+  return raw;
+}
+
+// ── SIMULATE ONE COMBO ──
+function simOne(candles, raw, stop, rr, tmo, risk, feeRate, days){
+  var wins=0,losses=0,tmos=0,net=0,tmoNet=0,peak=0,run=0,maxDD=0;
+  var ps=risk/stop, grossW=0, grossL=0;
+  for(var si=0;si<raw.length;si++){
+    var s=raw[si];
+    var tp=s.dir===1?s.e+stop*rr:s.e-stop*rr;
+    var sl=s.dir===1?s.e-stop:s.e+stop;
+    var fc=ps*s.e*feeRate*2;
+    var lim=Math.min(s.i+tmo,candles.length);
+    var res='T', ep=candles[lim-1]?candles[lim-1].close:s.e;
+    for(var j=s.i;j<lim;j++){
+      var p=candles[j].close;
+      if(s.dir===1){if(p>=tp){res='W';ep=p;break;}if(p<=sl){res='L';ep=p;break;}}
+      else{if(p<=tp){res='W';ep=p;break;}if(p>=sl){res='L';ep=p;break;}}
+    }
+    var t;
+    if(res==='W'){wins++;t=ps*stop*rr-fc;grossW+=ps*stop*rr;}
+    else if(res==='L'){losses++;t=-ps*stop-fc;grossL+=ps*stop;}
+    else{tmos++;t=(ep-s.e)*s.dir*ps-fc;tmoNet+=t;}
+    net+=t;run+=t;
+    if(run>peak)peak=run;
+    var dd=peak-run;if(dd>maxDD)maxDD=dd;
+  }
+  var tot=wins+losses+tmos,dec=wins+losses;
+  var wrAll=tot>0?wins/tot*100:0,wrWL=dec>0?wins/dec*100:0;
+  var beWR=100/(1+rr);
+  var ann=net*(365/days);
+  var calmar=maxDD>0?ann/maxDD:null;
+  var pf=grossL>0?grossW/grossL:null;
+  return {stop:stop,rr:rr,tol:0,tmo:tmo,
+    wins:wins,losses:losses,tmos:tmos,tot:tot,dec:dec,
+    net:net,tmoNet:tmoNet,wrAll:wrAll,wrWL:wrWL,
+    beWR:beWR,maxDD:maxDD,calmar:calmar,ann:ann,pf:pf};
+}
+
+// ── POSITION MODE ──
+var _posMode = 'IND';
+function setPosMode(m){
+  _posMode = m;
+  document.getElementById('pos-ind').className = 'lvl' + (m==='IND' ? ' on' : '');
+  document.getElementById('pos-mrg').className = 'lvl' + (m==='MRG' ? ' on' : '');
+  document.getElementById('pos-desc').textContent = m === 'IND'
+    ? 'IND: each signal resolved independently — classic backtest'
+    : 'MRG: first TP/SL in stack closes entire direction — Binance hedge mode';
+}
+
+// ── MERGED SIMULATE ONE COMBO ──
+// raw signals already sorted by bar index (i)
+function simOneMerged(candles, raw, stop, rr, tmo, risk, feeRate, days){
+  var wins=0,losses=0,tmos=0,net=0,tmoNet=0,peak=0,run=0,maxDD=0;
+  var grossW=0,grossL=0;
+  var ps = risk / stop;
+  var longStack=[], shortStack=[];
+  var sigPtr=0;
+
+  for(var i=0; i<candles.length; i++){
+    var price = candles[i].close;
+
+    // enqueue signals starting at bar i
+    while(sigPtr < raw.length && raw[sigPtr].i === i){
+      var sig = raw[sigPtr++];
+      var tp  = sig.dir===1 ? sig.e + stop*rr : sig.e - stop*rr;
+      var sl  = sig.dir===1 ? sig.e - stop    : sig.e + stop;
+      var fc  = ps * sig.e * feeRate * 2;
+      var pos = {e:sig.e, tp:tp, sl:sl, dir:sig.dir, entryIdx:i, fc:fc};
+      if(sig.dir===1) longStack.push(pos); else shortStack.push(pos);
+    }
+
+    // ── check LONG stack ──
+    if(longStack.length > 0){
+      var loTP=Infinity, hiSL=-Infinity;
+      for(var k=0;k<longStack.length;k++){
+        if(longStack[k].tp < loTP) loTP = longStack[k].tp;
+        if(longStack[k].sl > hiSL) hiSL = longStack[k].sl;
+      }
+      var ltrig = null;
+      if(price <= hiSL) ltrig = 'L';        // SL priority
+      else if(price >= loTP) ltrig = 'W';
+      else if((i - longStack[0].entryIdx) >= tmo) ltrig = 'T';
+
+      if(ltrig){
+        for(var k=0;k<longStack.length;k++){
+          var p=longStack[k];
+          var pnl;
+          if(ltrig==='W'){wins++;pnl=ps*stop*rr-p.fc;grossW+=ps*stop*rr;}
+          else if(ltrig==='L'){losses++;pnl=-(ps*stop)-p.fc;grossL+=ps*stop;}
+          else{tmos++;pnl=(price-p.e)*ps-p.fc;tmoNet+=pnl;}
+          net+=pnl;run+=pnl;
+        }
+        longStack=[];
+        if(run>peak)peak=run;
+        var dd=peak-run;if(dd>maxDD)maxDD=dd;
+      }
+    }
+
+    // ── check SHORT stack ──
+    if(shortStack.length > 0){
+      var hiTP=-Infinity, loSL=Infinity;
+      for(var j=0;j<shortStack.length;j++){
+        if(shortStack[j].tp > hiTP) hiTP = shortStack[j].tp;
+        if(shortStack[j].sl < loSL) loSL = shortStack[j].sl;
+      }
+      var strig = null;
+      if(price >= loSL) strig = 'L';
+      else if(price <= hiTP) strig = 'W';
+      else if((i - shortStack[0].entryIdx) >= tmo) strig = 'T';
+
+      if(strig){
+        for(var j=0;j<shortStack.length;j++){
+          var p=shortStack[j];
+          var pnl;
+          if(strig==='W'){wins++;pnl=ps*stop*rr-p.fc;grossW+=ps*stop*rr;}
+          else if(strig==='L'){losses++;pnl=-(ps*stop)-p.fc;grossL+=ps*stop;}
+          else{tmos++;pnl=(p.e-price)*ps-p.fc;tmoNet+=pnl;}
+          net+=pnl;run+=pnl;
+        }
+        shortStack=[];
+        if(run>peak)peak=run;
+        var dd=peak-run;if(dd>maxDD)maxDD=dd;
+      }
+    }
+  }
+
+  // force-close remaining at end of data
+  var finalP = candles[candles.length-1].close;
+  function forceClose(stack, isLong){
+    for(var k=0;k<stack.length;k++){
+      var p=stack[k];
+      var pnl = isLong ? (finalP-p.e)*ps-p.fc : (p.e-finalP)*ps-p.fc;
+      tmos++;tmoNet+=pnl;net+=pnl;run+=pnl;
+      if(run>peak)peak=run;
+      var dd=peak-run;if(dd>maxDD)maxDD=dd;
+    }
+  }
+  if(longStack.length)  forceClose(longStack,  true);
+  if(shortStack.length) forceClose(shortStack, false);
+
+  var tot=wins+losses+tmos, dec=wins+losses;
+  var wrAll=tot>0?wins/tot*100:0, wrWL=dec>0?wins/dec*100:0;
+  var beWR=100/(1+rr);
+  var ann=net*(365/days);
+  var calmar=maxDD>0?ann/maxDD:null;
+  var pf=grossL>0?grossW/grossL:null;
+  return {stop:stop,rr:rr,tol:0,tmo:tmo,
+    wins:wins,losses:losses,tmos:tmos,tot:tot,dec:dec,
+    net:net,tmoNet:tmoNet,wrAll:wrAll,wrWL:wrWL,
+    beWR:beWR,maxDD:maxDD,calmar:calmar,ann:ann,pf:pf};
+}
+
+// ── SORT STATE ──
+var _results=[], _sortKey='net', _sortDir=-1, _showN=50;
+
+function sortBy(key){
+  if(_sortKey===key){_sortDir*=-1;}
+  else{_sortKey=key;_sortDir=-1;}
+  document.querySelectorAll('.srt-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.key===key);
+  });
+  _showN=50;
+  renderTable();
+}
+
+function renderTable(){
+  var rows=_results.slice();
+  rows.sort(function(a,b){return _sortDir*(a[_sortKey]>b[_sortKey]?1:a[_sortKey]<b[_sortKey]?-1:0);});
+
+  var best=rows[0];
+  var shown=rows.slice(0,_showN);
+
+  var html='';
+
+  // banner — always best by net
+  var byNet=_results.slice().sort(function(a,b){return b.net-a.net;})[0];
+  var pc=byNet.net>=0?'g':'r';
+  html+='<div class="banner">'
+    +'<div style="color:#006618;font-size:9px;letter-spacing:2px;margin-bottom:8px;">'
+    +'BEST NET PNL — STOP $'+byNet.stop+' | RR '+byNet.rr+' | TOL '+byNet.tol+'% | TMO '+byNet.tmo+' BARS</div>'
+    +'<div class="bgrid">'
+    +'<div class="bcard"><div class="blbl">NET PNL</div>'
+      +'<div class="bval '+pc+'">$'+byNet.net.toFixed(0)+'</div>'
+      +'<div class="bsub">$'+(byNet.net/parseFloat(g('days'))).toFixed(2)+'/day</div></div>'
+    +'<div class="bcard"><div class="blbl">WIN RATE ALL / W/L</div>'
+      +'<div class="bval '+(byNet.wrAll>=byNet.beWR?'g':'r')+'">'+byNet.wrAll.toFixed(1)+'%</div>'
+      +'<div class="bsub">W/L: '+byNet.wrWL.toFixed(1)+'% | BE: '+byNet.beWR.toFixed(1)+'%</div></div>'
+    +'<div class="bcard"><div class="blbl">RESOLVED / FORCED</div>'
+      +'<div class="bval a">'+byNet.dec+' / '+byNet.tmos+'</div>'
+      +'<div class="bsub">P/F: '+(byNet.pf!=null?byNet.pf.toFixed(2):'—')+'</div></div>'
+    +'<div class="bcard"><div class="blbl">MAX DD | CALMAR</div>'
+      +'<div class="bval r">$'+byNet.maxDD.toFixed(0)+'</div>'
+      +'<div class="bsub">'+(byNet.calmar!=null?byNet.calmar.toFixed(2):'inf')+'</div></div>'
+    +'</div></div>';
+
+  // sort bar
+  var sortKeys=[
+    {k:'net',l:'NET PNL'},{k:'calmar',l:'CALMAR'},{k:'wrAll',l:'WR ALL'},
+    {k:'wrWL',l:'WR W/L'},{k:'maxDD',l:'MAX DD'},{k:'dec',l:'RESOLVED'},
+    {k:'tmos',l:'FORCED'},{k:'stop',l:'STOP'},{k:'rr',l:'RR'},
+    {k:'tol',l:'TOL'},{k:'tmo',l:'TMO'}
+  ];
+  html+='<div class="sec">// '+rows.length+' COMBOS — SORTED BY '+_sortKey.toUpperCase()+' — TAP HEADER TO SORT</div>';
+  html+='<div class="sort-bar">';
+  sortKeys.forEach(function(s){
+    html+='<button class="srt-btn'+(s.k===_sortKey?' active':'')+'" '
+      +'data-key="'+s.k+'" onclick="sortBy(\''+s.k+'\')">'+s.l+'</button>';
+  });
+  html+='</div>';
+
+  // table
+  html+='<div style="overflow-x:auto;">';
+  html+='<table class="res"><thead><tr>'
+    +'<th onclick="sortBy(\'net\')">NET PNL</th>'
+    +'<th onclick="sortBy(\'stop\')">STOP</th>'
+    +'<th onclick="sortBy(\'rr\')">RR</th>'
+    +'<th onclick="sortBy(\'tol\')">TOL%</th>'
+    +'<th onclick="sortBy(\'tmo\')">TMO</th>'
+    +'<th onclick="sortBy(\'wrAll\')">WR ALL</th>'
+    +'<th onclick="sortBy(\'wrWL\')">WR W/L</th>'
+    +'<th onclick="sortBy(\'dec\')">RESOLVED</th>'
+    +'<th onclick="sortBy(\'tmos\')">FORCED</th>'
+    +'<th onclick="sortBy(\'maxDD\')">MAX DD</th>'
+    +'<th onclick="sortBy(\'calmar\')">CALMAR</th>'
+    +'<th onclick="sortBy(\'pf\')">P/F</th>'
+    +'</tr></thead><tbody>';
+
+  shown.forEach(function(r,idx){
+    var rank=idx;// rank in current sort
+    var cls=rank===0?'top1':rank<10?'top10':'';
+    var pc2=r.net>=0?'g':'r';
+    var wc=r.wrAll>=r.beWR?'g':'r';
+    var cal=r.calmar!=null?r.calmar.toFixed(2):'inf';
+    var cc=r.calmar!=null&&r.calmar>=0.5?'g':r.calmar!=null&&r.calmar>=0?'a':'r';
+    var pf=r.pf!=null?r.pf.toFixed(2):'—';
+    html+='<tr class="'+cls+'">'
+      +'<td class="'+pc2+'">$'+r.net.toFixed(0)+'</td>'
+      +'<td>$'+r.stop+'</td>'
+      +'<td>'+r.rr+'</td>'
+      +'<td>'+r.tol+'%</td>'
+      +'<td>'+r.tmo+'</td>'
+      +'<td class="'+wc+'">'+r.wrAll.toFixed(1)+'%</td>'
+      +'<td>'+r.wrWL.toFixed(1)+'%</td>'
+      +'<td>'+r.dec+'</td>'
+      +'<td>'+r.tmos+'</td>'
+      +'<td class="r">$'+r.maxDD.toFixed(0)+'</td>'
+      +'<td class="'+cc+'">'+cal+'</td>'
+      +'<td>'+pf+'</td>'
+      +'</tr>';
+  });
+  html+='</tbody></table></div>';
+
+  if(rows.length>_showN){
+    html+='<button id="show-more-btn" onclick="showMore()">SHOW MORE ('+(rows.length-_showN)+' remaining)</button>';
+  }
+
+  document.getElementById('out').innerHTML=html;
+}
+
+function showMore(){_showN+=100;renderTable();}
+
+// ── MAIN ──
+async function go(){
+  var btn=document.getElementById('runbtn');
+  btn.disabled=true;
+  document.getElementById('out').innerHTML='';
+  document.getElementById('prog-bg').style.display='block';
+  setProg(0);
+  try{
+    var days   =parseInt(g('days'))||1800;
+    var risk   =parseFloat(g('risk'))||1000;
+    var feeRate=parseFloat(g('fee'))/100;
+    var minBar =parseInt(g('minbar'))||5;
+    var slFrom =parseFloat(document.getElementById('sl-from').value)||100;
+    var slTo   =parseFloat(document.getElementById('sl-to').value)||5000;
+    var slN    =parseInt(document.getElementById('sl-n').value)||6;
+    var stops  =logSpaced(slFrom,slTo,slN);
+    var rrs    =parseList('rr-vals');
+    var tols   =parseList('tol-vals');
+    var tmos   =parseList('tmo-vals');
+    var levels =[];
+    document.querySelectorAll('.lvl.on').forEach(function(b){levels.push(parseInt(b.dataset.deg));});
+    if(!levels.length){alert('SELECT LEVELS');btn.disabled=false;return;}
+    var total=stops.length*rrs.length*tols.length*tmos.length;
+
+    log('CHECKING CACHE...');
+    await tick();
+    var candles=loadCache(days);
+    if(candles){
+      log('CACHE HIT — '+candles.length+' CANDLES');
+      await tick();
+    } else {
+      candles=await fetchAll(days);
+      saveCache(days,candles);
+    }
+
+    log('BUILDING ANCHOR MAP...');
+    await tick();
+    var ao=buildAnchorOpens(candles);
+
+    var results=[];
+    var done=0;
+
+    for(var ti=0;ti<tols.length;ti++){
+      var tolPct=tols[ti]/100;
+      log('SCANNING TOL '+tols[ti]+'%... ('+( ti+1)+'/'+tols.length+')');
+      await tick();
+      var raw=scanRaw(candles,ao,tolPct,minBar,levels);
+      log('TOL '+tols[ti]+'%: '+raw.length+' signals — running combos...');
+      await tick();
+
+      for(var si=0;si<stops.length;si++){
+        for(var ri=0;ri<rrs.length;ri++){
+          for(var mi=0;mi<tmos.length;mi++){
+          var res = _posMode === 'MRG'
+            ? simOneMerged(candles,raw,stops[si],rrs[ri],tmos[mi],risk,feeRate,days)
+            : simOne(candles,raw,stops[si],rrs[ri],tmos[mi],risk,feeRate,days);
+            res.tol=tols[ti];
+            results.push(res);
+            done++;
+            if(done%20===0){
+              var pct=Math.round(done/total*100);
+              setProg(pct);
+              log('RUNNING '+done+'/'+total+' combos ('+pct+'%)');
+              await tick();
+            }
+          }
+        }
+      }
+    }
+
+    setProg(100);
+    log('DONE — '+results.length+' COMBOS');
+    await tick();
+
+    _results=results;
+    _sortKey='net';
+    _sortDir=-1;
+    _showN=50;
+    renderTable();
+
+  } catch(err){
+    log('ERROR: '+err.message);
+    console.error(err);
+  }
+  btn.disabled=false;
+}
+</script>
+
+</body>
+</html>
