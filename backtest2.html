@@ -168,6 +168,17 @@ td.green{color:#00ff41;}td.red{color:#ff3131;}td.amber{color:#ffb300;}td.blue{co
   <div id="tmo-desc" style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:10px;line-height:1.6;">
     A: hold until TP/SL hit — no bar limit — every signal resolves
   </div>
+  <!-- POSITION MODE -->
+  <div class="config-row" style="margin-bottom:4px;">
+    <span class="config-label">POSITION MODE</span>
+    <div style="display:flex;gap:6px;">
+      <button class="tmo-btn active-a" id="pos-ind" onclick="setPosMode('IND')">INDEPENDENT</button>
+      <button class="tmo-btn"          id="pos-mrg" onclick="setPosMode('MRG')">MERGED</button>
+    </div>
+  </div>
+  <div id="pos-desc" style="color:#004a14;font-size:9px;letter-spacing:1px;margin-bottom:10px;line-height:1.6;">
+    IND: each signal resolved independently — classic backtest
+  </div>
   <div class="config-row" id="tmo-bars-row" style="display:none;">
     <span class="config-label">TIMEOUT BARS</span>
     <input class="config-input" id="cfg-tmo-bars" type="number" value="200" min="10" max="9999">
@@ -417,6 +428,16 @@ function ftAnglePrice(anchor, bars, deg){
 // TIMEOUT MODE STATE
 // ─────────────────────────────────────────────────────────────────────────────
 let tmoMode = 'A'; // 'A' = hold until resolve  |  'B' = close at market
+let posMode = 'IND'; // 'IND' = independent  |  'MRG' = merged (Binance hedge mode)
+
+function setPosMode(m) {
+  posMode = m;
+  document.getElementById('pos-ind').className = 'tmo-btn' + (m==='IND' ? ' active-a' : '');
+  document.getElementById('pos-mrg').className = 'tmo-btn' + (m==='MRG' ? ' active-b' : '');
+  document.getElementById('pos-desc').textContent = m === 'IND'
+    ? 'IND: each signal resolved independently — classic backtest'
+    : 'MRG: first TP/SL in stack closes entire direction — Binance hedge mode';
+}
 
 function setTmoMode(m) {
   tmoMode = m;
@@ -472,6 +493,157 @@ function statCard(label, value, cls, sub){
        + `<div class="stat-value ${cls}">${value}</div>`
        + (sub ? `<div class="stat-sub">${sub}</div>` : '')
        + `</div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLLECT SIGNALS — shared by both position modes
+// Returns { signals: [{idx,dir,entry,label,time}], totalSignals }
+// ─────────────────────────────────────────────────────────────────────────────
+function collectSignals(candles, anchorOpens, activeLevels, tolPct, minBar){
+  var signals      = [];
+  var debounce     = {};
+  var totalSignals = 0;
+
+  for(var i = 2; i < candles.length - 10; i++){
+    var c          = candles[i];
+    var anchor     = getAnchor0900(c.time * 1000);
+    var anchorKey  = anchor.toISOString().slice(0, 10);
+    var anchorOpen = anchorOpens[anchorKey];
+    if(!anchorOpen) continue;
+
+    var anchorSec  = anchor.getTime() / 1000;
+    var candleDate = new Date(c.time * 1000).toISOString().slice(0, 10);
+    if(candleDate !== anchorKey) continue;
+
+    var bar = Math.floor((c.time - anchorSec) / 60);
+    if(bar < minBar) continue;
+
+    for(var di = 0; di < activeLevels.length; di++){
+      var deg   = activeLevels[di];
+      var label = deg > 0 ? 'L+' + deg : 'L' + deg;
+      var price = ftAnglePrice(anchorOpen, bar, deg);
+      var tol   = price * tolPct;
+      var dk    = anchorKey + '_' + label;
+
+      // LONG
+      if(c.low <= price + tol && c.low >= price - tol && c.close > price && !debounce[dk]){
+        debounce[dk] = true;
+        totalSignals++;
+        signals.push({ idx: i + 1, dir: 1, entry: c.close, label: label, time: c.time });
+        continue;
+      }
+      // SHORT
+      if(c.high >= price - tol && c.high <= price + tol && c.close < price && !debounce[dk]){
+        debounce[dk] = true;
+        totalSignals++;
+        signals.push({ idx: i + 1, dir: -1, entry: c.close, label: label, time: c.time });
+      }
+    }
+  }
+  return { signals: signals, totalSignals: totalSignals };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MERGED SIMULATION — Binance hedge mode
+// LONG and SHORT maintain independent stacks.
+// The FIRST TP or SL to trigger closes the ENTIRE direction's stack (closePosition=TRUE).
+// Most aggressive order: lowest TP for longs, highest SL for longs (vice versa for shorts).
+// All closed positions are marked-to-market at the exit price.
+// ─────────────────────────────────────────────────────────────────────────────
+function runMergedSimulation(candles, signals, stopDist, rrRatio, risk, feeRate, tmoBars){
+  var longStack  = [];
+  var shortStack = [];
+  var trades     = [];
+  var sigPtr     = 0;
+
+  for(var i = 0; i < candles.length; i++){
+    var price = candles[i].close;
+
+    // Enqueue new signals starting at bar i
+    while(sigPtr < signals.length && signals[sigPtr].idx === i){
+      var sig     = signals[sigPtr++];
+      var posSize = risk / stopDist;
+      var feeCost = posSize * sig.entry * feeRate * 2;
+      var tp      = sig.entry + sig.dir * stopDist * rrRatio;
+      var sl      = sig.entry - sig.dir * stopDist;
+      var pos     = { entryPrice: sig.entry, tpPrice: tp, slPrice: sl,
+                      entryIdx: i, posSize: posSize, feeCost: feeCost,
+                      label: sig.label, time: sig.time, dir: sig.dir };
+      if(sig.dir === 1) longStack.push(pos); else shortStack.push(pos);
+    }
+
+    // ── LONG STACK ──
+    if(longStack.length > 0){
+      // Most aggressive: lowest TP (easiest to hit), highest SL (closest to price)
+      var lowestTP = Infinity, highestSL = -Infinity;
+      for(var k = 0; k < longStack.length; k++){
+        if(longStack[k].tpPrice < lowestTP)  lowestTP  = longStack[k].tpPrice;
+        if(longStack[k].slPrice > highestSL) highestSL = longStack[k].slPrice;
+      }
+      var longTrig = null;
+      if(price >= lowestTP)  longTrig = 'WIN';
+      if(price <= highestSL) longTrig = 'LOSS'; // SL takes priority if both
+      if(!longTrig && tmoMode === 'B' && (i - longStack[0].entryIdx) >= tmoBars)
+        longTrig = 'TIMEOUT_CLOSE';
+
+      if(longTrig){
+        for(var k = 0; k < longStack.length; k++){
+          var p = longStack[k];
+          var grossPnl = (price - p.entryPrice) * p.posSize;
+          trades.push({ time: p.time, level: p.label, dir: 'LONG', entry: p.entryPrice,
+                        result: longTrig, grossPnl: grossPnl, feeCost: p.feeCost,
+                        netPnl: grossPnl - p.feeCost, barsHeld: i - p.entryIdx + 1 });
+        }
+        longStack = [];
+      }
+    }
+
+    // ── SHORT STACK ──
+    if(shortStack.length > 0){
+      var highestTP = -Infinity, lowestSL = Infinity;
+      for(var j = 0; j < shortStack.length; j++){
+        if(shortStack[j].tpPrice > highestTP) highestTP = shortStack[j].tpPrice;
+        if(shortStack[j].slPrice < lowestSL)  lowestSL  = shortStack[j].slPrice;
+      }
+      var shortTrig = null;
+      if(price <= highestTP) shortTrig = 'WIN';
+      if(price >= lowestSL)  shortTrig = 'LOSS';
+      if(!shortTrig && tmoMode === 'B' && (i - shortStack[0].entryIdx) >= tmoBars)
+        shortTrig = 'TIMEOUT_CLOSE';
+
+      if(shortTrig){
+        for(var j = 0; j < shortStack.length; j++){
+          var p = shortStack[j];
+          var grossPnl = (p.entryPrice - price) * p.posSize;
+          trades.push({ time: p.time, level: p.label, dir: 'SHORT', entry: p.entryPrice,
+                        result: shortTrig, grossPnl: grossPnl, feeCost: p.feeCost,
+                        netPnl: grossPnl - p.feeCost, barsHeld: i - p.entryIdx + 1 });
+        }
+        shortStack = [];
+      }
+    }
+  }
+
+  // Mode B: force-close any remaining positions at end of data
+  if(tmoMode === 'B'){
+    var finalPrice = candles[candles.length - 1].close;
+    for(var k = 0; k < longStack.length; k++){
+      var p = longStack[k];
+      var grossPnl = (finalPrice - p.entryPrice) * p.posSize;
+      trades.push({ time: p.time, level: p.label, dir: 'LONG', entry: p.entryPrice,
+                    result: 'TIMEOUT_CLOSE', grossPnl: grossPnl, feeCost: p.feeCost,
+                    netPnl: grossPnl - p.feeCost, barsHeld: candles.length - p.entryIdx });
+    }
+    for(var j = 0; j < shortStack.length; j++){
+      var p = shortStack[j];
+      var grossPnl = (p.entryPrice - finalPrice) * p.posSize;
+      trades.push({ time: p.time, level: p.label, dir: 'SHORT', entry: p.entryPrice,
+                    result: 'TIMEOUT_CLOSE', grossPnl: grossPnl, feeCost: p.feeCost,
+                    netPnl: grossPnl - p.feeCost, barsHeld: candles.length - p.entryIdx });
+    }
+  }
+
+  return trades;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -539,107 +711,58 @@ async function runBacktest(){
   setProgress(85, 'FOUND ' + anchorDays + ' ANCHOR OPENS -- SCANNING SIGNALS...');
   await new Promise(r=>setTimeout(r, 30));
 
-  // ── SIGNAL SCAN — FT LOGIC ──
-  // Key difference from BT1:
-  //   Signal detected on CURRENT bar c (not prev)
-  //   Entry = c.close (not next bar open)
-  //   Rejection = close only (no open check)
-  //   Resolution = bar close (not low/high)
-  //   No hour filter
+  // ── COLLECT SIGNALS ──
+  const collected    = collectSignals(candles, anchorOpens, activeLevels, tolPct, minBar);
+  const allSignals   = collected.signals;
+  const totalSignals = collected.totalSignals;
 
-  const trades      = [];
-  const byLevel     = {};
-  const debounce    = {};
-  let   totalSignals = 0;  // every signal touch, including timeouts
+  setProgress(92, 'SIMULATING ' + allSignals.length + ' SIGNALS (' + (posMode === 'MRG' ? 'MERGED' : 'INDEPENDENT') + ')...');
+  await new Promise(r=>setTimeout(r, 30));
 
-  for(let i = 2; i < candles.length - 10; i++){
-    const c = candles[i];
+  let trades  = [];
+  const byLevel = {};
 
-    const anchor    = getAnchor0900(c.time * 1000);
-    const anchorKey = anchor.toISOString().slice(0, 10);
-    const anchorOpen = anchorOpens[anchorKey];
-    if(!anchorOpen) continue;
-
-    const anchorSec  = anchor.getTime() / 1000;
-    const candleDate = new Date(c.time * 1000).toISOString().slice(0, 10);
-
-    // Day boundary guard — same as FT: candle_date != anchor_date → skip
-    if(candleDate !== anchorKey) continue;
-
-    const bar = Math.floor((c.time - anchorSec) / 60);
-
-    // MIN_BAR — applied to current bar (matches FT: bar < MIN_BAR → return)
-    if(bar < minBar) continue;
-
-    // NO HOUR FILTER — FT runs 24h
-
-    for(const deg of activeLevels){
-      const label = deg > 0 ? `L+${deg}` : `L${deg}`;
-      const price  = ftAnglePrice(anchorOpen, bar, deg);
-      const tol    = price * tolPct;
-      const dk     = `${anchorKey}_${label}`;
-
-      // ── LONG — FT logic: touch + close above, NO open check ──
-      if(c.low <= price + tol && c.low >= price - tol
-         && c.close > price
-         && !debounce[dk]){
-        debounce[dk] = true;
-        totalSignals++;
-        const entry = c.close;
-        const sim   = simulateTradeByClose(candles, i + 1, 1, entry, stopDist, rrRatio, tmoBars);
-        if(sim.result !== 'TIMEOUT'){
-          const posSize  = risk / stopDist;
-          const feeCost  = posSize * entry * feeRate * 2;
-          let grossPnl, netPnl;
-          if(sim.result === 'TIMEOUT_CLOSE'){
-            // Real mark-to-market: (exitPrice - entry) × posSize - fees
-            grossPnl = (sim.exitPrice - entry) * posSize;
-            netPnl   = grossPnl - feeCost;
-          } else {
-            grossPnl = sim.result === 'WIN' ? risk * rrRatio : -risk;
-            netPnl   = grossPnl - feeCost;
-          }
-          const hour = new Date(c.time * 1000).getUTCHours();
-          trades.push({ time: c.time, level: label, dir: 'LONG', entry, result: sim.result, grossPnl, feeCost, netPnl, hour, barsHeld: sim.barsHeld });
-          if(!byLevel[label]) byLevel[label] = { wins:0, losses:0, timeoutClose:0, netPnl:0, trades:0 };
-          byLevel[label].trades++;
-          if(sim.result === 'WIN') byLevel[label].wins++;
-          else if(sim.result === 'TIMEOUT_CLOSE') byLevel[label].timeoutClose++;
-          else byLevel[label].losses++;
-          byLevel[label].netPnl += netPnl;
+  if(posMode === 'IND'){
+    // ── INDEPENDENT MODE — each signal resolved on its own ──
+    for(let si = 0; si < allSignals.length; si++){
+      const sig = allSignals[si];
+      const sim = simulateTradeByClose(candles, sig.idx, sig.dir, sig.entry, stopDist, rrRatio, tmoBars);
+      if(sim.result !== 'TIMEOUT'){
+        const posSize = risk / stopDist;
+        const feeCost = posSize * sig.entry * feeRate * 2;
+        let grossPnl, netPnl;
+        if(sim.result === 'TIMEOUT_CLOSE'){
+          grossPnl = sig.dir === 1 ? (sim.exitPrice - sig.entry) * posSize
+                                   : (sig.entry - sim.exitPrice) * posSize;
+          netPnl   = grossPnl - feeCost;
+        } else {
+          grossPnl = sim.result === 'WIN' ? risk * rrRatio : -risk;
+          netPnl   = grossPnl - feeCost;
         }
-        continue;
+        const hour = new Date(sig.time * 1000).getUTCHours();
+        trades.push({ time: sig.time, level: sig.label,
+                      dir: sig.dir === 1 ? 'LONG' : 'SHORT', entry: sig.entry,
+                      result: sim.result, grossPnl, feeCost, netPnl,
+                      hour, barsHeld: sim.barsHeld });
+        if(!byLevel[sig.label]) byLevel[sig.label] = { wins:0, losses:0, timeoutClose:0, netPnl:0, trades:0 };
+        byLevel[sig.label].trades++;
+        if(sim.result === 'WIN') byLevel[sig.label].wins++;
+        else if(sim.result === 'TIMEOUT_CLOSE') byLevel[sig.label].timeoutClose++;
+        else byLevel[sig.label].losses++;
+        byLevel[sig.label].netPnl += netPnl;
       }
-
-      // ── SHORT — FT logic: touch + close below, NO open check ──
-      if(c.high >= price - tol && c.high <= price + tol
-         && c.close < price
-         && !debounce[dk]){
-        debounce[dk] = true;
-        totalSignals++;
-        const entry = c.close;
-        const sim   = simulateTradeByClose(candles, i + 1, -1, entry, stopDist, rrRatio, tmoBars);
-        if(sim.result !== 'TIMEOUT'){
-          const posSize  = risk / stopDist;
-          const feeCost  = posSize * entry * feeRate * 2;
-          let grossPnl, netPnl;
-          if(sim.result === 'TIMEOUT_CLOSE'){
-            grossPnl = (entry - sim.exitPrice) * posSize;
-            netPnl   = grossPnl - feeCost;
-          } else {
-            grossPnl = sim.result === 'WIN' ? risk * rrRatio : -risk;
-            netPnl   = grossPnl - feeCost;
-          }
-          const hour = new Date(c.time * 1000).getUTCHours();
-          trades.push({ time: c.time, level: label, dir: 'SHORT', entry, result: sim.result, grossPnl, feeCost, netPnl, hour, barsHeld: sim.barsHeld });
-          if(!byLevel[label]) byLevel[label] = { wins:0, losses:0, timeoutClose:0, netPnl:0, trades:0 };
-          byLevel[label].trades++;
-          if(sim.result === 'WIN') byLevel[label].wins++;
-          else if(sim.result === 'TIMEOUT_CLOSE') byLevel[label].timeoutClose++;
-          else byLevel[label].losses++;
-          byLevel[label].netPnl += netPnl;
-        }
-      }
+    }
+  } else {
+    // ── MERGED MODE — Binance hedge mode: first TP/SL closes entire stack ──
+    trades = runMergedSimulation(candles, allSignals, stopDist, rrRatio, risk, feeRate, tmoBars);
+    for(let ti = 0; ti < trades.length; ti++){
+      const t = trades[ti];
+      if(!byLevel[t.level]) byLevel[t.level] = { wins:0, losses:0, timeoutClose:0, netPnl:0, trades:0 };
+      byLevel[t.level].trades++;
+      if(t.result === 'WIN') byLevel[t.level].wins++;
+      else if(t.result === 'TIMEOUT_CLOSE') byLevel[t.level].timeoutClose++;
+      else byLevel[t.level].losses++;
+      byLevel[t.level].netPnl += t.netPnl;
     }
   }
 
@@ -734,7 +857,8 @@ function renderResults(trades, byLevel, risk, rrRatio, feeRate, days, accountSiz
   }
 
   const sg = document.getElementById('stat-grid');
-  const modeLabel = tmoMode === 'A' ? 'MODE A — HOLD UNTIL RESOLVE' : `MODE B — CLOSE AT BAR ${tmoBars}`;
+  const modeLabel = (tmoMode === 'A' ? 'MODE A — HOLD' : `MODE B — BAR ${tmoBars}`)
+    + (posMode === 'MRG' ? ' | MERGED' : ' | INDEPENDENT');
   sg.innerHTML =
     statCard('WIN RATE', winRate.toFixed(1)+'%',
       winRate>=85?'green':winRate>=breakEven?'amber':'red',
